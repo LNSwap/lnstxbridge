@@ -1109,7 +1109,12 @@ class SwapNursery extends EventEmitter {
 
         case CurrencyType.ERC20:
           this.logger.error("refunderc20 for " + chainSymbol);
-          await this.refundERC20(reverseSwap, chainSymbol);
+          if(chainSymbol == "SOV") {
+            await this.rrefundERC20(reverseSwap, chainSymbol);
+          } else {
+            await this.refundERC20(reverseSwap, chainSymbol);
+          }
+          
           break;
       }
     } else {
