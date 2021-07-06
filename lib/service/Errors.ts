@@ -91,6 +91,10 @@ export default {
     message: 'the Ethereum integration is not enabled',
     code: concatErrorCode(ErrorCodePrefix.Service, 25),
   }),
+  RSK_NOT_ENABLED: (): Error => ({
+    message: 'the Rootstock integration is not enabled',
+    code: concatErrorCode(ErrorCodePrefix.Service, 31),
+  }),
   INVALID_ETHEREUM_ADDRESS: (): Error => ({
     message: 'and invalid Ethereum address was provided',
     code: concatErrorCode(ErrorCodePrefix.Service, 26),

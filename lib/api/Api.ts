@@ -30,6 +30,7 @@ class Api {
   }
 
   public init = async (): Promise<void> => {
+    // this.logger.info(`API server init1`);
     await this.controller.init();
 
     await new Promise<void>((resolve) => {

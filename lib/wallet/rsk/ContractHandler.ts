@@ -26,7 +26,7 @@ class ContractHandler {
     claimAddress: string,
     timeLock: number,
   ): Promise<ContractTransaction> => {
-    this.logger.debug(`Locking ${amount} Ether with preimage hash: ${getHexString(preimageHash)}`);
+    this.logger.debug(`Locking ${amount} Rbtc with preimage hash: ${getHexString(preimageHash)}`);
     return this.etherSwap.lock(preimageHash, claimAddress, timeLock, {
       value: amount,
       gasPrice: await getGasPrice(this.etherSwap.provider),
@@ -51,7 +51,7 @@ class ContractHandler {
       },
     );
 
-    this.logger.debug(`Locking ${amount} and sending prepay ${amountPrepay} Ether with preimage hash: ${getHexString(preimageHash)}`);
+    this.logger.debug(`Locking ${amount} and sending prepay ${amountPrepay} Rbtc with preimage hash: ${getHexString(preimageHash)}`);
     return this.etherSwap.lockPrepayMinerfee(
       preimageHash,
       claimAddress,
@@ -72,7 +72,8 @@ class ContractHandler {
     refundAddress: string,
     timelock: number,
   ): Promise<ContractTransaction> => {
-    this.logger.debug(`Claiming Ether with preimage: ${getHexString(preimage)}`);
+    this.logger.debug(`Claiming Rbtc with preimage: ${getHexString(preimage)}`);
+    this.logger.error("claim data: " + refundAddress);
     return this.etherSwap.claim(
       preimage,
       amount,
@@ -90,7 +91,7 @@ class ContractHandler {
     claimAddress: string,
     timelock: number,
   ): Promise<ContractTransaction> => {
-    this.logger.debug(`Refunding Ether with preimage hash: ${getHexString(preimageHash)}`);
+    this.logger.debug(`Refunding Rbtc with preimage hash: ${getHexString(preimageHash)}`);
     return this.etherSwap.refund(
       preimageHash,
       amount,
@@ -110,15 +111,10 @@ class ContractHandler {
     timeLock: number,
   ): Promise<ContractTransaction> => {
     this.logger.debug(`Locking ${amount} ${token.symbol} with preimage hash: ${getHexString(preimageHash)}`);
-    claimAddress = claimAddress.toLowerCase();
-    let tokenlc = token.getTokenAddress().toLowerCase();
-    this.logger.error("contracthandler erc20swap lock: " + preimageHash + "," + amount + "," + tokenlc + "," + claimAddress + "," + timeLock);
-    
     return this.erc20Swap.lock(
       preimageHash,
       amount,
-      // token.getTokenAddress(),
-      tokenlc,
+      token.getTokenAddress(),
       claimAddress,
       timeLock,
       {
@@ -143,7 +139,7 @@ class ContractHandler {
       timeLock,
     );
 
-    this.logger.debug(`Locking ${amount} ${token.symbol} and sending prepay ${amountPrepay} Ether with preimage hash: ${getHexString(preimageHash)}`);
+    this.logger.debug(`Locking ${amount} ${token.symbol} and sending prepay ${amountPrepay} Rbtc with preimage hash: ${getHexString(preimageHash)}`);
     return this.erc20Swap.lockPrepayMinerfee(
       preimageHash,
       amount,

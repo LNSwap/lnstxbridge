@@ -8,10 +8,12 @@ import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 // TODO: what happens if the hash doesn't exist or the transaction isn't confirmed yet?
 
 export const queryEtherSwapValuesFromLock = async (etherSwap: EtherSwap, lockTransactionHash: string): Promise<EtherSwapValues> => {
+  console.log("rsk ContractUtils queryEtherSwapValuesFromLock start lockTransactionHash: ", lockTransactionHash);
   const lockTransactionReceipt = await etherSwap.provider.getTransactionReceipt(lockTransactionHash);
 
   const topicHash = etherSwap.filters.Lockup(null, null, null, null, null).topics![0];
 
+  console.log("rsk ContractUtils queryEtherSwapValuesFromLock start logs")
   for (const log of lockTransactionReceipt.logs) {
     if (log.topics[0] === topicHash) {
       const event = etherSwap.interface.parseLog(log);
@@ -38,6 +40,7 @@ export const queryERC20SwapValuesFromLock = async (erc20Swap: ERC20Swap, lockTra
 };
 
 export const queryEtherSwapValues = async (etherSwap: EtherSwap, preimageHash: Buffer): Promise<EtherSwapValues> => {
+  console.log("rsk ContractUtils queryEtherSwapValues start: ")
   const events = await etherSwap.queryFilter(
     etherSwap.filters.Lockup(preimageHash, null, null, null, null),
   );
@@ -48,11 +51,12 @@ export const queryEtherSwapValues = async (etherSwap: EtherSwap, preimageHash: B
 
   const event = events[0];
 
+  console.log("rsk ContractUtils queryEtherSwapValues end: ")
   return formatEtherSwapValues(event.args!);
 };
 
 export const queryERC20SwapValues = async (erc20Swap: ERC20Swap, preimageHash: Buffer): Promise<ERC20SwapValues> => {
-  console.log("eth queryERC20SwapValues for any lockups " + JSON.stringify(erc20Swap) + ", for " + preimageHash.toString('hex'));
+  console.log("queryERC20SwapValues for any lockups " + JSON.stringify(erc20Swap));
   const events = await erc20Swap.queryFilter(
     erc20Swap.filters.Lockup(preimageHash, null, null, null, null, null),
   );

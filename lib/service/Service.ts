@@ -94,6 +94,7 @@ class Service {
 
     this.logger.debug(`Using ${config.swapwitnessaddress ? 'P2WSH' : 'P2SH nested P2WSH'} addresses for Submarine Swaps`);
 
+    this.logger.error(`starting swapmanager inside service from Boltz`);
     this.swapManager = new SwapManager(
       this.logger,
       this.walletManager,
@@ -103,6 +104,7 @@ class Service {
       config.retryInterval,
     );
 
+    this.logger.error(`starting EventHandler inside service from Boltz for ${this.currencies}` + JSON.stringify(Array.from(this.currencies)) + " " + currencies);
     this.eventHandler = new EventHandler(
       this.logger,
       this.currencies,
@@ -111,6 +113,7 @@ class Service {
   }
 
   public init = async (configPairs: PairConfig[]): Promise<void> => {
+    // console.log("***service.ts init");
     const dbPairSet = new Set<string>();
     const dbPairs = await this.pairRepository.getPairs();
 
@@ -120,6 +123,7 @@ class Service {
 
     const checkCurrency = (symbol: string) => {
       if (!this.currencies.has(symbol)) {
+        // console.log("service.ts line 123");
         throw Errors.CURRENCY_NOT_FOUND(symbol);
       }
     };
@@ -326,9 +330,17 @@ class Service {
       swapContracts: Map<string, string>,
       tokens: Map<string, string>,
     },
+    rsk: {
+      network: Network,
+      swapContracts: Map<string, string>,
+      tokens: Map<string, string>,
+    },
   } => {
     if (this.walletManager.ethereumManager === undefined) {
       throw Errors.ETHEREUM_NOT_ENABLED();
+    }
+    if (this.walletManager.rskManager === undefined) {
+      throw Errors.RSK_NOT_ENABLED();
     }
 
     return {
@@ -338,6 +350,14 @@ class Service {
         swapContracts: new Map<string, string>([
           ['EtherSwap', this.walletManager.ethereumManager.etherSwap.address],
           ['ERC20Swap', this.walletManager.ethereumManager.erc20Swap.address],
+        ]),
+      },
+      rsk: {
+        network: this.walletManager.rskManager.network,
+        tokens: this.walletManager.rskManager.tokenAddresses,
+        swapContracts: new Map<string, string>([
+          ['RbtcSwap', this.walletManager.rskManager.etherSwap.address],
+          ['ERC20Swap', this.walletManager.rskManager.erc20Swap.address],
         ]),
       },
     };
@@ -407,6 +427,7 @@ class Service {
     const wallet = this.walletManager.wallets.get(symbol.toUpperCase());
 
     if (wallet === undefined) {
+      console.log("service.ts line 411");
       throw Errors.CURRENCY_NOT_FOUND(symbol);
     }
 
@@ -429,7 +450,7 @@ class Service {
     if (wallet !== undefined) {
       return wallet.getAddress();
     }
-
+    console.log("service.ts line 434");
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
@@ -456,7 +477,16 @@ class Service {
     if (symbol !== undefined) {
       const currency = this.getCurrency(symbol);
       const isERC20 = currency.type === CurrencyType.ERC20;
+      // const isRBTC = currency.type === CurrencyType.Rbtc;
 
+      // if(!isERC20 && isRBTC) {
+
+      // } else if ()
+
+      // map.set(isRBTC ? 'RBTC' : symbol, await estimateFee(currency));
+      // this.logger.error("getFeeEstimation: " + currency.symbol + ", isERC20" + isERC20 + ", isRBTC" +isRBTC + ", map.set" + (isERC20 ? 'ETH' : symbol));
+
+      // already works for rbtc
       map.set(isERC20 ? 'ETH' : symbol, await estimateFee(currency));
     } else {
       for (const [symbol, currency] of this.currencies) {
@@ -1091,7 +1121,7 @@ class Service {
         vout: vout!,
       };
     }
-
+    console.log("service.ts line 1096");
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
@@ -1150,6 +1180,7 @@ class Service {
     const currency = this.currencies.get(symbol);
 
     if (!currency) {
+      console.log("service.ts line 1155");
       throw Errors.CURRENCY_NOT_FOUND(symbol);
     }
 

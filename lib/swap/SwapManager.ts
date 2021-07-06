@@ -82,6 +82,7 @@ class SwapManager {
   }
 
   public init = async (currencies: Currency[]): Promise<void>=> {
+    // console.log("***swapmanager.ts init");
     currencies.forEach((currency) => {
       this.currencies.set(currency.symbol, currency);
     });
@@ -212,7 +213,7 @@ class SwapManager {
         redeemScript: getHexString(redeemScript),
       });
     } else {
-      address = this.getLockupContractAddress(receivingCurrency.type);
+      address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
 
       const blockNumber = await receivingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
@@ -303,6 +304,7 @@ class SwapManager {
             blockTime: TimeoutDeltaProvider.blockTimes.get(currency.symbol)!,
           };
 
+        // TODO if RBTC -> channel
         // All currencies that are not Bitcoin-like are either Ether or an ERC20 token on the Ethereum chain
         } else {
           return {
@@ -513,9 +515,13 @@ class SwapManager {
       const blockNumber = await sendingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.onchainTimeoutBlockDelta;
 
-      lockupAddress = this.getLockupContractAddress(sendingCurrency.type);
+      lockupAddress = this.getLockupContractAddress(sendingCurrency.type, args.quoteCurrency);
+      lockupAddress = lockupAddress.toLowerCase();
 
       refundAddress = await this.walletManager.wallets.get(sendingCurrency.symbol)!.getAddress();
+      refundAddress = refundAddress.toLowerCase();
+
+      this.logger.error("prepared reverse swap stuff: " + blockNumber + ", " + lockupAddress + ", " + refundAddress);
 
       await this.reverseSwapRepository.addReverseSwap({
         id,
@@ -555,6 +561,7 @@ class SwapManager {
       const lightningCurrency = getLightningCurrency(base, quote, swap.orderSide, isReverse);
 
       if ((swap.status === SwapUpdateEvent.SwapCreated || swap.status === SwapUpdateEvent.MinerFeePaid) && isReverse) {
+        this.logger.error("swapmanager recreateFilters foreach SwapCreated chainCurrency " + chainCurrency);
         const reverseSwap = swap as ReverseSwap;
 
         const { lndClient } = this.currencies.get(lightningCurrency)!;
@@ -566,6 +573,7 @@ class SwapManager {
         lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(reverseSwap.invoice).paymentHash!));
 
       } else if ((swap.status === SwapUpdateEvent.TransactionMempool || swap.status === SwapUpdateEvent.TransactionConfirmed) && isReverse) {
+        this.logger.error("swapmanager recreateFilters foreach TransactionConfirmed chainCurrency " + chainCurrency);
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
@@ -579,6 +587,7 @@ class SwapManager {
           }
         }
       } else {
+        this.logger.error("swapmanager recreateFilters foreach else chainCurrency " + chainCurrency);
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
@@ -633,17 +642,38 @@ class SwapManager {
 
   private getCurrency = (currencySymbol: string) => {
     const currency = this.currencies.get(currencySymbol);
-
+    
     if (!currency) {
+      // console.log("swapmanager.ts line 638");
       throw Errors.CURRENCY_NOT_FOUND(currencySymbol).message;
     }
 
     return currency;
   }
 
-  private getLockupContractAddress = (type: CurrencyType): string => {
+  private getLockupContractAddress = (type: CurrencyType, quoteCurrency: string): string => {
+    this.logger.error("getLockupContractAddress CurrencyType: " + type)
     const ethereumManager = this.walletManager.ethereumManager!;
-    return type === CurrencyType.Ether ? ethereumManager.etherSwap.address: ethereumManager.erc20Swap.address;
+    const rskManager = this.walletManager.rskManager!;
+
+    let addresstoreturn: string;
+    if (type === CurrencyType.Ether) {
+      addresstoreturn = ethereumManager.etherSwap.address
+    } else if (type === CurrencyType.Rbtc) {
+      addresstoreturn = rskManager.etherSwap.address
+    } else {
+      if (quoteCurrency == "SOV") {
+        this.logger.error("getlockupcontractaddress from rsk")
+        addresstoreturn = rskManager.erc20Swap.address
+      } else {
+        addresstoreturn = ethereumManager.erc20Swap.address
+      }
+      
+    }
+
+    return addresstoreturn;
+
+    // return type === CurrencyType.Ether ? ethereumManager.etherSwap.address: ethereumManager.erc20Swap.address;
   }
 }
 

@@ -19,6 +19,7 @@ import { CurrencyType } from './consts/Enums';
 import BackupScheduler from './backup/BackupScheduler';
 import ChainTipRepository from './db/ChainTipRepository';
 import EthereumManager from './wallet/ethereum/EthereumManager';
+import RskManager from './wallet/rsk/RskManager';
 import WalletManager, { Currency } from './wallet/WalletManager';
 import NotificationProvider from './notifications/NotificationProvider';
 
@@ -38,10 +39,13 @@ class Boltz {
   private grpcServer!: GrpcServer;
 
   private readonly ethereumManager?: EthereumManager;
+  private readonly rskManager?: RskManager;
 
   constructor(config: Arguments<any>) {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.loglevel, this.config.logpath);
+
+    this.logger.error(`boltz constructor`);
 
     process.on('unhandledRejection', ((reason) => {
       this.logger.error(`Unhandled rejection: ${formatError(reason)}`);
@@ -58,20 +62,30 @@ class Boltz {
       this.logger.warn(`Disabled Ethereum integration because: ${formatError(error)}`);
     }
 
+    try {
+      this.rskManager = new RskManager(
+        this.logger,
+        this.config.rsk,
+      );
+    } catch (error) {
+      this.logger.warn(`Disabled Rootstock integration because: ${formatError(error)}`);
+    }
+
     this.currencies = this.parseCurrencies();
 
     const walletCurrencies = Array.from(this.currencies.values());
 
     if (fs.existsSync(this.config.mnemonicpath)) {
-      this.walletManager = new WalletManager(this.logger, this.config.mnemonicpath, walletCurrencies, this.ethereumManager);
+      this.walletManager = new WalletManager(this.logger, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.info(`Generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, this.config.mnemonicpath, walletCurrencies, this.ethereumManager);
+      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager);
     }
 
     try {
+      this.logger.error(`new service in boltz.ts: ${this.currencies}` + JSON.stringify(this.currencies));
       this.service = new Service(
         this.logger,
         this.config,
@@ -119,16 +133,22 @@ class Boltz {
 
   public start = async (): Promise<void> => {
     try {
+      this.logger.error(`start1 ` + JSON.stringify(Array.from(this.currencies)));
       await this.db.migrate(this.currencies);
+      this.logger.error(`start2`);
       await this.db.init();
-
+      this.logger.error(`after db init`);
       const chainTipRepository = new ChainTipRepository();
 
       // Query the chain tips now to avoid them being updated after the chain clients are initialized
       const chainTips = await chainTipRepository.getChainTips();
 
+      // this.logger.error(`loop currencies`);
       for (const [, currency] of this.currencies) {
+        
+        // console.log("currency: ", currency);
         if (currency.chainClient) {
+          this.logger.error(`boltz start loop currency connectChainClient: ${currency}` + JSON.stringify(currency));
           await this.connectChainClient(currency.chainClient, chainTipRepository);
 
           if (currency.lndClient) {
@@ -162,12 +182,19 @@ class Boltz {
       const rescanPromises: Promise<void>[] = [];
 
       for (const chainTip of chainTips) {
+        this.logger.error("rescanpromise chaintip: " + chainTip.symbol);
         if (chainTip.symbol === 'ETH') {
           if (this.walletManager.ethereumManager) {
             logRescan(chainTip);
             rescanPromises.push(this.walletManager.ethereumManager.contractEventHandler.rescan(chainTip.height));
           }
+        } else if (chainTip.symbol === 'RBTC') {
+          if (this.walletManager.rskManager) {
+            logRescan(chainTip);
+            rescanPromises.push(this.walletManager.rskManager.contractEventHandler.rescan(chainTip.height));
+          }
         } else {
+          // if not ETH or RBTC
           const { chainClient } = this.currencies.get(chainTip.symbol)!;
 
           if (chainClient) {
@@ -180,7 +207,7 @@ class Boltz {
       await Promise.all(rescanPromises);
       this.logger.verbose('Finished rescanning');
     } catch (error) {
-      this.logger.error(`Could not initialize Boltz: ${formatError(error)}`);
+      this.logger.error(`Could not initialize Boltz!! : ${formatError(error)}`);
       console.log(error);
       // eslint-disable-next-line no-process-exit
       process.exit(1);
@@ -234,6 +261,7 @@ class Boltz {
     const result = new Map<string, Currency>();
 
     this.config.currencies.forEach((currency) => {
+      // this.logger.error(`parsecurrencies foreach curency: ${currency}` + JSON.stringify(currency));
       try {
         const chainClient = new ChainClient(this.logger, currency.chain, currency.symbol);
 
@@ -258,6 +286,8 @@ class Boltz {
       }
     });
 
+    // this.logger.error(`end of foreach ` + JSON.stringify(Array.from(result)));
+
     this.config.ethereum.tokens.forEach((token) => {
       result.set(token.symbol, {
         symbol: token.symbol,
@@ -269,6 +299,20 @@ class Boltz {
       });
     });
 
+    // this.logger.error(`after eth tokens ` + JSON.stringify(result));
+
+    this.config.rsk.tokens.forEach((token) => {
+      result.set(token.symbol, {
+        symbol: token.symbol,
+        type: token.symbol === 'RBTC' ? CurrencyType.Rbtc : CurrencyType.ERC20,
+        limits: {
+          ...token,
+        },
+        provider: this.rskManager?.provider,
+      });
+    });
+
+    this.logger.error(`parsecurrencies returning final result: ${result}` + JSON.stringify(Array.from(result)));
     return result;
   }
 

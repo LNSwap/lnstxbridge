@@ -7,6 +7,7 @@ class InvoiceExpiryHelper {
 
   constructor(currencies: CurrencyConfig[]) {
     for (const currency of currencies) {
+      console.log(`currency loop inside invoiceexpiryhelper ${currency.symbol}`);
       if (currency.invoiceExpiry) {
         this.invoiceExpiry.set(currency.symbol, currency.invoiceExpiry);
       }

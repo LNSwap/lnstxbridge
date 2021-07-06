@@ -5,6 +5,7 @@ import Binance from './exchanges/Binance';
 import Bitfinex from './exchanges/Bitfinex';
 import Poloniex from './exchanges/Poloniex';
 import CoinbasePro from './exchanges/CoinbasePro';
+import Coingecko from './exchanges/Coingecko';
 
 class DataAggregator {
   private readonly exchanges: Exchange[] = [
@@ -13,6 +14,7 @@ class DataAggregator {
     new Bitfinex(),
     new Poloniex(),
     new CoinbasePro(),
+    new Coingecko(),
   ];
 
   public readonly pairs = new Set<[string, string]>();

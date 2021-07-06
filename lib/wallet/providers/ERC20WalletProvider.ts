@@ -56,6 +56,7 @@ class ERC20WalletProvider implements WalletProviderInterface {
   }
 
   public getAllowance = async (spender: string): Promise<BigNumber> => {
+    this.logger.error("erc20 getAllowance " + spender);
     return this.token.contract.allowance(await this.signer.getAddress(), spender);
   }
 

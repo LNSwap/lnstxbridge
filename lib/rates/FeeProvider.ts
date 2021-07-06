@@ -156,6 +156,21 @@ class FeeProvider {
         break;
       }
 
+      case 'RBTC': {
+        const relativeFee = feeMap.get(chainCurrency)!;
+        const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
+
+        this.minerFees.set(chainCurrency, {
+          normal: claimCost,
+          reverse: {
+            claim: claimCost,
+            lockup: this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.lockup),
+          },
+        });
+
+        break;
+      }
+
       // If it is not BTC, LTC or ETH, it is an ERC20 token
       default: {
         const relativeFee = feeMap.get('ETH')!;

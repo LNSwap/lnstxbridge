@@ -158,6 +158,11 @@ class Controller {
           swapContracts: mapToObject(contracts.ethereum.swapContracts),
           tokens: mapToObject(contracts.ethereum.tokens),
         },
+        rsk: {
+          network: contracts.rsk.network,
+          swapContracts: mapToObject(contracts.rsk.swapContracts),
+          tokens: mapToObject(contracts.rsk.tokens),
+        },
       });
     } catch (error) {
       this.errorResponse(req, res, error, 501);
@@ -474,13 +479,16 @@ class Controller {
 
       // Bitcoin Core related errors
       if (errorObject.details) {
+        this.logger.error("Bitcoin Core related errors everything else");
         this.writeErrorResponse(req, res, statusCode, { error: errorObject.details });
       // Custom error when broadcasting a refund transaction fails because
       // the locktime requirement has not been met yet
       } else if (errorObject.timeoutBlockHeight) {
+        this.logger.error("timeoutBlockHeight error everything else");
         this.writeErrorResponse(req, res, statusCode, error);
       // Everything else
       } else {
+        this.logger.error("error everything else");
         this.writeErrorResponse(req, res, statusCode, { error: errorObject.message });
       }
     }

@@ -18,6 +18,8 @@
     "docker:geth:fund": "./bin/boltz-ethereum send 1000000000000 && ./bin/boltz-ethereum send 1000000000000 --token",
     "docker:start": "npm run docker:regtest && npm run docker:geth && npm run docker:geth:deploy && npm run docker:geth:fund",
     "docker:stop": "docker kill regtest && docker rm regtest && docker kill geth && docker rm geth",
+    "rsk:geth": "java -cp /home/z/Downloads/rskj-core-2.2.0-PAPYRUS-all.jar -Drpc.providers.web.ws.enabled=true co.rsk.Start --regtest",
+    "rsk:fund": "./bin/boltz-rsk send 1000000000000 && ./bin/boltz-rsk send 1000000000000 --token",
     "test": "npm run test:unit && npm run docker:start && npm run test:int && npm run docker:stop",
     "test:nodocker": "npm run test:unit && npm run test:int",
     "test:unit": "jest test/unit",

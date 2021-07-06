@@ -446,6 +446,10 @@ export const calculateEthereumTransactionFee = (transaction: ContractTransaction
   return transaction.gasLimit.mul(transaction.gasPrice).div(etherDecimals).toNumber();
 };
 
+export const calculateRskTransactionFee = (transaction: ContractTransaction): number => {
+  return transaction.gasLimit.mul(transaction.gasPrice).div(etherDecimals).toNumber();
+};
+
 export const getBiggerBigNumber = (a: BigNumber, b: BigNumber): BigNumber => {
   return a.gt(b) ? a : b;
 };

@@ -3,7 +3,7 @@ import { BlockWithTransactions } from '@ethersproject/abstract-provider';
 import Errors from './Errors';
 import Logger from '../../Logger';
 import { formatError, stringify } from '../../Utils';
-import { EthereumConfig, EthProviderServiceConfig } from '../../Config';
+import { RskConfig, RskProviderServiceConfig } from '../../Config';
 import PendingEthereumTransactionRepository from '../../db/PendingEthereumTransactionRepository';
 
 enum EthProviderService {
@@ -26,15 +26,17 @@ class InjectedProvider implements providers.Provider {
 
   private static readonly requestTimeout = 5000;
 
-  constructor(private logger: Logger, config: EthereumConfig) {
+  constructor(private logger: Logger, config: RskConfig) {
+    this.logger.error(`Rsk injectedprovider constructor: ` + JSON.stringify(config));
     if (config.providerEndpoint) {
       this.providers.set(EthProviderService.Websocket, new providers.WebSocketProvider(config.providerEndpoint));
+      // this is processed
       this.logAddedProvider(EthProviderService.Websocket, { endpoint: config.providerEndpoint });
     } else {
       this.logDisabledProvider(EthProviderService.Websocket, 'no endpoint was specified');
     }
 
-    const addEthProvider = (name: EthProviderService, providerConfig: EthProviderServiceConfig) => {
+    const addEthProvider = (name: EthProviderService, providerConfig: RskProviderServiceConfig) => {
       if (!providerConfig.apiKey) {
         this.logDisabledProvider(name, 'no api key was set');
         return;
@@ -72,17 +74,19 @@ class InjectedProvider implements providers.Provider {
     addEthProvider(EthProviderService.Alchemy, config.alchemy);
 
     if (this.providers.size === 0) {
+      this.logger.error(`NO_PROVIDER_SPECIFIED: `);
       throw Errors.NO_PROVIDER_SPECIFIED();
     }
   }
 
   public init = async (): Promise<void> => {
-    this.logger.verbose(`Trying to connect to ${this.providers.size} Web3 providers:\n - ${Array.from(this.providers.keys()).join('\n - ')}`);
+    this.logger.verbose(`Trying to connect to ${this.providers.size} Rsk Web3 providers:\n - ${Array.from(this.providers.keys()).join('\n - ')}`);
 
     const networks: providers.Network[] = [];
 
     for (const [providerName, provider] of this.providers) {
       try {
+        this.logger.error(`rsk injectedprovider getNetwork: ` + providerName + " " + JSON.stringify(provider));
         const network = await provider.getNetwork();
         this.logConnectedProvider(providerName, network);
         networks.push(network);
@@ -99,7 +103,7 @@ class InjectedProvider implements providers.Provider {
     }
 
     this.network = networks[0];
-    this.logger.info(`Connected to ${this.providers.size} Eth Web3 providers:\n - ${Array.from(this.providers.keys()).join('\n - ')}`);
+    this.logger.info(`Connected to ${this.providers.size} Rsk Web3 providers:\n - ${Array.from(this.providers.keys()).join('\n - ')}`);
   }
 
   public destroy = async (): Promise<void> => {
@@ -116,12 +120,11 @@ class InjectedProvider implements providers.Provider {
     transaction: utils.Deferrable<providers.TransactionRequest>,
     blockTag?: providers.BlockTag,
   ): Promise<string> => {
-    this.logger.error("eth call tx: " + JSON.stringify(transaction));
+    // this.logger.error("injectedprovider call " + JSON.stringify(transaction) + " | " + JSON.stringify(blockTag));
     return this.forwardMethod('call', transaction, blockTag);
   }
 
   public estimateGas = (transaction: providers.TransactionRequest): Promise<BigNumber> => {
-    this.logger.error("eth estimategas tx: " + JSON.stringify(transaction));
     return this.forwardMethod('estimateGas', transaction);
   }
 
@@ -146,12 +149,11 @@ class InjectedProvider implements providers.Provider {
   }
 
   public getGasPrice = (): Promise<BigNumber> => {
-    // this.logger.error("eth getGasPrice tx: ");
     return this.forwardMethod('getGasPrice');
   }
 
   public getLogs = (filter: providers.Filter): Promise<Array<providers.Log>> => {
-    this.logger.error("eth getLogs " + JSON.stringify(filter));
+    this.logger.error("rsk injectedprovider getLogs " + JSON.stringify(filter));
     return this.forwardMethod('getLogs', filter);
   }
 
@@ -175,7 +177,6 @@ class InjectedProvider implements providers.Provider {
     addressOrName: string,
     blockTag?: providers.BlockTag,
   ): Promise<number> => {
-    this.logger.error("eth getTransactionCount tx: " + JSON.stringify(addressOrName));
     return this.forwardMethod('getTransactionCount', addressOrName, blockTag);
   }
 
@@ -188,14 +189,13 @@ class InjectedProvider implements providers.Provider {
   }
 
   public resolveName = (name: string): Promise<string> => {
-    this.logger.error("eth resolveName tx: " + name);
     return this.forwardMethod('resolveName', name);
   }
 
   public sendTransaction = async (signedTransaction: string): Promise<providers.TransactionResponse> => {
     const transaction = utils.parseTransaction(signedTransaction);
 
-    this.logger.silly(`Sending Ethereum transaction: ${transaction.hash}`);
+    this.logger.silly(`Sending Rbtc transaction: ${transaction.hash}`);
     await this.pendingEthereumTransactionRepository.addTransaction(
       transaction.hash!,
       transaction.nonce,
@@ -331,31 +331,14 @@ class InjectedProvider implements providers.Provider {
         );
 
         if (result !== null) {
-          // this.logger.error("eth forwardmethod result is not null " +method+ ", " + JSON.stringify(result));
           return result;
         } else {
-          // this.logger.error("eth forwardmethod result is NULL " +method)
           resultIsNull = true;
         }
       } catch (error) {
-        this.logger.error("eth injectedprovider caught: " + JSON.stringify(error));
-        // let dummyresult = {"jsonrpc":"2.0","id":1,"result":"0xb5aa"};
-        // // dummyresult = "0x0";
-        // // return dummyresult;
-
-        // let errorstr = JSON.stringify(error);
-        // // let errorjson = JSON.parse(error);
-        // // this.logger.error("eth injectedprovider caught: " + JSON.stringify(error) + "\nerror.response: " + errorjson.response);
-        // if(errorstr.includes("cannot estimate gas")){
-        //   this.logger.error("eth returning dummy response: " + dummyresult);
-        //   return dummyresult;
-        // } else {
-        //   this.logger.error("eth some other error fail");
-        // }
-        // // return dummyresult;
-
         const formattedError = formatError(error);
 
+        this.logger.error("inside forwardMethod");
         this.logger.warn(`Request to ${providerName} Web3 provider failed: ${method}: ${formattedError}`);
         errors.push(formattedError);
       }

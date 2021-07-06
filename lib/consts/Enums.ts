@@ -9,6 +9,7 @@ export enum ErrorCodePrefix {
   Rates = 7,
   Backup = 8,
   Ethereum = 9,
+  Rsk = 10
 }
 
 export enum ClientStatus {
@@ -93,5 +94,6 @@ export enum BaseFeeType {
 export enum CurrencyType {
   BitcoinLike,
   Ether,
-  ERC20
+  ERC20,
+  Rbtc
 }

@@ -7,15 +7,14 @@ import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { Signer, providers, Contract, Wallet } from 'ethers';
 
 const Constants = {
-  erc20TokenAddress: '0x23d5395De7862A174b0cCbf9f7A350b4b8afC720',
-
-  etherSwapAddress: '0xCc2dd65Bc10AdbE3C6cF341aaFB5d9440E72cc20',
-  erc20SwapAddress: '0xf90664Edb44fd966089673f289834DaDb9888203',
+  erc20TokenAddress: '0x9f84F92d952f90027618089F6F2a3481f1a3fa0F',
+  rbtcSwapAddress: '0x4efc8b4323e532db6cd78d70a97f83bc7559cef3',
+  erc20SwapAddress: '0x3b15af794d4e39589a31089ce0b53a9e1994930f',
 };
 
 const connectEthereum = (providerUrl: string, signerAddress: string): Signer => {
   const provider = new providers.JsonRpcProvider(providerUrl);
-  console.log("connectEthereum signerAddress: ", signerAddress);
+  console.log("rsk connectEthereum signerAddress: ", signerAddress);
   return provider.getSigner(signerAddress);
 };
 
@@ -28,7 +27,7 @@ const getContracts = (signer: Signer): { token: ERC20, etherSwap: EtherSwap, erc
     ) as any as ERC20,
 
     etherSwap: new Contract(
-      Constants.etherSwapAddress,
+      Constants.rbtcSwapAddress,
       ContractABIs.EtherSwap,
       signer,
     ) as any as EtherSwap,
