@@ -1,8 +1,9 @@
 ## This is a fork of [boltz-backend](https://github.com/BoltzExchange/boltz-backend) for SOV hackathon.
 Boltz backend is modified to work with RSK and tested to allow Lightning Network submarine and reverse submarine swaps between RBTC and SOV. 
 
-RSK -> LN demo: https://www.youtube.com/watch?v=fMtGL8A4Ed8
-SOV -> LN demo: https://www.youtube.com/watch?v=SlIjtldXBIs
+* Presentation: https://github.com/pseudozach/lnsovbridge/blob/main/LNSOVBridge.pdf
+* RSK -> LN demo: https://www.youtube.com/watch?v=fMtGL8A4Ed8
+* SOV -> LN demo: https://www.youtube.com/watch?v=SlIjtldXBIs
 
 # Boltz
 
