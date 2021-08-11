@@ -4,7 +4,8 @@ import { ContractTransaction } from 'ethers';
 import { getHexBuffer } from '../../../Utils';
 import BuilderComponents from '../../BuilderComponents';
 import { connectEthereum, getContracts } from '../EthereumUtils';
-import { queryERC20SwapValues, queryEtherSwapValues } from '../../../wallet/rsk/ContractUtils';
+import { queryEtherSwapValues } from '../../../wallet/rsk/ContractUtils';
+// queryERC20SwapValues
 
 export const command = 'claim <preimage> [token]';
 

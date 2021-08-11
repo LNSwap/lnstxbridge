@@ -1,0 +1,1748 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"post",
+				"postConditions"
+			],
+			[
+				"loc",
+				"lockStx"
+			],
+			[
+				"dis",
+				"disconnectCall"
+			],
+			[
+				"defa",
+				"defaultringcount"
+			],
+			[
+				"cli",
+				"clientId"
+			],
+			[
+				"all",
+				"allsubs"
+			],
+			[
+				"sub",
+				"subscriptions"
+			],
+			[
+				"mute",
+				"mutebutton"
+			],
+			[
+				"rppac",
+				"rppacketend"
+			],
+			[
+				"rppa",
+				"rppacket"
+			],
+			[
+				"rppacket",
+				"rppacketid"
+			],
+			[
+				"res",
+				"result"
+			],
+			[
+				"me",
+				"messagejson"
+			],
+			[
+				"call",
+				"callhistory"
+			],
+			[
+				"inc",
+				"incomingcalls"
+			],
+			[
+				"my",
+				"mypubkey"
+			],
+			[
+				"cen",
+				"centertext"
+			],
+			[
+				"subsc",
+				"subscription"
+			],
+			[
+				"data",
+				"datatosignal"
+			],
+			[
+				"app",
+				"applicationServerKey"
+			],
+			[
+				"mes",
+				"message"
+			],
+			[
+				"from",
+				"fromPubkey"
+			],
+			[
+				"atta",
+				"attachMedia"
+			],
+			[
+				"get",
+				"getElementById"
+			],
+			[
+				"sign",
+				"signaldata"
+			],
+			[
+				"check",
+				"checkSwapIsLocked"
+			],
+			[
+				"string",
+				"string-ascii"
+			],
+			[
+				"order",
+				"orderId"
+			],
+			[
+				"refun",
+				"refundAddress"
+			],
+			[
+				"claim",
+				"claimAddress"
+			],
+			[
+				"handleC",
+				"handleCountryChange"
+			],
+			[
+				"setSele",
+				"setSelectedService"
+			],
+			[
+				"service",
+				"serviceOptions"
+			],
+			[
+				"active",
+				"activeStep"
+			],
+			[
+				"selec",
+				"selectedService"
+			],
+			[
+				"serv",
+				"serviceOptions"
+			],
+			[
+				"marg",
+				"margin\tproperty"
+			],
+			[
+				"str",
+				"string"
+			],
+			[
+				"signed",
+				"signedMessageDER"
+			],
+			[
+				"link",
+				"linkingKeyPub"
+			],
+			[
+				"sc",
+				"secp256k1"
+			],
+			[
+				"limit",
+				"smsLimiter"
+			],
+			[
+				"scan",
+				"scanforwallets"
+			],
+			[
+				"contrac",
+				"contractaddress"
+			],
+			[
+				"th",
+				"thisthing"
+			],
+			[
+				"acti",
+				"activeNetworkStr"
+			],
+			[
+				"acto",
+				"activeNetworkStr"
+			],
+			[
+				"hover",
+				"hoverlistener"
+			],
+			[
+				"priva",
+				"privateChannel"
+			],
+			[
+				"lnur",
+				"lnurlChannelSuccess"
+			],
+			[
+				"chann",
+				"lnurlChannelSuccess"
+			],
+			[
+				"js",
+				"jsontoreturn"
+			],
+			[
+				"connec",
+				"connectingToPeer"
+			],
+			[
+				"errorMs",
+				"errorMsgPeer"
+			],
+			[
+				"local",
+				"localnodeid"
+			],
+			[
+				"enc",
+				"encodetest"
+			],
+			[
+				"Chann",
+				"ChannelsStore"
+			],
+			[
+				"is",
+				"isdevicemobile"
+			],
+			[
+				"tex",
+				"textstroke2"
+			],
+			[
+				"i",
+				"important"
+			],
+			[
+				"bo",
+				"box3"
+			],
+			[
+				"cout",
+				"countercb"
+			],
+			[
+				"game",
+				"gamename"
+			],
+			[
+				"type",
+				"typethings"
+			],
+			[
+				"strings",
+				"stringsarr"
+			],
+			[
+				"snap",
+				"snapshot"
+			],
+			[
+				"body",
+				"bodyjson"
+			],
+			[
+				"wri",
+				"writeChargeData"
+			],
+			[
+				"resolve",
+				"resolveTime"
+			],
+			[
+				"text",
+				"texttoprint"
+			],
+			[
+				"Pro",
+				"Production"
+			],
+			[
+				"acces",
+				"accessToken"
+			],
+			[
+				"attac",
+				"attackLimiter"
+			],
+			[
+				"deploy",
+				"deployContract"
+			],
+			[
+				"isLo",
+				"isLoadingResolver"
+			],
+			[
+				"resolver",
+				"resolvercode"
+			],
+			[
+				"user",
+				"userinfoobj"
+			],
+			[
+				"publ",
+				"publicKey"
+			],
+			[
+				"resol",
+				"resolvetype"
+			],
+			[
+				"thr",
+				"thresholdVisible"
+			],
+			[
+				"market",
+				"marketobj"
+			],
+			[
+				"mark",
+				"marketobj"
+			],
+			[
+				"expl",
+				"explorerTransactionUrl"
+			],
+			[
+				"expo",
+				"explorer"
+			],
+			[
+				"unix",
+				"unixtime"
+			],
+			[
+				"on",
+				"onAccount"
+			],
+			[
+				"callre",
+				"callResult"
+			],
+			[
+				"func",
+				"function"
+			],
+			[
+				"false",
+				"falseCV"
+			],
+			[
+				"side",
+				"sideobj"
+			],
+			[
+				"tru",
+				"trueCV"
+			],
+			[
+				"join",
+				"joinMarket"
+			],
+			[
+				"funct",
+				"functionArgs"
+			],
+			[
+				"err",
+				"error"
+			],
+			[
+				"di",
+				"div\tTag"
+			],
+			[
+				"crop",
+				"cropregion"
+			],
+			[
+				"this",
+				"thisthing"
+			],
+			[
+				"foun",
+				"foundit"
+			],
+			[
+				"pos",
+				"positionobj"
+			],
+			[
+				"contr",
+				"contractname"
+			],
+			[
+				"pub",
+				"publicKey"
+			],
+			[
+				"cha",
+				"channelarr"
+			],
+			[
+				"enty",
+				"entrymerchant"
+			],
+			[
+				"s4l",
+				"s4ltaskcleanup"
+			],
+			[
+				"full",
+				"fullparserstr"
+			],
+			[
+				"curr",
+				"currtype"
+			],
+			[
+				"typ",
+				"typestr"
+			],
+			[
+				"cur",
+				"currentindex"
+			],
+			[
+				"inpu",
+				"inputbytearray"
+			],
+			[
+				"base",
+				"basedecoded"
+			],
+			[
+				"op",
+				"option\tTag"
+			],
+			[
+				"cate",
+				"category"
+			],
+			[
+				"up",
+				"updateThings"
+			],
+			[
+				"dapp",
+				"dappsref\tlet"
+			],
+			[
+				"tran",
+				"transfer"
+			],
+			[
+				"prog",
+				"programId"
+			],
+			[
+				"add",
+				"addVotes\tconst"
+			],
+			[
+				"con",
+				"connection\tconst"
+			],
+			[
+				"singl",
+				"singleGossip\tstring"
+			],
+			[
+				"Tran",
+				"Transaction\talias"
+			],
+			[
+				"useSend",
+				"useSendTransaction\tfunction"
+			],
+			[
+				"error",
+				"error_log"
+			],
+			[
+				"payment",
+				"payment_callback"
+			],
+			[
+				"api",
+				"api_url"
+			],
+			[
+				"Tes",
+				"TeslaCoil"
+			],
+			[
+				"back",
+				"background-color\tproperty"
+			],
+			[
+				"decode",
+				"decodeoutput"
+			],
+			[
+				"remo",
+				"remoteUri2"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/Users/pseudozach/Documents/aqueous-fjord-19834/index.js",
+			"settings":
+			{
+				"buffer_size": 778134,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "contracts/stxswap_v2.clar",
+			"settings":
+			{
+				"buffer_size": 7128,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "README.md",
+			"settings":
+			{
+				"buffer_size": 487,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "docker/stacks/boltz.conf",
+			"settings":
+			{
+				"buffer_size": 3313,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "# [[pairs]]"
+			}
+		},
+		{
+			"file": "contracts/tests.clar",
+			"settings":
+			{
+				"buffer_size": 1429,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "# START - PREP"
+			}
+		},
+		{
+			"file": "/Users/pseudozach/Documents/stxpredict/contracts/predictionmarket_v5.clar",
+			"settings":
+			{
+				"buffer_size": 7110,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "contracts/stxswap_v1_clarinet.clar",
+			"settings":
+			{
+				"buffer_size": 5425,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "(define-map swaps {hash: (buff 32)} {locked: bool}"
+			}
+		},
+		{
+			"file": "/Users/pseudozach/Documents/lnstxbridge-frontend/src/components/form2.vue",
+			"settings":
+			{
+				"buffer_size": 31958,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/swap/RskNursery.ts",
+			"settings":
+			{
+				"buffer_size": 12884,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/wallet/rsk/RskManager.ts",
+			"settings":
+			{
+				"buffer_size": 7101,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/wallet/rsk/EthereumTransactionTracker.ts",
+			"settings":
+			{
+				"buffer_size": 1794,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/wallet/providers/CoreWalletProvider.ts",
+			"settings":
+			{
+				"buffer_size": 3128,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "docker/stacks/mocknet.toml",
+			"settings":
+			{
+				"buffer_size": 2530,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "[node]"
+			}
+		},
+		{
+			"file": "package.json",
+			"settings":
+			{
+				"buffer_size": 4915,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/db/KeyRepository.ts",
+			"settings":
+			{
+				"buffer_size": 867,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"previ",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"prett",
+				"Pretty JSON: Format (Pretty Print) JSON"
+			],
+			[
+				"prev",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"json",
+				"Pretty JSON: Validate"
+			],
+			[
+				"preview",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"prefere",
+				"Preferences: Settings"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"lsp",
+				"Preferences: LSP Settings"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"mar",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"packages",
+				"Package Control: Disable Package"
+			],
+			[
+				"typesc",
+				"Set Syntax: TypeScript"
+			],
+			[
+				"mark",
+				"Markdown Preview: Preview in Browser"
+			],
+			[
+				"pretty java",
+				"Pretty JSON: Validate"
+			],
+			[
+				"install pac",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/pseudozach/Documents/lnstxbridge",
+		"/Users/pseudozach/Documents/lnstxbridge/docker",
+		"/Users/pseudozach/Documents/lnstxbridge/docker/stacks",
+		"/Users/pseudozach/Documents/lnstxbridge/lib",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/chain",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/consts",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/data",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/db",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/grpc",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/service",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/swap",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/wallet",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/wallet/providers",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/wallet/rsk"
+	],
+	"file_history":
+	[
+		"/Users/pseudozach/Documents/nodetest/encodetest.js",
+		"/Users/pseudozach/Documents/notes/stacksnotes.txt",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/chain/ChainClient.ts",
+		"/Users/pseudozach/Documents/lnstxbridge/lib/chain/MempoolSpace.ts",
+		"/Users/pseudozach/Documents/lnstxbridge/contracts/stxswap_v1.clar",
+		"/Users/pseudozach/Documents/lnstxbridge-frontend/src/components/table.vue",
+		"/Users/pseudozach/Documents/nodetest/lnurltest.js",
+		"/Users/pseudozach/Documents/nodetest/lnurlauthtest.js",
+		"/Users/pseudozach/Documents/nodetest/qrcodetest.js",
+		"/Users/pseudozach/Documents/backups/lndsigresults",
+		"/Users/pseudozach/Documents/zeus/backends/LND.ts",
+		"/Users/pseudozach/Documents/zeus/backends/CLightningREST.ts",
+		"/Users/pseudozach/Documents/zeus/backends/Eclair.ts",
+		"/Users/pseudozach/Documents/zeus/backends/LndHub.ts",
+		"/Users/pseudozach/Documents/zeus/backends/Spark.ts",
+		"/Users/pseudozach/Documents/zeus/utils/RESTUtils.ts",
+		"/Users/pseudozach/Documents/zeus/stores/MessageSignStore.ts",
+		"/Users/pseudozach/Documents/zeus/android/build.gradle",
+		"/Users/pseudozach/Documents/zeus/android/app/src/main/AndroidManifest.xml",
+		"/Users/pseudozach/Documents/stxpredict/src/components/form2.vue",
+		"/Users/pseudozach/Documents/redphone/.gitignore",
+		"/Users/pseudozach/Documents/kriptode.com/receivesms/recsms.js",
+		"/Users/pseudozach/Documents/kriptode.com/index.html",
+		"/Users/pseudozach/Documents/kriptode.com/receivesms/index.html",
+		"/Users/pseudozach/Documents/stxpredict/README.md",
+		"/Users/pseudozach/Documents/stxpredict/contracts/tests.clar",
+		"/Users/pseudozach/Documents/lnstxbridge/contracts/stxswap_v1_claritytools.clar",
+		"/Users/pseudozach/Documents/redphone/README.md",
+		"/Users/pseudozach/Documents/redphone/public/redphone.html",
+		"/Users/pseudozach/Documents/redphone/index.js",
+		"/Users/pseudozach/Documents/impervious/bob_config.yml",
+		"/Users/pseudozach/Documents/impervious/alice_config.yml",
+		"/Users/pseudozach/Documents/redphone/public/worker.js",
+		"/Users/pseudozach/Documents/redphone/public/client.js",
+		"/Users/pseudozach/Documents/kriptode.com/interviews/index.html",
+		"/Users/pseudozach/Documents/redphone/8888db.stormdb",
+		"/Users/pseudozach/Documents/redphone/8889db.stormdb",
+		"/Users/pseudozach/Documents/redphone/public/soundmeter.js",
+		"/Users/pseudozach/Documents/redphone/db.stormdb",
+		"/Users/pseudozach/Documents/kriptode.com/battoln/index.html",
+		"/Users/pseudozach/Documents/redphone/package.json",
+		"/Users/pseudozach/Documents/redphone/redphone.js",
+		"/Users/pseudozach/Documents/sinyal/index.html",
+		"/Users/pseudozach/Documents/nodetest/akismettest.js",
+		"/Users/pseudozach/Documents/kriptode.com/brickbreak/brickbreak.js",
+		"/Users/pseudozach/Documents/kriptode.com/lhvoucher/voucher.js",
+		"/Users/pseudozach/Documents/sinyal/redphone.js",
+		"/Users/pseudozach/Documents/kriptode.com/lhvoucher/index.html",
+		"/Users/pseudozach/Documents/nodetest/ecdsatest.js",
+		"/Users/pseudozach/Documents/lnstxbridge/.gitignore",
+		"/Users/pseudozach/Documents/sms4sats/src/components/ReceivePanel.js",
+		"/Users/pseudozach/Documents/sms4sats/src/components/Footer.js",
+		"/Users/pseudozach/Documents/sms4sats/src/components/SendPanel.js",
+		"/Users/pseudozach/Documents/sms4sats/src/config/services.js",
+		"/Users/pseudozach/Documents/nodetest/smsactivatetest.js",
+		"/Users/pseudozach/Documents/sms4sats/pages/_app.js",
+		"/Users/pseudozach/Documents/sms4sats/next.config.js",
+		"/Users/pseudozach/Documents/sms4sats/pages/index.js",
+		"/Users/pseudozach/Documents/nodetest/downloadtest.js",
+		"/Users/pseudozach/Documents/notes/zeusnotes.txt",
+		"/Users/pseudozach/Documents/zeus/stores/TransactionsStore.ts",
+		"/Users/pseudozach/Documents/zeus/.gitignore",
+		"/Users/pseudozach/Documents/zeus/views/LnurlAuth.tsx",
+		"/Users/pseudozach/Documents/nodetest/sendpulsetest.js",
+		"/Users/pseudozach/Documents/sms4sats/README.md",
+		"/Users/pseudozach/Documents/sms4sats/src/components/About.js",
+		"/Users/pseudozach/Documents/sms4sats/src/components/Hero.js",
+		"/Users/pseudozach/Documents/sms4sats/src/components/Panels.js",
+		"/Users/pseudozach/Documents/sms4sats/src/config/rebase.js",
+		"/Users/pseudozach/Documents/sms4sats/src/config/firebase.js",
+		"/Users/pseudozach/Documents/kriptode.com/lnhunt/index.html",
+		"/Users/pseudozach/Documents/sms4sats/.env",
+		"/Users/pseudozach/Documents/sms4sats/.gitignore",
+		"/Users/pseudozach/Documents/sms4sats/public/assets/styles/style.css",
+		"/Users/pseudozach/Documents/sms4sats/package.json",
+		"/Users/pseudozach/Documents/sms4sats/src/components/AppBar.js",
+		"/Users/pseudozach/Documents/sms4sats/src/config/Constants.js",
+		"/Users/pseudozach/Documents/nodetest/iapsingleuserbalance.js",
+		"/Users/pseudozach/Documents/aeppstore/README.md",
+		"/Users/pseudozach/Documents/aeppstore/.gitignore",
+		"/Users/pseudozach/Documents/dapp-scaffold/src/lib/firebase.js",
+		"/Users/pseudozach/Documents/sms4sats/.env.development",
+		"/Users/pseudozach/Documents/stxpredict/.env",
+		"/Users/pseudozach/Documents/cl2021/.env.example",
+		"/Users/pseudozach/Documents/bestbitcoinrewards/.env",
+		"/Users/pseudozach/Documents/dapp-scaffold/.env",
+		"/Users/pseudozach/Documents/sms4sats/LICENSE",
+		"/Users/pseudozach/Documents/sms4sats/index.html",
+		"/Users/pseudozach/Documents/aeppstore/contracts/aeppstore_v1.aes",
+		"/Users/pseudozach/Documents/aeppstore/src/App.vue",
+		"/Users/pseudozach/Documents/aeppstore/src/components/aesignin.vue",
+		"/Users/pseudozach/Documents/aeppstore/.env",
+		"/Users/pseudozach/Documents/aeppstore/src/eventbus.js",
+		"/Users/pseudozach/Documents/zeus/views/AddressQRScanner.tsx",
+		"/Users/pseudozach/Documents/zeus/utils/handleAnything.ts",
+		"/Users/pseudozach/Documents/zeus/App.tsx",
+		"/Users/pseudozach/Documents/zeus/Navigation.ts",
+		"/Users/pseudozach/Documents/nodetest/secp256k1test.mjs",
+		"/Users/pseudozach/Documents/zeus/package.json",
+		"/Users/pseudozach/Documents/zeus/utils/Base64Utils.ts",
+		"/Users/pseudozach/Documents/zeus/views/Settings/SignMessage.tsx",
+		"/Users/pseudozach/Documents/zeus/locales/en.json",
+		"/Users/pseudozach/Documents/zeus/stores/Stores.ts",
+		"/Users/pseudozach/Documents/zeus/stores/LnurlPayStore.ts",
+		"/Users/pseudozach/Documents/zeus/android/app/build.gradle",
+		"/Users/pseudozach/Documents/nodetest/secp256k1test.js",
+		"/Users/pseudozach/Documents/lnsovbridge/README.md",
+		"/Users/pseudozach/Documents/zeus/utils/PrivacyUtils.ts",
+		"/Users/pseudozach/Documents/aeppstore/src/components/card.vue",
+		"/Users/pseudozach/Documents/aeppstore/src/components/appbar.vue",
+		"/Users/pseudozach/Documents/aeppstore/src/components/form2.vue",
+		"/Users/pseudozach/Documents/aeppstore/src/components/vuetify.js",
+		"/Users/pseudozach/Documents/aeppstore/src/main.js",
+		"/Users/pseudozach/Documents/aeppstore/public/index.html",
+		"/Users/pseudozach/Documents/kriptode.com/interviews/add.html",
+		"/Users/pseudozach/Documents/zeus/docs/Bounties.md",
+		"/Users/pseudozach/Documents/zeus/README.md",
+		"/Users/pseudozach/Documents/kriptode.com/cgiv.html",
+		"/Users/pseudozach/Documents/kriptode.com/backgammon/index.html",
+		"/Users/pseudozach/Documents/aeppstore/babel.config.js",
+		"/Users/pseudozach/Documents/nodetest/gplaytest.js",
+		"/Users/pseudozach/Documents/stxpredict/contracts/oracle_v5.clar",
+		"/Users/pseudozach/Documents/stxpredict/contracts/predictionmarket_v5.clar",
+		"/Users/pseudozach/Documents/kriptode.com/iapdashboard.html",
+		"/Users/pseudozach/Documents/aepredict/src/components/form2.vue",
+		"/Users/pseudozach/Documents/aepredict/src/components/aesignin.vue",
+		"/Users/pseudozach/Documents/zeus/views/LnurlChannel.tsx",
+		"/Users/pseudozach/Documents/zeus/components/DropdownSetting.tsx"
+	],
+	"find":
+	{
+		"height": 39.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+			"/Users/pseudozach/Documents/kriptode.com",
+			"/Users/pseudozach/Documents/nodetest",
+			"/Users/pseudozach/Documents/stxpredict",
+			"/Users/pseudozach/Documents/nodetest",
+			"/Users/pseudozach/Documents/to-satoshi",
+			"/Users/pseudozach/Documents/lisk-sdk-examples",
+			"/Users/pseudozach/Documents/takeside",
+			"/Users/pseudozach/Documents/nodetest/",
+			"/Users/pseudozach/Documents/stxpredict/src/components",
+			"/Users/pseudozach/Documents/stxpredict",
+			"/Users/pseudozach/Documents/takeside",
+			"/Users/pseudozach/Documents/",
+			"/Users/pseudozach/Documents/stxpredict",
+			"/Users/pseudozach/Documents/gorucu",
+			"/Users/pseudozach/Documents/nodetest",
+			"/Users/pseudozach/Documents/bestbitcoinrewards",
+			"/Users/pseudozach/Documents/dapp-scaffold",
+			"/Users/pseudozach/Documents/teslacoil",
+			"/Users/pseudozach/Documents/SocialApp",
+			"/Users/pseudozach/Documents/kriptode.com",
+			"/Users/pseudozach/Documents/SocialApp",
+			"/Users/pseudozach/Documents/lnbits/lnbits/extensions/",
+			"/Users/pseudozach/Documents/lnbits/lnbits/extensions/captcha",
+			"/Users/pseudozach/Documents/",
+			"/Users/pseudozach/Documents/karikaturfun/themes",
+			"",
+			"site-info"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"keyRepository",
+			"providers",
+			"getKeyProviders",
+			"derivationPath",
+			"listenBlocks",
+			"wei",
+			"ether",
+			"firebase",
+			"lnendpo",
+			"lnendpoint",
+			"'/",
+			"bignum",
+			"makeStandardSTXPostCondition",
+			"postConditionAddress",
+			"# ",
+			"///",
+			"sending",
+			"connect",
+			"p.signal",
+			"datatosignal",
+			"loadingans",
+			"destroy",
+			"cookie",
+			"null",
+			"initializesp",
+			"callnode",
+			"callhisto",
+			"remove()",
+			"callconnected",
+			"mutebutt",
+			"empty",
+			"toggleMic",
+			"mutebutton",
+			"video",
+			"createScriptProcessor",
+			"video",
+			"activecall",
+			"192.16",
+			"localhost",
+			"adding active",
+			"TODO",
+			"initializesp",
+			"connect",
+			"db.get(\"callhistory\")",
+			"db.get",
+			"index.html",
+			"DB.GET",
+			"callpubkey",
+			"bolt11.min.js",
+			"activecall",
+			"suspici",
+			"akismet",
+			"addBalance",
+			"default-to",
+			"map-get?",
+			"principal",
+			"serviceoption",
+			"country not found",
+			"Russian",
+			"countrymap",
+			"handlereset",
+			"getSMSActivateNumber",
+			"getSMSActivateNumber with",
+			"173",
+			"switzer",
+			"///",
+			"map-set",
+			"///",
+			"getSMSActivateNumber",
+			"getsmsactivatenumber with",
+			"sendsmswithsp(",
+			"smssend",
+			"smsactivate",
+			"russia",
+			"denmark",
+			"england",
+			"united king",
+			"getSMSActivategetNumbersStatus",
+			"handleCountryChange",
+			"serviceoptions",
+			"getRootProps",
+			"vk.com",
+			"serviceOptions",
+			"select serv",
+			"fullWidth",
+			"smsactivatescmap",
+			"getSMSActivategetNumbersStatus",
+			"getsmsac",
+			"request",
+			"sendsmswithsp",
+			"sendsmsorder",
+			"sendsmswithsp",
+			"number",
+			"text",
+			"textfield",
+			"text",
+			"phone",
+			"handlechange",
+			"sendsmswithsp",
+			"smsactiva",
+			"function ",
+			"function (",
+			"plivo",
+			"freetextsms",
+			" sendfreetext",
+			"sendfreetext",
+			"freetextsms",
+			"qrcode",
+			"isGettingNumber",
+			"lockoutlined",
+			"activestep",
+			"div",
+			"<div",
+			"mui",
+			"getSMSActivateNumber",
+			"sms-activate",
+			"function updateChargesms",
+			"gamename ==",
+			"handlechange",
+			"handleNext",
+			"\"av\"",
+			"\"ym\"",
+			"\"ya\"",
+			"\"fx\"",
+			"\"ot\"",
+			"handleNext",
+			"activestep",
+			"value"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"mstx",
+			"stx",
+			"",
+			";;",
+			"\"value\"",
+			"\"text\"",
+			"\"key\"",
+			".png\"}},",
+			"0.png",
+			"ico/",
+			":\"https",
+			"\",",
+			":\"",
+			"\",",
+			":\"",
+			"MessageSignStore",
+			"signatureSuccess",
+			"errorMsgAuth",
+			"Video_Footage%29.webm.360p.vp9.webm\" oncontextmenu=\"return false;\"",
+			"<a href=\"https://twitter.com/aubreystrobel\" target=\"_blank\">AUBREY STROBEL</a>",
+			"",
+			"style=\"width: 100%;\"",
+			"",
+			"ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ",
+			"http://statichost.tk/",
+			"\",\"updatedAt\":\"2021-03-15\"}",
+			"console.log",
+			"teslacoilUrl",
+			"TESLACOIL_URL",
+			"TeslaCoil",
+			"teslacoil.io",
+			"teslacoil",
+			"TeslaCoil",
+			"teslacoil_order_id",
+			"special-color",
+			"icons8-long-position-96",
+			"captchaStyleAdded",
+			"-captcha-",
+			"show-modal-captcha",
+			"close-button-captcha",
+			"ctippinStyleAdded",
+			"captcha",
+			"Captcha",
+			"captcha",
+			"announcement 3",
+			"no problem adding",
+			"SatMine",
+			"NANO",
+			"#ea6d03",
+			"",
+			"input type='checkbox' class='uk-checkbox' ",
+			"input type='button' class='uk-button uk-button-primary' ",
+			"input type=\"button\" class=\"uk-button uk-button-primary\" ",
+			"input type=\"text\" class=\"uk-input\" ",
+			"web_hi_res_512.webp",
+			"Rewards to Bitcoin",
+			"file"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 2,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/Users/pseudozach/Documents/aqueous-fjord-19834/index.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 778134,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								352018,
+								352018
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": "<",
+									"selector": "text.html"
+								},
+								{
+									"characters": ".\"'/@<",
+									"selector": "source.js"
+								}
+							],
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"lsp-typescript": "javascript"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true,
+							"typescript_plugin_format_options":
+							{
+								"convertTabsToSpaces": true,
+								"indentSize": 2,
+								"tabSize": 2
+							},
+							"use_tab_stops": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 100134.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 11,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "contracts/stxswap_v2.clar",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7128,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								7128
+							]
+						],
+						"settings":
+						{
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"clarity": "clarity"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Lisp/Lisp.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "README.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 487,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								487,
+								487
+							]
+						],
+						"settings":
+						{
+							"parser": "github",
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax",
+							"target": "disk"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "docker/stacks/boltz.conf",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3313,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2395,
+								2395
+							]
+						],
+						"settings":
+						{
+							"auto_name": "# [[pairs]]",
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "contracts/tests.clar",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1429,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								260,
+								326
+							]
+						],
+						"settings":
+						{
+							"auto_name": "# START - PREP",
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"clarity": "clarity"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Lisp/Lisp.sublime-syntax"
+						},
+						"translation.x": 454.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 12,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "/Users/pseudozach/Documents/stxpredict/contracts/predictionmarket_v5.clar",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7110,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3466,
+								3479
+							]
+						],
+						"settings":
+						{
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"clarity": "clarity"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Lisp/Lisp.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 14,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "contracts/stxswap_v1_clarinet.clar",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5425,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1390,
+								1390
+							]
+						],
+						"settings":
+						{
+							"auto_name": "(define-map swaps {hash: (buff 32)} {locked: bool}",
+							"lsp_active": true,
+							"lsp_language":
+							{
+								"clarity": "clarity"
+							},
+							"show_definitions": false,
+							"syntax": "Packages/Lisp/Lisp.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 13,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "/Users/pseudozach/Documents/lnstxbridge-frontend/src/components/form2.vue",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 31958,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								20391,
+								20391
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Vuejs Complete Package/vue.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 9289.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "lib/swap/RskNursery.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 12884,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								680,
+								690
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript Syntax/TypeScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 778.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "lib/wallet/rsk/RskManager.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7101,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3986,
+								4012
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript Syntax/TypeScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "lib/wallet/rsk/EthereumTransactionTracker.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1794,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1114,
+								1114
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript Syntax/TypeScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "lib/wallet/providers/CoreWalletProvider.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3128,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript Syntax/TypeScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 541.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "docker/stacks/mocknet.toml",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2530,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1301,
+								1301
+							]
+						],
+						"settings":
+						{
+							"auto_name": "[node]",
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 13,
+					"file": "package.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4915,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1516,
+								1593
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 14,
+					"file": "lib/db/KeyRepository.ts",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 867,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/TypeScript Syntax/TypeScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 38.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.diagnostics":
+	{
+		"height": 0.0
+	},
+	"output.doc":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.language servers":
+	{
+		"height": 0.0
+	},
+	"output.markdown":
+	{
+		"height": 120.0
+	},
+	"pinned_build_system": "",
+	"project": "/Users/pseudozach/Documents/1.sublime-project",
+	"replace":
+	{
+		"height": 70.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 392.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 840.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 278.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

@@ -20,7 +20,8 @@
     "docker:stop": "docker kill regtest && docker rm regtest && docker kill geth && docker rm geth",
     "rsk:geth": "java -cp /home/z/Downloads/rskj-core-2.2.0-PAPYRUS-all.jar -Drpc.providers.web.ws.enabled=true co.rsk.Start --regtest",
     "rsk:fund": "./bin/boltz-rsk send 1000000000000 && ./bin/boltz-rsk send 1000000000000 --token",
-    "stx:mocknet": "npm i -g typescript && npm install -g @stacks/cli @blockstack/clarity-cli && stacks-node start --config=docker/stacks/mocknet.toml",
+    "stx:mocknet": "npm i -g typescript && npm install -g @stacks/cli @blockstack/clarity-cli && docker/stacks/macos-x64/stacks-node start --config=docker/stacks/mocknet.toml",
+    "docker:stacks": "docker run -p 3999:3999 blockstack/stacks-blockchain-api-standalone mocknet",
     "test": "npm run test:unit && npm run docker:start && npm run test:int && npm run docker:stop",
     "test:nodocker": "npm run test:unit && npm run test:int",
     "test:unit": "jest test/unit",
@@ -37,7 +38,8 @@
   },
   "cross-os": {
     "postcompile": {
-      "linux": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/lib/proto"
+      "linux": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/lib/proto",
+      "darwin": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/lib/proto"
     },
     "proto": {
       "linux": "./node_modules/grpc-tools/bin/protoc --js_out='import_style=commonjs,binary:lib/proto' --ts_out='lib/proto' --grpc_out='lib/proto' --plugin='protoc-gen-grpc=node_modules/.bin/grpc_tools_node_protoc_plugin' --plugin='protoc-gen-ts=node_modules/grpc_tools_node_protoc_ts/bin/protoc-gen-ts' -I='proto' proto/*.proto proto/**/*.proto"
