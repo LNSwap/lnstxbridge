@@ -122,7 +122,7 @@ class RskManager {
     await transactionTracker.init();
 
     this.provider.on('block', async (blockNumber: number) => {
-      this.logger.silly(`Got new Ethereum block: ${ blockNumber }`);
+      this.logger.silly(`Got new rsk block: ${ blockNumber }`);
 
       await Promise.all([
         chainTipRepository.updateTip(chainTip, blockNumber),
