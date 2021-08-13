@@ -102,6 +102,7 @@ class Controller {
             // If the transaction can't be queried with the service it's either a transaction on the Ethereum network,
             // or something is terribly wrong
             if (error.message !== ServiceErrors.NOT_SUPPORTED_BY_SYMBOL(chainCurrency).message) {
+              console.log("controller.ts NOT_SUPPORTED_BY_SYMBOL");
               throw error;
             }
 

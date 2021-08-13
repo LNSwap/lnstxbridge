@@ -18,6 +18,7 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
+import { getFee, getInfo } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
@@ -85,6 +86,7 @@ class Service {
     this.pairRepository = new PairRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
 
+    console.log("service.ts 88")
     this.rateProvider = new RateProvider(
       this.logger,
       config.rates.interval,
@@ -155,11 +157,13 @@ class Service {
    * Gets general information about this Boltz instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<GetInfoResponse> => {
+    this.logger.error("service.160 STARTED")
     const response = new GetInfoResponse();
     const map = response.getChainsMap();
 
     response.setVersion(getVersion());
 
+    this.logger.error("service.165 - " + JSON.stringify(this.currencies))
     for (const [symbol, currency] of this.currencies) {
       const chain = new ChainInfo();
       const lnd = new LndInfo();
@@ -186,6 +190,10 @@ class Service {
         } catch (error) {
           chain.setError(formatError(error));
         }
+      } else if (currency.stacksClient) {
+        this.logger.error("service.ts 192 TODO");
+        const blockNumber = await getInfo();
+        this.logger.error("blockNumber: " + blockNumber);
       }
 
       if (currency.lndClient) {
@@ -370,6 +378,7 @@ class Service {
     const currency = this.getCurrency(symbol);
 
     if (currency.chainClient === undefined) {
+      console.log("service.ts NOT_SUPPORTED_BY_SYMBOL");
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
     }
 
@@ -404,6 +413,7 @@ class Service {
     const currency = this.getCurrency(chainCurrency);
 
     if (currency.chainClient === undefined) {
+      console.log("service.ts 408 NOT_SUPPORTED_BY_SYMBOL")
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(currency.symbol);
     }
 
@@ -463,18 +473,29 @@ class Service {
     const numBlocks = blocks === undefined ? 2 : blocks;
 
     const estimateFee = async (currency: Currency): Promise<number> => {
+      // console.log("service.ts 468 ", currency);
       if (currency.chainClient) {
         return currency.chainClient.estimateFee(numBlocks);
       } else if (currency.provider) {
         const gasPrice = await getGasPrice(currency.provider);
-
         return gasPrice.div(gweiDecimals).toNumber();
+      } else if (currency.stacksClient) {
+        const fee = await getFee();
+        // const test = await getTest();
+        // console.log("fee, test ", fee, test)
+        // console.log("NEED TO GET GAS FEE from STACKS CLIENT!!!", fee)
+        return fee;
+        // const gasPrice = await getGasPrice(currency.provider);
+        // return gasPrice.div(gweiDecimals).toNumber();
+
       } else {
+        console.log("service.ts 475 NOT_SUPPORTED_BY_SYMBOL")
         throw Errors.NOT_SUPPORTED_BY_SYMBOL(currency.symbol);
       }
     };
 
     if (symbol !== undefined) {
+      // console.log("service.ts 489 ", symbol)
       const currency = this.getCurrency(symbol);
       const isERC20 = currency.type === CurrencyType.ERC20;
       // const isRBTC = currency.type === CurrencyType.Rbtc;
@@ -487,17 +508,19 @@ class Service {
       // this.logger.error("getFeeEstimation: " + currency.symbol + ", isERC20" + isERC20 + ", isRBTC" +isRBTC + ", map.set" + (isERC20 ? 'ETH' : symbol));
 
       // already works for rbtc
+      // console.log("service.ts 502 ", isERC20 ? 'ETH' : symbol, currency)
       map.set(isERC20 ? 'ETH' : symbol, await estimateFee(currency));
     } else {
       for (const [symbol, currency] of this.currencies) {
         if (currency.type === CurrencyType.ERC20) {
           if (!map.has('ETH')) {
+            console.log("service.ts 507 ", currency)
             map.set('ETH', await estimateFee(currency));
           }
 
           continue;
         }
-
+        console.log("service.ts 513 ", currency)
         map.set(symbol, await estimateFee(currency));
       }
     }
@@ -512,6 +535,7 @@ class Service {
     const currency = this.getCurrency(symbol);
 
     if (currency.chainClient === undefined) {
+      console.log("service.ts 518 NOT_SUPPORTED_BY_SYMBOL")
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
     }
 

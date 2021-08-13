@@ -95,5 +95,6 @@ export enum CurrencyType {
   BitcoinLike,
   Ether,
   ERC20,
-  Rbtc
+  Rbtc,
+  Stx
 }

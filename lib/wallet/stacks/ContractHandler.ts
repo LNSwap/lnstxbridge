@@ -3,7 +3,7 @@ import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
 import { getHexString } from '../../Utils';
-import { getGasPrice } from './EthereumUtils';
+import { getGasPrice } from './StacksUtils';
 import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 

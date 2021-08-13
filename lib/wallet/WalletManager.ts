@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { providers } from 'ethers';
+// import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 import { Network } from 'bitcoinjs-lib';
 import { BIP32Interface, fromSeed } from 'bip32';
 import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
@@ -8,11 +9,13 @@ import Wallet from './Wallet';
 import Logger from '../Logger';
 import { splitDerivationPath } from '../Utils';
 import ChainClient from '../chain/ChainClient';
+import BaseClient from '../BaseClient';
 import LndClient from '../lightning/LndClient';
 import { CurrencyType } from '../consts/Enums';
 import KeyRepository from '../db/KeyRepository';
 import EthereumManager from './ethereum/EthereumManager';
 import RskManager from './rsk/RskManager';
+import StacksManager from './stacks/StacksManager';
 import ChainTipRepository from '../db/ChainTipRepository';
 import { KeyProviderType } from '../db/models/KeyProvider';
 import LndWalletProvider from './providers/LndWalletProvider';
@@ -43,6 +46,9 @@ type Currency = {
 
   // Needed for Ether and tokens on Ethereum
   provider?: providers.Provider;
+
+  // Needed for Stacks
+  stacksClient?: BaseClient;
 };
 
 /**
@@ -54,6 +60,7 @@ class WalletManager {
 
   public ethereumManager?: EthereumManager;
   public rskManager?: RskManager;
+  public stacksManager?: StacksManager;
 
   private readonly mnemonic: string;
   private readonly masterNode: BIP32Interface;
@@ -61,7 +68,7 @@ class WalletManager {
 
   private readonly derivationPath = 'm/0';
 
-  constructor(private logger: Logger, mnemonicPath: string, private currencies: Currency[], ethereumManager?: EthereumManager, rskManager?: RskManager) {
+  constructor(private logger: Logger, mnemonicPath: string, private currencies: Currency[], ethereumManager?: EthereumManager, rskManager?: RskManager, stacksManager?: StacksManager) {
     this.mnemonic = this.loadMnemonic(mnemonicPath);
     this.masterNode = fromSeed(mnemonicToSeedSync(this.mnemonic));
 
@@ -69,19 +76,20 @@ class WalletManager {
 
     this.ethereumManager = ethereumManager;
     this.rskManager = rskManager;
+    this.stacksManager = stacksManager;
   }
 
   /**
    * Initializes a new WalletManager with a mnemonic
    */
-  public static fromMnemonic = (logger: Logger, mnemonic: string, mnemonicPath: string, currencies: Currency[], ethereumManager?: EthereumManager, rskManager?: RskManager): WalletManager => {
+  public static fromMnemonic = (logger: Logger, mnemonic: string, mnemonicPath: string, currencies: Currency[], ethereumManager?: EthereumManager, rskManager?: RskManager, stacksManager?: StacksManager): WalletManager => {
     if (!validateMnemonic(mnemonic)) {
       throw(Errors.INVALID_MNEMONIC(mnemonic));
     }
 
     fs.writeFileSync(mnemonicPath, mnemonic);
 
-    return new WalletManager(logger, mnemonicPath, currencies, ethereumManager, rskManager);
+    return new WalletManager(logger, mnemonicPath, currencies, ethereumManager, rskManager, stacksManager);
   }
 
   public init = async (chainTipRepository: ChainTipRepository): Promise<void> => {
@@ -167,6 +175,17 @@ class WalletManager {
         this.wallets.set(symbol, rskWallet);
       }
     }
+
+    if (this.stacksManager) {
+      this.logger.error("walletmanager.179 init stacksManager inside WalletManager");
+      // this.mnemonic, chainTipRepository
+      const stacksWallets = await this.stacksManager.init(this.mnemonic, chainTipRepository);
+
+      for (const [symbol, stacksWallet] of stacksWallets) {
+        this.wallets.set(symbol, stacksWallet);
+      }
+    }
+
   }
 
   private loadMnemonic = (filename: string) => {

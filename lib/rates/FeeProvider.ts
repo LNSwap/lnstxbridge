@@ -122,6 +122,8 @@ class FeeProvider {
   }
 
   public updateMinerFees = async (chainCurrency: string): Promise<void> => {
+    // this.logger.error("feeprovider.125 chainCurrency "+ chainCurrency);
+
     const feeMap = await this.getFeeEstimation(chainCurrency);
 
     // TODO: avoid hard coding symbols
@@ -159,6 +161,23 @@ class FeeProvider {
       case 'RBTC': {
         const relativeFee = feeMap.get(chainCurrency)!;
         const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
+
+        this.minerFees.set(chainCurrency, {
+          normal: claimCost,
+          reverse: {
+            claim: claimCost,
+            lockup: this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.lockup),
+          },
+        });
+
+        break;
+      }
+
+      case 'STX': {
+        const relativeFee = feeMap.get(chainCurrency)!;
+        const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
+        // claimcost is wrong for STX but that should be OK.
+        // this.logger.error("feeprovider.179 - " + relativeFee + ", " +claimCost)
 
         this.minerFees.set(chainCurrency, {
           normal: claimCost,

@@ -2,7 +2,7 @@ import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Errors from './Errors';
 import { utils } from 'ethers';
-import { parseBuffer } from './EthereumUtils';
+import { parseBuffer } from './StacksUtils';
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 
 // TODO: what happens if the hash doesn't exist or the transaction isn't confirmed yet?

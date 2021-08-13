@@ -3,7 +3,7 @@ import { BigNumber, Event } from 'ethers';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
-import { parseBuffer } from './EthereumUtils';
+import { parseBuffer } from './StacksUtils';
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
 

@@ -20,6 +20,7 @@ import BackupScheduler from './backup/BackupScheduler';
 import ChainTipRepository from './db/ChainTipRepository';
 import EthereumManager from './wallet/ethereum/EthereumManager';
 import RskManager from './wallet/rsk/RskManager';
+import StacksManager from './wallet/stacks/StacksManager';
 import WalletManager, { Currency } from './wallet/WalletManager';
 import NotificationProvider from './notifications/NotificationProvider';
 
@@ -40,6 +41,7 @@ class Boltz {
 
   private readonly ethereumManager?: EthereumManager;
   private readonly rskManager?: RskManager;
+  private readonly stacksManager?: StacksManager;
 
   constructor(config: Arguments<any>) {
     this.config = new Config().load(config);
@@ -71,21 +73,32 @@ class Boltz {
       this.logger.warn(`Disabled Rootstock integration because: ${formatError(error)}`);
     }
 
+    try {
+      this.stacksManager = new StacksManager(
+        this.logger,
+        this.config.stacks,
+      );
+    } catch (error) {
+      this.logger.warn(`Disabled Stacks integration because: ${formatError(error)}`);
+    }
+
     this.currencies = this.parseCurrencies();
 
     const walletCurrencies = Array.from(this.currencies.values());
 
     if (fs.existsSync(this.config.mnemonicpath)) {
-      this.walletManager = new WalletManager(this.logger, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager);
+      this.logger.error("boltz.ts 90, service init with currencies "+ JSON.stringify(walletCurrencies));
+      this.walletManager = new WalletManager(this.logger, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager, this.stacksManager);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.info(`Generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager);
+      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager, this.stacksManager);
     }
 
     try {
-      this.logger.error(`new service in boltz.ts: ${this.currencies}` + JSON.stringify(this.currencies));
+      this.logger.error(`boltz.100: ${this.currencies}` + JSON.stringify(this.currencies));
+      this.logger.error("boltz.ts 100, service init with currencies "+ JSON.stringify(this.currencies));
       this.service = new Service(
         this.logger,
         this.config,
@@ -133,7 +146,7 @@ class Boltz {
 
   public start = async (): Promise<void> => {
     try {
-      this.logger.error(`start1 ` + JSON.stringify(Array.from(this.currencies)));
+      this.logger.error(`boltz 149 start1 ` + JSON.stringify(Array.from(this.currencies)) + '\n');
       await this.db.migrate(this.currencies);
       this.logger.error(`start2`);
       await this.db.init();
@@ -143,12 +156,12 @@ class Boltz {
       // Query the chain tips now to avoid them being updated after the chain clients are initialized
       const chainTips = await chainTipRepository.getChainTips();
 
-      // this.logger.error(`loop currencies`);
+      this.logger.error(`boltz.159 loop currencies\n`);
       for (const [, currency] of this.currencies) {
         
         // console.log("currency: ", currency);
         if (currency.chainClient) {
-          this.logger.error(`boltz start loop currency connectChainClient: ${currency}` + JSON.stringify(currency));
+          this.logger.error(`boltz start loop currency connectChainClient: ${currency}` + JSON.stringify(currency) + '\n');
           await this.connectChainClient(currency.chainClient, chainTipRepository);
 
           if (currency.lndClient) {
@@ -192,6 +205,15 @@ class Boltz {
           if (this.walletManager.rskManager) {
             logRescan(chainTip);
             rescanPromises.push(this.walletManager.rskManager.contractEventHandler.rescan(chainTip.height));
+          }
+        } else if (chainTip.symbol === 'STX') {
+          this.logger.error("TODO boltz 210 stacks symbol "+ this.walletManager.stacksManager)
+          if (this.walletManager.stacksManager) {
+            this.logger.error("TODO boltz 212 stacks symbol "+ this.walletManager.stacksManager)
+            logRescan(chainTip);
+            // TODO find a way to rescan if there was any contract calls from users starting with chaintip til now
+            
+            // rescanPromises.push(this.walletManager.stacksManager.contractEventHandler.rescan(chainTip.height));
           }
         } else {
           // if not ETH or RBTC
@@ -309,6 +331,19 @@ class Boltz {
           ...token,
         },
         provider: this.rskManager?.provider,
+      });
+    });
+
+    // this.logger.error("boltz.ts 333 "+ this.stacksManager?);
+    this.config.stacks.tokens.forEach((token) => {
+      result.set(token.symbol, {
+        symbol: token.symbol,
+        type: token.symbol === 'STX' ? CurrencyType.Stx : CurrencyType.ERC20,
+        limits: {
+          ...token,
+        },
+        // provider: this.stacksManager?.provider,
+        stacksClient: this.stacksManager?.stacksClient,
       });
     });
 

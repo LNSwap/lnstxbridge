@@ -1,10 +1,30 @@
 import { BigNumber, BigNumberish, providers, utils } from 'ethers';
 import { BlockWithTransactions } from '@ethersproject/abstract-provider';
+// connectWebSocketClient, 
+import { StacksApiWebSocketClient } from '@stacks/blockchain-api-client';
 import Errors from './Errors';
 import Logger from '../../Logger';
 import { formatError, stringify } from '../../Utils';
-import { RskConfig, RskProviderServiceConfig } from '../../Config';
+import { StacksConfig, RskProviderServiceConfig } from '../../Config';
 import PendingEthereumTransactionRepository from '../../db/PendingEthereumTransactionRepository';
+
+// import {
+//   Configuration,
+//   // AccountsApi,
+//   // SmartContractsApi,
+//   InfoApi,
+//   // TransactionsApi,
+//   // BlocksApi,
+//   // FaucetsApi,
+//   // BnsApi,
+//   // BurnchainApi,
+//   // FeesApi,
+//   // SearchApi,
+//   // RosettaApi,
+//   // MicroblocksApi,
+// } from '@stacks/blockchain-api-client';
+
+import { RPCClient } from '@stacks/rpc-client';
 
 enum EthProviderService {
   Infura = 'Infura',
@@ -19,6 +39,8 @@ enum EthProviderService {
 class InjectedProvider implements providers.Provider {
   public _isProvider = true;
 
+  private client!: StacksApiWebSocketClient;
+
   private providers = new Map<string, providers.WebSocketProvider>();
   private pendingEthereumTransactionRepository = new PendingEthereumTransactionRepository();
 
@@ -26,15 +48,17 @@ class InjectedProvider implements providers.Provider {
 
   private static readonly requestTimeout = 5000;
 
-  constructor(private logger: Logger, config: RskConfig) {
+  constructor(private logger: Logger, config: StacksConfig) {
     this.logger.error(`Stacks injectedprovider constructor: ` + JSON.stringify(config));
-    if (config.providerEndpoint) {
-      this.providers.set(EthProviderService.Websocket, new providers.WebSocketProvider(config.providerEndpoint));
-      // this is processed
-      this.logAddedProvider(EthProviderService.Websocket, { endpoint: config.providerEndpoint });
-    } else {
-      this.logDisabledProvider(EthProviderService.Websocket, 'no endpoint was specified');
-    }
+    // if (config.providerEndpoint) {
+      
+    //   // stacks will have blockchain-api-client
+    //   this.providers.set(EthProviderService.Websocket, new providers.WebSocketProvider(config.providerEndpoint));
+    //   // this is processed
+    //   this.logAddedProvider(EthProviderService.Websocket, { endpoint: config.providerEndpoint });
+    // } else {
+    //   this.logDisabledProvider(EthProviderService.Websocket, 'no endpoint was specified');
+    // }
 
     const addEthProvider = (name: EthProviderService, providerConfig: RskProviderServiceConfig) => {
       if (!providerConfig.apiKey) {
@@ -73,20 +97,33 @@ class InjectedProvider implements providers.Provider {
     addEthProvider(EthProviderService.Infura, config.infura);
     addEthProvider(EthProviderService.Alchemy, config.alchemy);
 
-    if (this.providers.size === 0) {
-      this.logger.error(`NO_PROVIDER_SPECIFIED: `);
-      throw Errors.NO_PROVIDER_SPECIFIED();
-    }
+    // if (this.providers.size === 0) {
+    //   this.logger.error(`NO_PROVIDER_SPECIFIED: `);
+    //   throw Errors.NO_PROVIDER_SPECIFIED();
+    // }
+    this.logger.error("injectedprovider 104, end of constructor")
   }
 
   public init = async (): Promise<void> => {
     this.logger.verbose(`Trying to connect to ${this.providers.size} Stacks providers:\n - ${Array.from(this.providers.keys()).join('\n - ')}`);
 
+    // this.logger.error("injectedprovider test!!!");
+    // this.test();
+
     const networks: providers.Network[] = [];
 
     for (const [providerName, provider] of this.providers) {
       try {
-        this.logger.error(`rsk injectedprovider getNetwork: ` + providerName + " " + JSON.stringify(provider));
+        this.logger.error(`****************stacks injectedprovider getNetwork: ` + providerName + " " + JSON.stringify(provider));
+        
+        // ws://stacks-node-api.testnet.stacks.co/
+        // this.client = await connectWebSocketClient('wss://stacks-node-api.testnet.stacks.co/');
+        // this.client.subscribeAddressTransactions("ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ", function (transactionInfo) {
+        //   console.log("ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ tx: ", transactionInfo);
+        // });
+
+        
+
         const network = await provider.getNetwork();
         this.logConnectedProvider(providerName, network);
         networks.push(network);
@@ -98,6 +135,7 @@ class InjectedProvider implements providers.Provider {
 
     const networksAreSame = networks.every((network) => network.chainId === networks[0].chainId);
 
+    this.logger.error(`****************stacks injectedprovider.138`);
     if (!networksAreSame) {
       throw Errors.UNEQUAL_PROVIDER_NETWORKS(networks);
     }
@@ -110,6 +148,26 @@ class InjectedProvider implements providers.Provider {
     for (const provider of this.providers.values()) {
       await provider.destroy();
     }
+  }
+
+  public test = async () => {
+    console.log("started TEST");
+    // let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
+    // if (env.includes('mocknet')) {
+    //   coreApiUrl = 'http://localhost:20080';
+    //   // coreApiUrl = 'https://dull-liger-41.loca.lt';
+    // } else if (env.includes('testnet')) {
+      let coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
+    // } else if (env.includes('regtest')) {
+    //   coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
+    // }
+    // const client = new InfoApi(new Configuration("stacks-node-api.testnet.stacks.co",))
+    const client = new RPCClient(coreApiUrl);
+    const address = "ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
+    const url = `${client.url}/extended/v1/address/${address}/balances`;
+    const response = await fetch(url, { credentials: 'omit' });
+    const data = await response.json();
+    console.log("injectedprovider 170 test", data);
   }
 
   /*
@@ -390,6 +448,11 @@ class InjectedProvider implements providers.Provider {
   private logDisabledProvider = (name: string, reason: string) => {
     this.logger.warn(`Disabled ${name} Web3 provider: ${reason}`);
   }
+  
+  public getClient = () => {
+    return this.client;
+  }
+
 }
 
 export default InjectedProvider;

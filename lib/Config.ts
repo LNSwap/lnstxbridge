@@ -96,6 +96,18 @@ type RskConfig = {
   tokens: TokenConfig[];
 };
 
+type StacksConfig = {
+  providerEndpoint: string;
+
+  infura: RskProviderServiceConfig;
+  alchemy: RskProviderServiceConfig;
+
+  stxSwapAddress: string;
+  erc20SwapAddress: string;
+
+  tokens: TokenConfig[];
+};
+
 type ApiConfig = {
   host: string;
   port: number;
@@ -158,6 +170,7 @@ type ConfigType = {
 
   ethereum: EthereumConfig;
   rsk: RskConfig;
+  stacks: StacksConfig;
 };
 
 class Config {
@@ -359,6 +372,25 @@ class Config {
         tokens: [],
       },
 
+      stacks: {
+        providerEndpoint: '',
+
+        infura: {
+          apiKey: '',
+          network: 'rinkeby',
+        },
+
+        alchemy: {
+          apiKey: '',
+          network: 'rinkeby',
+        },
+
+        stxSwapAddress: '',
+        erc20SwapAddress: '',
+
+        tokens: [],
+      },      
+
     };
   }
 
@@ -474,6 +506,7 @@ export {
   BackupConfig,
   EthereumConfig,
   RskConfig,
+  StacksConfig,
   CurrencyConfig,
   NotificationConfig,
   EthProviderServiceConfig,

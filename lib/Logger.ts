@@ -48,7 +48,7 @@ class Logger {
   }
 
   public error = (message: string): void => {
-    this.log('error', message);
+    this.log('error', message + '\n');
   }
 
   public warn = (message: string): void => {
@@ -60,11 +60,11 @@ class Logger {
   }
 
   public verbose = (message: string): void => {
-    this.log('verbose', message);
+    this.log('verbose', message + '\n');
   }
 
   public debug = (message: string): void => {
-    this.log('debug', message);
+    this.log('debug', message + '\n');
   }
 
   public silly = (message: string): void => {
