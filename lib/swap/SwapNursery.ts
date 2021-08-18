@@ -16,6 +16,7 @@ import LndClient from '../lightning/LndClient';
 import ChainClient from '../chain/ChainClient';
 import EthereumNursery from './EthereumNursery';
 import RskNursery from './RskNursery';
+import StacksNursery from './StacksNursery';
 import RateProvider from '../rates/RateProvider';
 import SwapRepository from '../db/SwapRepository';
 import LightningNursery from './LightningNursery';
@@ -25,6 +26,7 @@ import ChannelCreation from '../db/models/ChannelCreation';
 import ReverseSwapRepository from '../db/ReverseSwapRepository';
 import ContractHandler from '../wallet/ethereum/ContractHandler';
 import RskContractHandler from '../wallet/rsk/ContractHandler';
+import StacksContractHandler from '../wallet/stacks/ContractHandler';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import { ERC20SwapValues, EtherSwapValues } from '../consts/Types';
 import ChannelCreationRepository from '../db/ChannelCreationRepository';
@@ -44,6 +46,7 @@ import {
   getLightningCurrency,
   getRate,
   splitPairId,
+  stringify,
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 
@@ -107,6 +110,7 @@ class SwapNursery extends EventEmitter {
 
   private readonly ethereumNursery?: EthereumNursery;
   private readonly rskNursery?: RskNursery;
+  private readonly stacksNursery?: StacksNursery;
 
   // Maps
   private currencies = new Map<string, Currency>();
@@ -168,6 +172,15 @@ class SwapNursery extends EventEmitter {
       );
     }    
 
+    if (this.walletManager.stacksManager) {
+      this.stacksNursery = new StacksNursery(
+        this.logger,
+        this.walletManager,
+        this.swapRepository,
+        this.reverseSwapRepository,
+      );
+    } 
+
     this.channelNursery = new ChannelNursery(
       this.logger,
       this.swapRepository,
@@ -189,6 +202,11 @@ class SwapNursery extends EventEmitter {
     if (this.rskNursery) {
       this.logger.error("swapnursery this.listenRskNursery");
       await this.listenRskNursery(this.rskNursery!);
+    }
+
+    if (this.stacksNursery) {
+      this.logger.error("swapnursery this.listenstacksNursery");
+      await this.listenStacksNursery(this.stacksNursery!);
     }
 
     // Swap events
@@ -299,6 +317,31 @@ class SwapNursery extends EventEmitter {
             }
 
             break;
+
+          case CurrencyType.Stx:
+            this.logger.error("swapnursery reverseswap invoice.paid lockupStx for" + quote);
+            await this.lockupStx(
+              wallet,
+              lndClient!,
+              reverseSwap,
+            );
+
+            // if(quote == "SOV") {
+            //   await this.rlockupERC20(
+            //     wallet,
+            //     lndClient!,
+            //     reverseSwap,
+            //   );
+            // } else {
+            //   await this.lockupERC20(
+            //     wallet,
+            //     lndClient!,
+            //     reverseSwap,
+            //   );
+            // }
+
+            break;
+
         }
       });
     });
@@ -429,6 +472,17 @@ class SwapNursery extends EventEmitter {
           outgoingChannelId,
         );
         break;
+    
+      case CurrencyType.Stx:
+        this.logger.error("swapnursery.476 " + stringify(this.walletManager.stacksManager!))
+        await this.claimStx(
+          this.walletManager.stacksManager!.contractHandler,
+          swap,
+          await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+          outgoingChannelId,
+        );
+        break;
+        
     }
   }
 
@@ -589,6 +643,89 @@ class SwapNursery extends EventEmitter {
 
     await rskNursery.init();
   }
+
+  private listenStacksNursery = async (stacksNursery: StacksNursery) => {
+    const contractHandler = this.walletManager.stacksManager!.contractHandler;
+
+    // Swap events
+    stacksNursery.on('swap.expired', async (swap) => {
+      this.logger.error("rskNursery swap.expired ");
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        await this.expireSwap(swap);
+      });
+    });
+
+    stacksNursery.on('lockup.failed', async (swap, reason) => {
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        await this.lockupFailed(swap, reason);
+      });
+    });
+
+    stacksNursery.on('eth.lockup', async (swap, transactionHash, etherSwapValues) => {
+      this.logger.error("listenStacksNursery eth.lockup: " + transactionHash);
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        this.emit('transaction', swap, transactionHash, true, false);
+
+        if (swap.invoice) {
+          this.logger.error("swapnursery.670 triggering claimstx!");
+          await this.claimStx(contractHandler, swap, etherSwapValues);
+        } else {
+          await this.setSwapRate(swap);
+        }
+      });
+    });
+
+    // stacksNursery.on('erc20.lockup', async (swap, transactionHash, erc20SwapValues) => {
+    //   await this.lock.acquire(SwapNursery.swapLock, async () => {
+    //     this.emit('transaction', swap, transactionHash, true, false);
+
+    //     if (swap.invoice) {
+    //       await this.claimRskERC20(contractHandler, swap, erc20SwapValues);
+    //     } else {
+    //       await this.setSwapRate(swap);
+    //     }
+    //   });
+    // });
+
+    // Reverse Swap events
+    stacksNursery.on('reverseSwap.expired', async (reverseSwap) => {
+      this.logger.error("stacksNursery reverseSwap.expired ");
+      await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+        await this.expireReverseSwap(reverseSwap);
+      });
+    });
+
+    stacksNursery.on('lockup.failedToSend', async (reverseSwap: ReverseSwap, reason ) => {
+      await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+        const { base, quote } = splitPairId(reverseSwap.pair);
+        const chainSymbol = getChainCurrency(base, quote, reverseSwap.orderSide, true);
+        const lightningSymbol = getLightningCurrency(base, quote, reverseSwap.orderSide, true);
+
+        await this.handleReverseSwapSendFailed(
+          reverseSwap,
+          chainSymbol,
+          this.currencies.get(lightningSymbol)!.lndClient!,
+          reason);
+      });
+    });
+
+    stacksNursery.on('lockup.confirmed', async (reverseSwap, transactionHash) => {
+      this.logger.error("listenstacksNursery lockup.confirmed: " + transactionHash);
+      await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+        this.emit('transaction', reverseSwap, transactionHash, true, true);
+      });
+    });
+
+    stacksNursery.on('claim', async (reverseSwap, preimage) => {
+      this.logger.error("listenstacksNursery claim: ");
+      await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+        await this.settleReverseSwapInvoice(reverseSwap, preimage);
+      });
+    });
+
+    await stacksNursery.init();
+  }
+
 
   /**
    * Sets the rate for a Swap that doesn't have an invoice yet
@@ -773,6 +910,48 @@ class SwapNursery extends EventEmitter {
     }
   }
 
+  private lockupStx = async (
+    wallet: Wallet,
+    lndClient: LndClient,
+    reverseSwap: ReverseSwap,
+  ) => {
+    try {
+      let contractTransaction: ContractTransaction;
+
+      if (reverseSwap.minerFeeOnchainAmount) {
+        contractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
+          getHexBuffer(reverseSwap.preimageHash),
+          BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
+          BigNumber.from(reverseSwap.minerFeeOnchainAmount).mul(etherDecimals),
+          reverseSwap.claimAddress!,
+          reverseSwap.timeoutBlockHeight,
+        );
+      } else {
+        contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
+          getHexBuffer(reverseSwap.preimageHash),
+          BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
+          reverseSwap.claimAddress!,
+          reverseSwap.timeoutBlockHeight,
+        );
+      }
+
+      this.stacksNursery!.listenContractTransaction(reverseSwap, contractTransaction);
+      this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.hash}`);
+
+      this.emit(
+        'coins.sent',
+        await this.reverseSwapRepository.setLockupTransaction(
+          reverseSwap,
+          contractTransaction.hash,
+          calculateEthereumTransactionFee(contractTransaction),
+        ),
+        contractTransaction.hash,
+      );
+    } catch (error) {
+      await this.handleReverseSwapSendFailed(reverseSwap, wallet.symbol, lndClient, error);
+    }
+  }
+
   private claimUtxo = async (
     chainClient: ChainClient,
     wallet: Wallet,
@@ -933,6 +1112,30 @@ class SwapNursery extends EventEmitter {
     );
 
     this.logger.info(`Claimed ${chainCurrency} of Swap ${swap.id} in: ${contractTransaction.hash}`);
+    this.emit('claim', await this.swapRepository.setMinerFee(swap, calculateRskTransactionFee(contractTransaction)), channelCreation || undefined);
+  }
+
+  private claimStx = async (contractHandler: StacksContractHandler, swap: Swap, etherSwapValues: EtherSwapValues, outgoingChannelId?: string) => {
+    this.logger.error(`swapnursery.1040 claimStx triggered`);
+    const channelCreation = await this.channelCreationRepository.getChannelCreation({
+      swapId: {
+        [Op.eq]: swap.id,
+      },
+    });
+    const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    if (!preimage) {
+      return;
+    }
+
+    const contractTransaction = await contractHandler.claimEther(
+      preimage,
+      etherSwapValues.amount,
+      etherSwapValues.refundAddress,
+      etherSwapValues.timelock,
+    );
+
+    this.logger.info(`Claimed Stx of Swap ${swap.id} in: ${contractTransaction.hash}`);
     this.emit('claim', await this.swapRepository.setMinerFee(swap, calculateRskTransactionFee(contractTransaction)), channelCreation || undefined);
   }
 

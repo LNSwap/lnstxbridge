@@ -9,10 +9,10 @@ import Wallet from '../Wallet';
 import Logger from '../../Logger';
 import { stringify } from '../../Utils';
 import { StacksConfig } from '../../Config';
-// import ContractHandler from './ContractHandler';
+import ContractHandler from './ContractHandler';
 import InjectedProvider from './InjectedProvider';
 // import { CurrencyType } from '../../consts/Enums';
-// import ContractEventHandler from './ContractEventHandler';
+import ContractEventHandler from './ContractEventHandler';
 import ChainTipRepository from '../../db/ChainTipRepository';
 // import EtherWalletProvider from '../providers/EtherWalletProvider';
 // import ERC20WalletProvider from '../providers/ERC20WalletProvider';
@@ -36,8 +36,8 @@ class StacksManager {
   public provider: InjectedProvider;
   // public stacksClient: StacksApiSocketClient;
 
-  // public contractHandler: ContractHandler;
-  // public contractEventHandler: ContractEventHandler;
+  public contractHandler: ContractHandler;
+  public contractEventHandler: ContractEventHandler;
 
   // public etherSwap: EtherSwap;
   // public erc20Swap: ERC20Swap;
@@ -85,8 +85,8 @@ class StacksManager {
     // ) as any as ERC20Swap;
 
     // TODO: need to write these two from scratch!
-    // this.contractHandler = new ContractHandler(this.logger);
-    // this.contractEventHandler = new ContractEventHandler(this.logger);
+    this.contractHandler = new ContractHandler(this.logger);
+    this.contractEventHandler = new ContractEventHandler(this.logger);
     this.stacksClient = true;
   }
 
@@ -115,7 +115,7 @@ class StacksManager {
 
     
     const derivedData = await deriveStxAddressChain(chainId)(signer)
-    this.logger.error("stacksmanager.117 test "+ JSON.stringify(derivedData));
+    this.logger.error("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
     this.address = derivedData.address;
 
     // this.etherSwap = this.etherSwap.connect(signer);
@@ -136,8 +136,10 @@ class StacksManager {
     this.logger.error("StacksManager currentBlock: "+ currentBlock);
     const chainTip = await chainTipRepository.findOrCreateTip('STX', currentBlock);
 
-    // this.contractHandler.init(this.etherSwap, this.erc20Swap);
-    // this.contractEventHandler.init(this.etherSwap, this.erc20Swap);
+    // , this.erc20Swap
+    this.contractHandler.init(this.stacksConfig.stxSwapAddress);
+    // this.etherSwap, this.erc20Swap
+    this.contractEventHandler.init(this.stacksConfig.stxSwapAddress);
 
     this.logger.verbose(`Stacks chain status: ${stringify({
       chainId: chainId,
@@ -164,7 +166,10 @@ class StacksManager {
 
     // and maybe separately subscribe to our contract address to get updates instead of scanning the block for our TX
     // TODO
+    // this.logger.error("stacksmanager.167 TODO subscribe to contract updates and check for any relevant thing.")
+    // listenContract(this.stacksConfig.stxSwapAddress);
 
+    this.logger.error("TODO need to scan the blocks(?) and remove swaps from db if they're found...")
 
     // this.provider.on('block', async (blockNumber: number) => {
     //   this.logger.silly(`Got new Stacks block: ${ blockNumber }`);

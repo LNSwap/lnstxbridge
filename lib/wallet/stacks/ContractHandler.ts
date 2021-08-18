@@ -2,22 +2,38 @@ import { BigNumber, ContractTransaction } from 'ethers';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
-import { getHexString } from '../../Utils';
+import { getHexString, stringify } from '../../Utils';
 import { getGasPrice } from './StacksUtils';
 import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
+// makeContractCall, , broadcastTransaction, 
+import { bufferCV, AnchorMode, FungibleConditionCode, makeStandardSTXPostCondition } from '@stacks/transactions';
+import { StacksTestnet, StacksMainnet } from '@stacks/network';
+const BigNum = require('bn.js');
+
+let networkconf:string = "testnet";
+let network = new StacksTestnet();
+if(networkconf=="mainnet"){
+  network = new StacksMainnet();
+}
+
 class ContractHandler {
   private etherSwap!: EtherSwap;
   private erc20Swap!: ERC20Swap;
+  private contractAddress!: string;
+  private contractName!: string;
 
   constructor(
     private logger: Logger,
   ) {}
 
-  public init = (etherSwap: EtherSwap, erc20Swap: ERC20Swap): void => {
-    this.etherSwap = etherSwap;
-    this.erc20Swap = erc20Swap;
+  // etherSwap: EtherSwap, erc20Swap: ERC20Swap
+  public init = (contract:string): void => {
+    this.contractAddress = contract.split(".")[0]
+    this.contractName = contract.split(".")[1]
+    // this.etherSwap = etherSwap;
+    // this.erc20Swap = erc20Swap;
   }
 
   public lockupEther = async (
@@ -27,6 +43,65 @@ class ContractHandler {
     timeLock: number,
   ): Promise<ContractTransaction> => {
     this.logger.debug(`Locking ${amount} Rbtc with preimage hash: ${getHexString(preimageHash)}`);
+    return this.etherSwap.lock(preimageHash, claimAddress, timeLock, {
+      value: amount,
+      gasPrice: await getGasPrice(this.etherSwap.provider),
+    });
+  }
+
+  public lockupStx = async (
+    preimageHash: Buffer,
+    amount: BigNumber,
+    claimAddress: string,
+    timeLock: number,
+  ): Promise<ContractTransaction> => {
+    this.logger.debug(`Locking ${amount} Stx with preimage hash: ${getHexString(preimageHash)}`);
+
+    // Add an optional post condition
+    // See below for details on constructing post conditions
+    const postConditionAddress = this.contractAddress;
+    const postConditionCode = FungibleConditionCode.GreaterEqual;
+    // new BigNum(1000000);
+    const postConditionAmount = new BigNum(amount);
+    const postConditions = [
+      makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
+    ];
+
+    // (lockStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16))
+    const functionArgs = [
+      bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
+      bufferCV(Buffer.from('00000000000000000000000000100000','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
+    ];
+    this.logger.error("stacks contracthandler.80 functionargs: "+stringify(functionArgs));
+
+    // const functionArgs = [
+    //   bufferCV(preimageHash),
+    //   bufferCV(Buffer.from('00000000000000000000000000100000','hex')),
+    //   bufferCV(Buffer.from('01','hex')),
+    //   bufferCV(Buffer.from('01','hex')),
+    //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
+    // ];
+
+    const txOptions = {
+      contractAddress: this.contractAddress,
+      contractName: this.contractName,
+      functionName: 'lockStx',
+      functionArgs: functionArgs,
+      senderKey: 'b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01',
+      validateWithAbi: true,
+      network,
+      postConditions,
+      anchorMode: AnchorMode.Any,
+    };
+
+    this.logger.error("stacks contracthandler.84 txOptions: "+ stringify(txOptions));
+
+    // const transaction = await makeContractCall(txOptions);
+    // broadcastTransaction(transaction, network);
+
     return this.etherSwap.lock(preimageHash, claimAddress, timeLock, {
       value: amount,
       gasPrice: await getGasPrice(this.etherSwap.provider),

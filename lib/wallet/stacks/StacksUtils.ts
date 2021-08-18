@@ -4,15 +4,19 @@ import { gweiDecimals } from '../../consts/Consts';
 import { getBiggerBigNumber, getHexBuffer } from '../../Utils';
 // import { RPCClient } from '@stacks/rpc-client';
 import axios from 'axios';
-// import { Configuration, FeesApi, InfoApi } from '@stacks/blockchain-api-client';
+import { connectWebSocketClient } from '@stacks/blockchain-api-client';
+// TransactionsApi
+// import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 
-let network:string = "testnet";
+let network:string = "mocknet";
 let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
+let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/'
 if (network.includes('mocknet')) {
-  coreApiUrl = 'http://localhost:20080';
-  // coreApiUrl = 'https://dull-liger-41.loca.lt';
+  coreApiUrl = 'http://localhost:3999';
+  wsUrl = 'ws://localhost:3999/extended/v1/ws'
 } else if (network.includes('testnet')) {
   coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
+  wsUrl = 'ws://stacks-node-api.testnet.stacks.co/'
 } else if (network.includes('regtest')) {
   coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
 }
@@ -86,7 +90,28 @@ export const getInfo = async () => {
   // console.log("stacksutils getInfo", response.data);
   return response.data;
 }
+export const getTx = async (txid:string) => {
+  const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
+  const response = await axios.get(url)
+  // console.log("stacksutils getInfo", response.data);
+  return response.data;
+}
 
+export const listenContract = async (address:string) => {
+  const client = await connectWebSocketClient(wsUrl);
+  console.log("stackutils.94 started listening to txns for ", address);
+  await client.subscribeAddressTransactions(address, event => {
+    console.log("stackutils.95 got event ", event);
+  });
+  /*
+    {
+      address: 'ST3GQB6WGCWKDNFNPSQRV8DY93JN06XPZ2ZE9EVMA',
+      tx_id: '0x8912000000000000000000000000000000000000000000000000000000000000',
+      tx_status: 'success',
+      tx_type: 'token_transfer',
+    }
+  */
+}
 
 // window is not defined?!
 // export const getInfo = async () => {
@@ -99,6 +124,13 @@ export const getInfo = async () => {
 // export const getFee = async () => {
 //   const feesApi = new FeesApi(apiConfig)
 //   const fee = await feesApi.getFeeTransfer()
+//   console.log("getNewFee: ", fee)
+//   return fee;
+// }
+
+// export const getTransaction = async (txid:Transaction) => {
+//   const transactionApi = new TransactionsApi(apiConfig)
+//   const fee = await transactionApi.getTransactionById(txid)
 //   console.log("getNewFee: ", fee)
 //   return fee;
 // }

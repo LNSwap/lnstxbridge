@@ -82,7 +82,7 @@ class SwapManager {
   }
 
   public init = async (currencies: Currency[]): Promise<void>=> {
-    // console.log("***swapmanager.ts init");
+    console.log("***swapmanager.ts init");
     currencies.forEach((currency) => {
       this.currencies.set(currency.symbol, currency);
     });
