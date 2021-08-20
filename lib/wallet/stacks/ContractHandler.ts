@@ -8,14 +8,17 @@ import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
 // makeContractCall, , broadcastTransaction, 
-import { bufferCV, AnchorMode, FungibleConditionCode, makeStandardSTXPostCondition } from '@stacks/transactions';
-import { StacksTestnet, StacksMainnet } from '@stacks/network';
+import { bufferCV, AnchorMode, FungibleConditionCode, makeStandardSTXPostCondition, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
+import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
+
 const BigNum = require('bn.js');
 
-let networkconf:string = "testnet";
+let networkconf:string = "mocknet";
 let network = new StacksTestnet();
 if(networkconf=="mainnet"){
   network = new StacksMainnet();
+} else if(networkconf=="mocknet") {
+  network = new StacksMocknet()
 }
 
 class ContractHandler {
@@ -108,6 +111,113 @@ class ContractHandler {
     });
   }
 
+  public claimStx = async (
+    preimage: Buffer,
+    amount: BigNumber,
+    claimAddress: string,
+    timeLock: number,
+  ): Promise<TxBroadcastResult> => {
+    this.logger.debug(`Claiming ${amount} Stx with preimage ${getHexString(preimage)} and timelock ${timeLock}`);
+
+    let decimalamount = parseInt(amount.toString(),16)
+    this.logger.error("decimalamount: " + decimalamount)
+    let smallamount = decimalamount
+    // let smallamount = amount.div(etherDecimals).toNumber();
+    // this.logger.error("smallamount: " + smallamount)
+
+    // Add an optional post condition
+    // See below for details on constructing post conditions
+    // const postConditionAddress = this.contractAddress;
+    const postConditionCode = FungibleConditionCode.GreaterEqual;
+    // new BigNum(1000000);
+    const postConditionAmount = new BigNum(100000);
+    // const postConditions = [
+    //   makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
+    // ];
+
+    const postConditions = [
+      makeContractSTXPostCondition(
+        this.contractAddress,
+        this.contractName,
+        postConditionCode,
+        postConditionAmount
+      )
+    ];
+
+    console.log("contracthandler.129 postConditions: " + postConditions, claimAddress)
+
+    let swapamount = smallamount.toString(16).split(".")[0] + "";
+    let paddedamount = swapamount.padStart(32, "0");
+    let tl1 = timeLock.toString(16);
+    let tl2 = tl1.padStart(32, "0");
+    let tl3 = tl2.slice(2);
+    let paddedtimelock = timeLock.toString(16).padStart(32, "0");
+    console.log("contracthandler.135 ", smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
+    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162 
+    // 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea
+    // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+    const functionArgs = [
+      // bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
+      bufferCV(preimage),
+      bufferCV(Buffer.from(paddedamount,'hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from(tl3,'hex')),
+    ];
+    this.logger.error("stacks contracthandler.80 functionargs: " + stringify(functionArgs));
+
+    // const functionArgs = [
+    //   bufferCV(preimageHash),
+    //   bufferCV(Buffer.from('00000000000000000000000000100000','hex')),
+    //   bufferCV(Buffer.from('01','hex')),
+    //   bufferCV(Buffer.from('01','hex')),
+    //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
+    // ];
+
+    const txOptions = {
+      contractAddress: this.contractAddress,
+      contractName: this.contractName,
+      functionName: 'claimStx',
+      functionArgs: functionArgs,
+      senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+      validateWithAbi: true,
+      network,
+      postConditionMode: PostConditionMode.Allow,
+      postConditions,
+      anchorMode: AnchorMode.Any,
+      onFinish: data => {
+        console.log('Stacks claim Transaction:', JSON.stringify(data));
+      }
+    };
+
+    // this.toObject(txOptions)
+    // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
+
+    const transaction = await makeContractCall(txOptions);
+    return broadcastTransaction(transaction, network);
+
+    
+
+    // this is from connect
+    // return await openContractCall(txOptions);
+
+    // return this.etherSwap.lock(preimageHash, claimAddress, timeLock, {
+    //   value: amount,
+    //   gasPrice: await getGasPrice(this.etherSwap.provider),
+    // });
+  }
+
+  public toObject = (data) => {
+    // JSON.parse(
+    return JSON.stringify(data, (key, value) => {
+        console.log("key, value: ", key, value)
+        typeof value === 'bigint'
+            ? value.toString()
+            : value // return everything else unchanged
+          }
+    );
+  }
+
   public lockupEtherPrepayMinerfee = async (
     preimageHash: Buffer,
     amount: BigNumber,
@@ -146,18 +256,22 @@ class ContractHandler {
     amount: BigNumber,
     refundAddress: string,
     timelock: number,
-  ): Promise<ContractTransaction> => {
-    this.logger.debug(`Claiming Rbtc with preimage: ${getHexString(preimage)}`);
-    this.logger.error("claim data: " + refundAddress);
-    return this.etherSwap.claim(
-      preimage,
-      amount,
-      refundAddress,
-      timelock,
-      {
-        gasPrice: await getGasPrice(this.etherSwap.provider),
-      }
-    );
+  ): Promise<TxBroadcastResult> => {
+    this.logger.debug(`Claiming Stx with preimage: ${getHexString(preimage)}`);
+    this.logger.error("contracthandler.151 claim data refundAddress: " + refundAddress);
+
+    return this.claimStx(preimage, amount, refundAddress, timelock);
+
+
+    // return this.etherSwap.claim(
+    //   preimage,
+    //   amount,
+    //   refundAddress,
+    //   timelock,
+    //   {
+    //     gasPrice: await getGasPrice(this.etherSwap.provider),
+    //   }
+    // );
   }
 
   public refundEther = async (

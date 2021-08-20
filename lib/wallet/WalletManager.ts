@@ -21,6 +21,7 @@ import { KeyProviderType } from '../db/models/KeyProvider';
 import LndWalletProvider from './providers/LndWalletProvider';
 import CoreWalletProvider from './providers/CoreWalletProvider';
 import WalletProviderInterface from './providers/WalletProviderInterface';
+// import { stringify } from '@iarna/toml';
 
 type CurrencyLimits = {
   maxSwapAmount: number;
@@ -182,6 +183,7 @@ class WalletManager {
       const stacksWallets = await this.stacksManager.init(this.mnemonic, chainTipRepository);
 
       for (const [symbol, stacksWallet] of stacksWallets) {
+        this.logger.error("walletmanager.185 wallets.set " + stacksWallet);
         this.wallets.set(symbol, stacksWallet);
       }
     }

@@ -34,7 +34,9 @@ import {
   getUnixTime,
   reverseBuffer,
   splitPairId,
+  stringify,
 } from '../Utils';
+import { getInfo } from '../wallet/stacks/StacksUtils';
 
 type ChannelCreationInfo = {
   auto: boolean,
@@ -161,6 +163,7 @@ class SwapManager {
     // So that the user can specify the claim address (Boltz) in the lockup transaction to the contract
     claimAddress?: string,
   }> => {
+    // this.logger.error("swapmanager.166 getCurrencies " + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
 
     if (!sendingCurrency.lndClient) {
@@ -212,9 +215,43 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
       });
+    } else if (receivingCurrency.type === CurrencyType.Stx) {
+      address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
+
+      // this.logger.error("swapmanager.218 " + receivingCurrency.provider!);
+      // const blockNumber = await receivingCurrency.provider!.getBlockNumber();
+
+      const info = await getInfo()  
+      const blockNumber = info.stacks_tip_height;
+      timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
+
+      this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
+      claimAddress = await receivingCurrency.wallet.getAddress();
+      // claimAddress = await receivingCurrency.wallet.
+      this.logger.error("swapmanager.228 " + stringify({
+        id,
+        pair,
+        timeoutBlockHeight,
+        lockupAddress: address,
+        orderSide: args.orderSide,
+        status: SwapUpdateEvent.SwapCreated,
+        preimageHash: getHexString(args.preimageHash),
+      }));
+
+      await this.swapRepository.addSwap({
+        id,
+        pair,
+        timeoutBlockHeight,
+
+        lockupAddress: address,
+        orderSide: args.orderSide,
+        status: SwapUpdateEvent.SwapCreated,
+        preimageHash: getHexString(args.preimageHash),
+      });
     } else {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
 
+      this.logger.error("swapmanager.237 " + receivingCurrency.provider!);
       const blockNumber = await receivingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
 
@@ -512,6 +549,7 @@ class SwapManager {
       });
 
     } else {
+      this.logger.error("swapmanager.515 " + sendingCurrency.provider!)
       const blockNumber = await sendingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.onchainTimeoutBlockDelta;
 
@@ -627,6 +665,16 @@ class SwapManager {
 
   private getCurrencies = (baseCurrency: string, quoteCurrency: string, orderSide: OrderSide) => {
     const { sending, receiving } = getSendingReceivingCurrency(baseCurrency, quoteCurrency, orderSide);
+    this.logger.error("swapmanager.668 " + stringify({
+      // sendingCurrency: {
+      //   ...this.getCurrency(sending),
+      //   wallet: this.walletManager.wallets.get(sending)!,
+      // },
+      receivingCurrency: {
+        ...this.getCurrency(receiving),
+        wallet: this.walletManager.wallets.get(receiving)!,
+      },
+    }));
 
     return {
       sendingCurrency: {
@@ -655,12 +703,15 @@ class SwapManager {
     this.logger.error("getLockupContractAddress CurrencyType: " + type)
     const ethereumManager = this.walletManager.ethereumManager!;
     const rskManager = this.walletManager.rskManager!;
+    const stacksManager = this.walletManager.stacksManager!;
 
     let addresstoreturn: string;
     if (type === CurrencyType.Ether) {
       addresstoreturn = ethereumManager.etherSwap.address
     } else if (type === CurrencyType.Rbtc) {
       addresstoreturn = rskManager.etherSwap.address
+    } else if (type === CurrencyType.Stx) {
+      addresstoreturn = stacksManager.stxswapaddress
     } else {
       if (quoteCurrency == "SOV") {
         this.logger.error("getlockupcontractaddress from rsk")

@@ -13,7 +13,9 @@ class Coingecko implements Exchange {
     const response = await makeRequest(`${Coingecko.API}/simple/price?ids=${pair}`);
     // console.log("response: ", response, response[longerquoteasset]);
     const lastprice = response[longerquoteasset][lowerbaseasset];
-    // console.log("coingecko lastprice: ", lastprice);
+    // console.log("coingecko 1/lastprice: ", 1/lastprice);
+    // 1 stx = 3000 sats
+    // 1 btc = 33156.498673740054 STX -> this is returned from here which is correct on frontend UI
     return Number(1/lastprice);
 
     // const lastTrade = (Object.values(response['result'])[0] as Record<string, string[]>)['c'];
@@ -27,6 +29,7 @@ class Coingecko implements Exchange {
       case 'ETH': return 'ethereum';
       case 'BTC': return 'bitcoin';
       case 'RBTC': return 'rootstock';
+      case 'STX': return 'blockstack';
 
       default: return asset;
     }    

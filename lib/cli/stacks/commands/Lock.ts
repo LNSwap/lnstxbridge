@@ -1,0 +1,71 @@
+import { Arguments } from 'yargs';
+import { BigNumber, ContractTransaction } from 'ethers';
+import { getHexBuffer } from '../../../Utils';
+import { etherDecimals } from '../../../consts/Consts';
+import BuilderComponents from '../../BuilderComponents';
+import { connectEthereum, getContracts, getBoltzAddress } from '../StacksUtils';
+
+export const command = 'lock <preimageHash> <amount> <timelock> [token]';
+
+export const describe = 'locks Ether or a ERC20 token in the corresponding swap contract';
+
+export const builder = {
+  preimageHash: {
+    describe: 'preimage hash with which the funds should be locked',
+    type: 'string',
+  },
+  amount: {
+    describe: 'amount of tokens that should be locked up',
+    type: 'number',
+  },
+  timelock: {
+    describe: 'timelock delta in blocks',
+    type: 'number',
+  },
+  token: BuilderComponents.token,
+};
+
+export const handler = async (argv: Arguments<any>): Promise<void> => {
+  const signer = connectEthereum(argv.provider, argv.signer);
+  const { etherSwap } = getContracts(signer);
+
+  const preimageHash = getHexBuffer(argv.preimageHash);
+  const amount = BigNumber.from(argv.amount).mul(etherDecimals);
+
+  const boltzAddress = await getBoltzAddress();
+  console.log("boltzAddress: ", boltzAddress);
+
+  if (boltzAddress === undefined) {
+    console.log('Could not lock coins because the address of Boltz could not be queried');
+    return;
+  }
+
+  let transaction: ContractTransaction;
+
+  // if (argv.token) {
+  //   console.log("rsk erc20Swap.lock to erc20SwapAddress: ", Constants.erc20SwapAddress);
+  //   await token.approve(Constants.erc20SwapAddress, amount);
+  //   console.log("rsk erc20Swap.lock after approve: ", preimageHash, amount, Constants.erc20TokenAddress, boltzAddress, argv.timelock);
+  //   transaction = await erc20Swap.lock(
+  //     preimageHash,
+  //     amount,
+  //     Constants.erc20TokenAddress,
+  //     boltzAddress,
+  //     argv.timelock,
+  //   );
+  // } else {
+    console.log("rsk etherSwap.lock to claimAddress: ", boltzAddress);
+    transaction = await etherSwap.lock(
+      preimageHash,
+      boltzAddress,
+      argv.timelock,
+      {
+        value: amount,
+      },
+    );
+  // }
+
+  await transaction.wait(1);
+
+  console.log(`Sent ${argv.token ? 'ERC20 token' : 'Rbtc'} in: ${transaction.hash}`);
+};

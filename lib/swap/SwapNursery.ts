@@ -474,7 +474,7 @@ class SwapNursery extends EventEmitter {
         break;
     
       case CurrencyType.Stx:
-        this.logger.error("swapnursery.476 " + stringify(this.walletManager.stacksManager!))
+        this.logger.error("???swapnursery.476 " + stringify(this.walletManager.stacksManager!))
         await this.claimStx(
           this.walletManager.stacksManager!.contractHandler,
           swap,
@@ -1135,8 +1135,10 @@ class SwapNursery extends EventEmitter {
       etherSwapValues.timelock,
     );
 
-    this.logger.info(`Claimed Stx of Swap ${swap.id} in: ${contractTransaction.hash}`);
-    this.emit('claim', await this.swapRepository.setMinerFee(swap, calculateRskTransactionFee(contractTransaction)), channelCreation || undefined);
+    this.logger.info(`Claimed Stx of Swap ${swap.id} in: ${contractTransaction.txid}`);
+    this.logger.error("swapnursery.1139 TODO: setminerfee in swaprepository when stacks tx fee calc is available.")
+    // calculateRskTransactionFee(contractTransaction)
+    this.emit('claim', await this.swapRepository.setMinerFee(swap, 1), channelCreation || undefined);
   }
 
   /**

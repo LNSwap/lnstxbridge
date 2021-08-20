@@ -180,6 +180,15 @@ class RateProvider {
       // failed and that the pairs and limits don't have to be updated
       if (rate && !isNaN(rate)) {
         const limits = this.getLimits(pairId, base, quote, rate);
+        // this.logger.error("rateprovider.183 " + pairId + ", " + stringify(limits))
+        // BTC/STX, {
+        //   "maximal": 429496700,
+        //   "minimal": 332005313,
+        //   "maximalZeroConf": {
+        //     "baseAsset": 10000000,
+        //     "quoteAsset": 0
+        //   }
+        
 
         this.pairs.set(pairId, {
           rate,
@@ -222,22 +231,37 @@ class RateProvider {
     this.logger.silly('Updated rates');
   }
 
+  // The quotation EUR/USD = 1.2500 means that one euro is exchanged for 1.2500 U.S. dollars. 
+  // In this case, EUR is the base currency and USD is the quote currency (counter currency). 
+  // This means that 1 euro can be exchanged for 1.25 U.S. dollars. Another way of looking at this is that it will cost you $125 to buy 100 euros.
+
   private getLimits = (pair: string, base: string, quote: string, rate: number) => {
     const baseLimits = this.limits.get(base);
     const quoteLimits = this.limits.get(quote);
+    // this.logger.error("rateprovider.233 baseLimits, quoteLimits " + base+":"+ stringify(baseLimits) + ", " +quote+":"+ stringify(quoteLimits))
 
     if (baseLimits && quoteLimits) {
       let minimalLimit = Math.max(quoteLimits.minimal, baseLimits.minimal * rate);
+      // rateprovider.231 base, quote, baselimit*4, quotelimit                    BTC,           STX,          332115576.2205247,            10000
+      // this.logger.error("rateprovider.231 base, quote, baselimit*4, quotelimit "+ base +", " + quote +", " + baseLimits.minimal * rate+", " +quoteLimits.minimal);
 
       // Make sure the minimal limit is at least 4 times the fee needed to claim
       const minimalLimitQuoteTransactionFee = this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim) * 4;
       const minimalLimitBaseTransactionFee = this.feeProvider.getBaseFee(base, BaseFeeType.NormalClaim) * rate * 4;
+      // rateprovider.235 basefee, quote, base, rate:                      1,   
+      // this.logger.error("rateprovider.235 basefee, quote, base, rate: "+ this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim) 
+      //                  340,                                            rate: 33222.591362126244
+        // + "," + this.feeProvider.getBaseFee(base, BaseFeeType.NormalClaim) + ", rate: " +rate);
 
       minimalLimit = Math.max(minimalLimit, minimalLimitBaseTransactionFee, minimalLimitQuoteTransactionFee);
+      // rateprovider.237 minimallimit:                   332115576.2205247,         45167718.36599137,                          4
+      // this.logger.error("rateprovider.237 minimallimit: "+ minimalLimit + ", "+ minimalLimitBaseTransactionFee  + ", "+ minimalLimitQuoteTransactionFee);
 
+      this.logger.error("TODO: fix STX max/min limits");
       return {
-        maximal: Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)),
-        minimal: Math.ceil(minimalLimit),
+        maximal: Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10,
+        // minimal: Math.ceil(minimalLimit), // no idea why this comes out 332115576
+        minimal: Math.ceil(quoteLimits.minimal) * 10000,
 
         maximalZeroConf: {
           baseAsset: baseLimits.maximalZeroConf,

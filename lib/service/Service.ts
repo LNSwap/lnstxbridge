@@ -475,18 +475,25 @@ class Service {
     const estimateFee = async (currency: Currency): Promise<number> => {
       // console.log("service.ts 468 ", currency);
       if (currency.chainClient) {
+        let test = await currency.chainClient.estimateFee(numBlocks)
+        this.logger.error("service.478 btc chainclient estimatefee: "+ test)
         return currency.chainClient.estimateFee(numBlocks);
       } else if (currency.provider) {
         const gasPrice = await getGasPrice(currency.provider);
         return gasPrice.div(gweiDecimals).toNumber();
       } else if (currency.stacksClient) {
-        const fee = await getFee();
+        // STACKS I do it manually differently.
+        let fee = await getFee();
+        // this.logger.error("service.485 got fee: " + fee + ", gweiDecimals " + gweiDecimals)
+        // // fee = fee / BigInt(gweiDecimals)
+        // // fee = new BigNumber(fee).toNumber().div(gweiDecimals).toNumber()
+        // this.logger.error("service.487 fee.div: " + fee)
         // const test = await getTest();
         // console.log("fee, test ", fee, test)
         // console.log("NEED TO GET GAS FEE from STACKS CLIENT!!!", fee)
-        return fee;
+        // return fee;
         // const gasPrice = await getGasPrice(currency.provider);
-        // return gasPrice.div(gweiDecimals).toNumber();
+        return fee.div(gweiDecimals).toNumber();
 
       } else {
         console.log("service.ts 475 NOT_SUPPORTED_BY_SYMBOL")

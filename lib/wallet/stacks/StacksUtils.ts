@@ -82,7 +82,8 @@ export const getFee = async () => {
   const url = `${coreApiUrl}/v2/fees/transfer`;
   const response = await axios.get(url)
   // console.log("stacksutils  getFee", response.data);
-  return response.data;
+  return BigNumber.from(response.data).mul(gweiDecimals);
+  // return response.data;
 }
 export const getInfo = async () => {
   const url = `${coreApiUrl}/v2/info`;

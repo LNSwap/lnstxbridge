@@ -7,6 +7,7 @@ export const ReverseSwapOutputType = OutputType.Bech32;
 export const etherDecimals = BigNumber.from(10).pow(BigNumber.from(10));
 
 // Decimals from GWEI to WEI
+// 1 wei = 0.000000001 gwei
 export const gweiDecimals = BigNumber.from(10).pow(BigNumber.from(9));
 
 // This amount will be multiplied with the current gas price to determine

@@ -11,10 +11,10 @@ import { stringify } from '../../Utils';
 import { StacksConfig } from '../../Config';
 import ContractHandler from './ContractHandler';
 import InjectedProvider from './InjectedProvider';
-// import { CurrencyType } from '../../consts/Enums';
+import { CurrencyType } from '../../consts/Enums';
 import ContractEventHandler from './ContractEventHandler';
 import ChainTipRepository from '../../db/ChainTipRepository';
-// import EtherWalletProvider from '../providers/EtherWalletProvider';
+import StacksWalletProvider from '../providers/StacksWalletProvider';
 // import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 // import EthereumTransactionTracker from './EthereumTransactionTracker';
 // import { StacksApiSocketClient } from '@stacks/blockchain-api-client';
@@ -23,6 +23,7 @@ import { deriveRootKeychainFromMnemonic, getAddress, deriveStxAddressChain } fro
 import { ChainID } from '@stacks/transactions';
 import { getInfo } from './StacksUtils';
 
+// TODO: Fetch CHAINID from configuration!!!
 const chainId = ChainID.Testnet
 
 type Network = {
@@ -42,6 +43,7 @@ class StacksManager {
   // public etherSwap: EtherSwap;
   // public erc20Swap: ERC20Swap;
 
+  public stxswapaddress!: string;
   public address!: string;
   public network!: Network;
   public btcAddress!: string;
@@ -118,6 +120,8 @@ class StacksManager {
     this.logger.error("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
     this.address = derivedData.address;
 
+    this.stxswapaddress = this.stacksConfig.stxSwapAddress;
+
     // this.etherSwap = this.etherSwap.connect(signer);
     // this.erc20Swap = this.erc20Swap.connect(signer);
 
@@ -182,47 +186,49 @@ class StacksManager {
 
     const wallets = new Map<string, Wallet>();
 
-    // for (const token of this.stacksConfig.tokens) {
-    //   if (token.contractAddress) {
-    //     if (token.decimals) {
-    //       if (!wallets.has(token.symbol)) {
-    //         // Wrap the address in "utils.getAddress" to make sure it is a checksum one
-    //         this.tokenAddresses.set(token.symbol, utils.getAddress(token.contractAddress));
-    //         const provider = new ERC20WalletProvider(this.logger, signer, {
-    //           symbol: token.symbol,
-    //           decimals: token.decimals,
-    //           contract: new Contract(token.contractAddress, ContractABIs.ERC20, signer) as any as ERC20,
-    //         });
+    for (const token of this.stacksConfig.tokens) {
+      if (token.contractAddress) {
+        this.logger.error("stacksmanager.190 TODO: token wallets?!")
+        // if (token.decimals) {
+        //   if (!wallets.has(token.symbol)) {
+        //     // Wrap the address in "utils.getAddress" to make sure it is a checksum one
+        //     this.tokenAddresses.set(token.symbol, utils.getAddress(token.contractAddress));
+        //     // const provider = new ERC20WalletProvider(this.logger, signer, {
+        //     //   symbol: token.symbol,
+        //     //   decimals: token.decimals,
+        //     //   contract: new Contract(token.contractAddress, ContractABIs.ERC20, signer) as any as ERC20,
+        //     // });
+        //     const provider = null;
 
-    //         wallets.set(token.symbol, new Wallet(
-    //           this.logger,
-    //           CurrencyType.ERC20,
-    //           provider,
-    //         ));
+        //     wallets.set(token.symbol, new Wallet(
+        //       this.logger,
+        //       CurrencyType.ERC20,
+        //       provider,
+        //     ));
 
-    //         await this.checkERC20Allowance(provider);
-    //       } else {
-    //         throw Errors.INVALID_ETHEREUM_CONFIGURATION(`duplicate ${token.symbol} token config`);
-    //       }
-    //     } else {
-    //       throw Errors.INVALID_ETHEREUM_CONFIGURATION(`missing decimals configuration for token: ${token.symbol}`);
-    //     }
-    //   } else {
-    //     if (token.symbol === 'RBTC') {
-    //       if (!wallets.has('RBTC')) {
-    //         wallets.set('RBTC', new Wallet(
-    //           this.logger,
-    //           CurrencyType.Rbtc,
-    //           new EtherWalletProvider(this.logger, signer),
-    //         ));
-    //       } else {
-    //         throw Errors.INVALID_ETHEREUM_CONFIGURATION('duplicate Stacks token config');
-    //       }
-    //     } else {
-    //       throw Errors.INVALID_ETHEREUM_CONFIGURATION(`missing token contract address for: ${stringify(token)}`);
-    //     }
-    //   }
-    // }
+        //     await this.checkERC20Allowance(provider);
+        //   } else {
+        //     throw Errors.INVALID_ETHEREUM_CONFIGURATION(`duplicate ${token.symbol} token config`);
+        //   }
+        // } else {
+        //   throw Errors.INVALID_ETHEREUM_CONFIGURATION(`missing decimals configuration for token: ${token.symbol}`);
+        // }
+      } else {
+        if (token.symbol === 'STX') {
+          if (!wallets.has('STX')) {
+            wallets.set('STX', new Wallet(
+              this.logger,
+              CurrencyType.Stx,
+              new StacksWalletProvider(this.logger, signer, chainId),
+            ));
+          } else {
+            throw Errors.INVALID_ETHEREUM_CONFIGURATION('duplicate Stacks token config');
+          }
+        } else {
+          throw Errors.INVALID_ETHEREUM_CONFIGURATION(`missing token contract address for: ${stringify(token)}`);
+        }
+      }
+    }
 
     return wallets;
   }

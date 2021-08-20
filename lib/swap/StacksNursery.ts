@@ -145,26 +145,35 @@ class StacksNursery extends EventEmitter {
         return;
       }
 
-      this.logger.debug(`Found lockup in rEtherSwap contract for Swap ${swap.id}: ${transactionHash}`);
+      this.logger.debug(`Found lockup in stxswap contract for Swap ${swap.id}: ${transactionHash}`);
 
+      // 0x000000000000000000000000001e708f
+      // *100 + 100 because stx is 10^6 while boltz is 10^8
+      let swapamount = (parseInt(etherSwapValues.amount + "",16) * 100) + 100
+      this.logger.error("stacksnursery.150 etherSwapValues.amount, swapamount, transactionHash " + etherSwapValues.amount + ", " + swapamount + ", " + transactionHash)
       swap = await this.swapRepository.setLockupTransaction(
         swap,
         transactionHash,
-        etherSwapValues.amount.div(etherDecimals).toNumber(),
+        // etherSwapValues.amount.div(etherDecimals).toNumber(),
+        swapamount,
         true,
       );
 
       this.logger.error("StacksNursery listenetherswap claimAddress, this.rskmanageraddress: " + etherSwapValues.claimAddress + ", " + this.stacksManager.address + ", " + JSON.stringify(etherSwapValues));
-      if (etherSwapValues.claimAddress !== this.stacksManager.address) {
-        this.emit(
-          'lockup.failed',
-          swap,
-          Errors.INVALID_CLAIM_ADDRESS(etherSwapValues.claimAddress, this.stacksManager.address).message,
-        );
-        return;
-      }
+      // skip claimaddress check because Stacks claim address are dummy buffers...
+      // if (etherSwapValues.claimAddress !== this.stacksManager.address) {
+      //   this.emit(
+      //     'lockup.failed',
+      //     swap,
+      //     Errors.INVALID_CLAIM_ADDRESS(etherSwapValues.claimAddress, this.stacksManager.address).message,
+      //   );
+      //   return;
+      // }
 
-      if (etherSwapValues.timelock !== swap.timeoutBlockHeight) {
+      let swaptimelock = parseInt(etherSwapValues.timelock + "",16) 
+      this.logger.error("etherSwapValues.timelock, swap.timeoutBlockHeight " +etherSwapValues.timelock + ", " + swap.timeoutBlockHeight)
+      // etherSwapValues.timelock
+      if (swaptimelock !== swap.timeoutBlockHeight) {
         this.emit(
           'lockup.failed',
           swap,
@@ -172,15 +181,19 @@ class StacksNursery extends EventEmitter {
         );
         return;
       }
-
+      
       if (swap.expectedAmount) {
         const expectedAmount = BigNumber.from(swap.expectedAmount).mul(etherDecimals);
 
-        if (expectedAmount.gt(etherSwapValues.amount)) {
+        // 1995138440000000000,
+        const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
+        this.logger.error("swap.expectedAmount, expectedAmount , etherSwapValues.amount" +swap.expectedAmount+ ", " + expectedAmount + ", " + etherSwapValues.amount)
+        // etherSwapValues.amount
+        if (expectedAmount.gt(bigswapamount)) {
           this.emit(
             'lockup.failed',
             swap,
-            Errors.INSUFFICIENT_AMOUNT(etherSwapValues.amount.div(etherDecimals).toNumber(), swap.expectedAmount).message,
+            Errors.INSUFFICIENT_AMOUNT(swapamount, swap.expectedAmount).message,
           );
           return;
         }

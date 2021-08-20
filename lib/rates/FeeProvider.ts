@@ -101,6 +101,7 @@ class FeeProvider {
 
   public getBaseFee = (chainCurrency: string, type: BaseFeeType): number => {
     const minerFeeMap = this.minerFees.get(chainCurrency)!;
+    // console.log("feeprovider.104 minerFeeMap: ", chainCurrency, minerFeeMap);
 
     let baseFee: number;
 
@@ -118,6 +119,7 @@ class FeeProvider {
         break;
     }
 
+    // console.log("feeprovider.122 baseFee: ", chainCurrency, baseFee);
     return baseFee;
   }
 
@@ -177,13 +179,16 @@ class FeeProvider {
         const relativeFee = feeMap.get(chainCurrency)!;
         const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
         // claimcost is wrong for STX but that should be OK.
-        // this.logger.error("feeprovider.179 - " + relativeFee + ", " +claimCost)
+        this.logger.error("feeprovider.181 TODO: NO CLAIM/LOCK FEE estimation yet!! -relativeFee,claimCost " + relativeFee + ", " +claimCost)
 
         this.minerFees.set(chainCurrency, {
-          normal: claimCost,
+          normal: relativeFee,
+          // normal: claimCost,
           reverse: {
-            claim: claimCost,
-            lockup: this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.lockup),
+            claim: relativeFee,
+            // claim: claimCost,
+            lockup: relativeFee,
+            // lockup: this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.lockup),
           },
         });
 

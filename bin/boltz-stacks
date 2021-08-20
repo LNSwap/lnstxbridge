@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+
+require('yargs')
+  .options({
+    'provider': {
+      describe: 'HTTP endpoint of the web3 provider',
+      default: 'http://127.0.0.1:4444',
+      type: 'string',
+      alias: 'p',
+    },
+    'signer': {
+      describe: 'address for the JsonRpcSigner',
+      default: '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826',
+      type: 'string',
+      alias: 's',
+    },
+  })
+  .commandDir('../dist/lib/cli/stacks/commands/')
+  // .demandCommand(1, '')
+  // .strict()
+  .argv;
