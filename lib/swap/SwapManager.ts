@@ -613,10 +613,10 @@ class SwapManager {
         lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(reverseSwap.invoice).paymentHash!));
 
       } else if ((swap.status === SwapUpdateEvent.TransactionMempool || swap.status === SwapUpdateEvent.TransactionConfirmed) && isReverse) {
-        this.logger.error("swapmanager recreateFilters foreach TransactionConfirmed chainCurrency " + chainCurrency);
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
+          this.logger.error("swapmanager recreateFilters foreach TransactionConfirmed chainCurrency " + chainCurrency);
           const transactionId = reverseBuffer(getHexBuffer((swap as ReverseSwap).transactionId!));
           chainClient.addInputFilter(transactionId);
 
@@ -627,10 +627,10 @@ class SwapManager {
           }
         }
       } else {
-        this.logger.error("swapmanager recreateFilters foreach else chainCurrency " + chainCurrency);
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
+          this.logger.error("swapmanager recreateFilters foreach else chainCurrency " + chainCurrency);
           const wallet = this.walletManager.wallets.get(chainCurrency)!;
           const outputScript = wallet.decodeAddress(swap.lockupAddress);
 

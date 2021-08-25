@@ -207,13 +207,12 @@ class Boltz {
             rescanPromises.push(this.walletManager.rskManager.contractEventHandler.rescan(chainTip.height));
           }
         } else if (chainTip.symbol === 'STX') {
-          this.logger.error("TODO boltz 210 stacks symbol "+ this.walletManager.stacksManager)
+          // this.logger.error("TODO boltz 210 stacks symbol "+ this.walletManager.stacksManager)
           if (this.walletManager.stacksManager) {
-            this.logger.error("TODO boltz 212 stacks symbol "+ this.walletManager.stacksManager)
+            this.logger.error("TODO: boltz.212 stacksManager.contractEventHandler.rescan "+ this.walletManager.stacksManager)
             logRescan(chainTip);
             // TODO find a way to rescan if there was any contract calls from users starting with chaintip til now
-            
-            // rescanPromises.push(this.walletManager.stacksManager.contractEventHandler.rescan(chainTip.height));
+            rescanPromises.push(this.walletManager.stacksManager.contractEventHandler.rescan(chainTip.height));
           }
         } else {
           // if not ETH or RBTC

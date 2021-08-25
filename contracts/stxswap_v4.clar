@@ -30,7 +30,6 @@
     (claimer tx-sender)
     )
   (begin
-    (print (hashValuesbuf (sha256 preimage) amount timelock))
     (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf (sha256 preimage) amount timelock)) true) (err u1000))
     (map-delete swaps {hash: (hashValuesbuf (sha256 preimage) amount timelock)})
     (try! (as-contract (stx-transfer? (buff-to-uint-le amount) tx-sender claimer)))

@@ -18,7 +18,7 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-import { getFee, getInfo } from '../wallet/stacks/StacksUtils';
+import { getFee, getInfo, getStacksRawTransaction } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
@@ -378,8 +378,14 @@ class Service {
     const currency = this.getCurrency(symbol);
 
     if (currency.chainClient === undefined) {
-      console.log("service.ts NOT_SUPPORTED_BY_SYMBOL");
-      throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
+      // this.logger.error("service.381 gettransaction " + currency.stacksClient)
+      if(currency.stacksClient !== undefined) {
+        // this.logger.error("service.383 gettransaction ")
+        return await getStacksRawTransaction(transactionHash);
+      } else {
+        console.log("service.381 NOT_SUPPORTED_BY_SYMBOL");
+        throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
+      }
     }
 
     return await currency.chainClient.getRawTransaction(transactionHash);
@@ -475,8 +481,8 @@ class Service {
     const estimateFee = async (currency: Currency): Promise<number> => {
       // console.log("service.ts 468 ", currency);
       if (currency.chainClient) {
-        let test = await currency.chainClient.estimateFee(numBlocks)
-        this.logger.error("service.478 btc chainclient estimatefee: "+ test)
+        // let test = await currency.chainClient.estimateFee(numBlocks)
+        // this.logger.error("service.478 btc chainclient estimatefee: "+ test)
         return currency.chainClient.estimateFee(numBlocks);
       } else if (currency.provider) {
         const gasPrice = await getGasPrice(currency.provider);

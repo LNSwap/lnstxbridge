@@ -18,6 +18,8 @@ import { getChainCurrency, getHexString, splitPairId } from '../Utils';
 import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
 import { TxBroadcastResult } from '@stacks/transactions';
+import { getTx } from '../wallet/stacks/StacksUtils';
+import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 
 interface StacksNursery {
   // EtherSwap
@@ -79,25 +81,31 @@ class StacksNursery extends EventEmitter {
     });
 
     // remove later
-    const allReverseSwaps = await ReverseSwap.findAll();
-    console.log("allReverseSwaps: ", allReverseSwaps);
+    // const allReverseSwaps = await ReverseSwap.findAll();
+    // this is tested and all reverswaps go into invoice.settled now, yay!
+    // console.log("allReverseSwaps: ", allReverseSwaps);
 
 
     for (const mempoolReverseSwap of mempoolReverseSwaps) {
-      const { base, quote } = splitPairId(mempoolReverseSwap.pair);
-      const chainCurrency = getChainCurrency(base, quote, mempoolReverseSwap.orderSide, true);
+      // const { base, quote } = splitPairId(mempoolReverseSwap.pair);
+      // const chainCurrency = getChainCurrency(base, quote, mempoolReverseSwap.orderSide, true);
 
-      // Skip all Reverse Swaps that didn't send coins on the Rsk chain
-      if (this.getEthereumWallet(chainCurrency) === undefined) {
-        this.logger.error("StacksNursery Skip all Reverse Swaps that didn't send coins on the Stacks chain");
-        continue;
-      }
+      // // Skip all Reverse Swaps that didn't send coins on the Stacks chain
+      // if (this.getEthereumWallet(chainCurrency) === undefined) {
+      //   this.logger.error("StacksNursery.93 Skip all Reverse Swaps that didn't send coins on the Stacks chain");
+      //   continue;
+      // }
 
       try {
-        const transaction = await this.stacksManager.provider.getTransaction(mempoolReverseSwap.transactionId!);
-        this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${mempoolReverseSwap.id}: ${mempoolReverseSwap.transactionId}`);
-        this.listenContractTransaction(mempoolReverseSwap, transaction);
+        this.logger.error("stacksnurseryr.98 mempoolReverseSwap " + mempoolReverseSwap.transactionId)
+        // const transaction = await this.stacksManager.provider.getTransaction(mempoolReverseSwap.transactionId!);
+        const transaction = await getTx(mempoolReverseSwap.transactionId!)
+        this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${mempoolReverseSwap.id}: ${mempoolReverseSwap.transactionId}, ${transaction}`);
+        // this.listenContractTransaction(mempoolReverseSwap, transaction);
+        // this.listenStacksContractTransaction(mempoolReverseSwap, transaction);
+        this.checkStacksTransaction(mempoolReverseSwap, transaction);
       } catch (error) {
+        this.logger.error(`stacksnursery.106 error ${error}`);
         // TODO: retry finding that transaction
         // If the provider can't find the transaction, it is not on the Ethereum chain
       }
@@ -134,6 +142,27 @@ class StacksNursery extends EventEmitter {
           'lockup.confirmed',
           await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
           transaction.txid,
+        );
+      }
+    // }).catch(async (reason) => {
+
+    // });
+  }
+
+  public checkStacksTransaction = async (reverseSwap: ReverseSwap, transaction: Transaction): Promise<void> => {
+    // transaction.wait(1).then(async () => {
+      this.logger.error("stacksnursery.154 checkStacksTransaction tx: "+ JSON.stringify(transaction))
+      if(transaction.tx_status !== "success") {
+        this.emit(
+          'lockup.failedToSend',
+          await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionFailed),
+          transaction.tx_status,
+        );
+      } else {
+        this.emit(
+          'lockup.confirmed',
+          await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
+          transaction.tx_id,
         );
       }
     // }).catch(async (reason) => {
@@ -369,6 +398,7 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredSwaps = async (height: number) => {
     const expirableSwaps = await this.swapRepository.getSwapsExpirable(height);
+    this.logger.error("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
 
     for (const expirableSwap of expirableSwaps) {
       const { base, quote } = splitPairId(expirableSwap.pair);
@@ -384,11 +414,13 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredReverseSwaps = async (height: number) => {
     const expirableReverseSwaps = await this.reverseSwapRepository.getReverseSwapsExpirable(height);
+    this.logger.error("stacksnursery.417 checkExpiredReverseSwaps " + expirableReverseSwaps)
 
     for (const expirableReverseSwap of expirableReverseSwaps) {
       const { base, quote } = splitPairId(expirableReverseSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, expirableReverseSwap.orderSide, true);
 
+      this.logger.error("stacksnursery.393 checkExpiredReverseSwaps, " + height + ", " + expirableReverseSwap.id)
       const wallet = this.getEthereumWallet(chainCurrency);
 
       if (wallet) {

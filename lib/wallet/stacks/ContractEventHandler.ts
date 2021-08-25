@@ -1,15 +1,16 @@
 import { EventEmitter } from 'events';
 // import { BigNumber, Event } from 'ethers';
-import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
-import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
+// import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
+// import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
-import { parseBuffer, getTx } from './StacksUtils';
+import { parseBuffer, getTx, getInfo, getStacksContractTransactions } from './StacksUtils';
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
-import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
+// import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
 
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
+// import ChainTipRepository from 'lib/db/ChainTipRepository';
 
 let network:string = "mocknet";
 let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/extended/v1/ws'
@@ -42,8 +43,8 @@ interface ContractEventHandler {
 }
 
 class ContractEventHandler extends EventEmitter {
-  private etherSwap!: EtherSwap;
-  private erc20Swap!: ERC20Swap;
+  // private etherSwap!: EtherSwap;
+  // private erc20Swap!: ERC20Swap;
   private contractAddress!: string;
   private contractName!: string;
 
@@ -63,72 +64,97 @@ class ContractEventHandler extends EventEmitter {
     // this.erc20Swap = erc20Swap;
 
     this.logger.verbose('Stacks Starting contract event subscriptions');
-
     this.subscribeContractEvents(contract);
   }
 
   public rescan = async (startHeight: number): Promise<void> => {
-    const etherLockups = await this.etherSwap.queryFilter(
-      this.etherSwap.filters.Lockup(null, null, null, null, null),
-      startHeight,
-    );
+    // since Stacks do not have queryfilters/swap contract types etc.
+    // fetch each block since last chaintip and search for any lockup/claim/refund event signatures in a loop
 
-    const etherClaims = await this.etherSwap.queryFilter(
-      this.etherSwap.filters.Claim(null, null),
-      startHeight,
-    );
+    const contract = this.contractAddress + "." + this.contractName;
+    const stacksInfo = await getInfo()
+    const currentTip = stacksInfo.stacks_tip_height;
 
-    const etherRefunds = await this.etherSwap.queryFilter(
-      this.etherSwap.filters.Refund(null),
-      startHeight,
-    );
+    for (let index = startHeight; index < currentTip; index++) {
+      // this.logger.error(`ceh.79 rescan loop ${index}`);
+      const stacksBlockResults = await getStacksContractTransactions(contract,1,undefined,index);
+      this.logger.error(`ceh.82 stacksBlockResults ` + JSON.stringify(stacksBlockResults));
 
-    for (const event of etherLockups) {
-      this.emit(
-        'eth.lockup',
-        event.transactionHash,
-        formatEtherSwapValues(event.args!),
-      );
+      for (let index = 0; index < stacksBlockResults.length; index++) {
+        const tx = stacksBlockResults[index];
+        if(tx.tx_status === "success" && tx.tx_type === "contract_call"){
+          // go get the event?
+          let func_args = tx.contract_call.function_args; // array of inputs
+          let events = (await getTx(tx.tx_id)).events;
+          this.logger.debug("got events: "+ events + ", " + func_args);
+          // TODO: parse events and emit stuff!!!
+        }
+      }
+
     }
 
-    etherClaims.forEach((event) => {
-      this.emit('eth.claim', event.transactionHash, parseBuffer(event.topics[1]), parseBuffer(event.args!.preimage));
-    });
 
-    etherRefunds.forEach((event) => {
-      this.emit('eth.refund', event.transactionHash, parseBuffer(event.topics[1]));
-    });
+    // const etherLockups = await this.etherSwap.queryFilter(
+    //   this.etherSwap.filters.Lockup(null, null, null, null, null),
+    //   startHeight,
+    // );
 
-    const erc20Lockups = await this.erc20Swap.queryFilter(
-      this.erc20Swap.filters.Lockup(null, null, null, null, null, null),
-      startHeight,
-    );
+    // const etherClaims = await this.etherSwap.queryFilter(
+    //   this.etherSwap.filters.Claim(null, null),
+    //   startHeight,
+    // );
 
-    const erc20Claims = await this.erc20Swap.queryFilter(
-      this.erc20Swap.filters.Claim(null, null),
-      startHeight,
-    );
+    // const etherRefunds = await this.etherSwap.queryFilter(
+    //   this.etherSwap.filters.Refund(null),
+    //   startHeight,
+    // );
 
-    const erc20Refunds = await this.erc20Swap.queryFilter(
-      this.erc20Swap.filters.Refund(null),
-      startHeight,
-    );
+    // for (const event of etherLockups) {
+    //   this.emit(
+    //     'eth.lockup',
+    //     event.transactionHash,
+    //     formatEtherSwapValues(event.args!),
+    //   );
+    // }
 
-    for (const event of erc20Lockups) {
-      this.emit(
-        'erc20.lockup',
-        event.transactionHash,
-        formatERC20SwapValues(event.args!),
-      );
-    }
+    // etherClaims.forEach((event) => {
+    //   this.emit('eth.claim', event.transactionHash, parseBuffer(event.topics[1]), parseBuffer(event.args!.preimage));
+    // });
 
-    erc20Claims.forEach((event) => {
-      this.emit('erc20.claim', event.transactionHash, parseBuffer(event.topics[1]), parseBuffer(event.args!.preimage));
-    });
+    // etherRefunds.forEach((event) => {
+    //   this.emit('eth.refund', event.transactionHash, parseBuffer(event.topics[1]));
+    // });
 
-    erc20Refunds.forEach((event) => {
-      this.emit('erc20.refund', event.transactionHash, parseBuffer(event.topics[1]));
-    });
+    // const erc20Lockups = await this.erc20Swap.queryFilter(
+    //   this.erc20Swap.filters.Lockup(null, null, null, null, null, null),
+    //   startHeight,
+    // );
+
+    // const erc20Claims = await this.erc20Swap.queryFilter(
+    //   this.erc20Swap.filters.Claim(null, null),
+    //   startHeight,
+    // );
+
+    // const erc20Refunds = await this.erc20Swap.queryFilter(
+    //   this.erc20Swap.filters.Refund(null),
+    //   startHeight,
+    // );
+
+    // for (const event of erc20Lockups) {
+    //   this.emit(
+    //     'erc20.lockup',
+    //     event.transactionHash,
+    //     formatERC20SwapValues(event.args!),
+    //   );
+    // }
+
+    // erc20Claims.forEach((event) => {
+    //   this.emit('erc20.claim', event.transactionHash, parseBuffer(event.topics[1]), parseBuffer(event.args!.preimage));
+    // });
+
+    // erc20Refunds.forEach((event) => {
+    //   this.emit('erc20.refund', event.transactionHash, parseBuffer(event.topics[1]));
+    // });
   }
 
   private subscribeContractEvents = async (contract:string) => {

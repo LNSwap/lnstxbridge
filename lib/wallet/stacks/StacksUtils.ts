@@ -6,7 +6,7 @@ import { getBiggerBigNumber, getHexBuffer } from '../../Utils';
 import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
-// import type { Transaction } from '@stacks/stacks-blockchain-api-types';
+import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 
 let network:string = "mocknet";
 let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
@@ -94,9 +94,32 @@ export const getInfo = async () => {
 export const getTx = async (txid:string) => {
   const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
   const response = await axios.get(url)
-  // console.log("stacksutils getInfo", response.data);
   return response.data;
 }
+
+export const getTransaction = async (txid:string): Promise<Transaction> => {
+  const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
+  const response = await axios.get(url)
+  return response.data;
+}
+
+export const getStacksRawTransaction = async (txid:string) => {
+  const url = `${coreApiUrl}/extended/v1/tx/${txid}/raw`;
+  const response = await axios.get(url)
+  return response.data.raw_tx;
+}
+
+export const getStacksContractTransactions = async (address:string, limit?:number, offset?:number, height?:number) => {
+  let url = `${coreApiUrl}/extended/v1/address/${address}/transactions?limit=${limit}&height=${height}`;
+  if(offset){
+    url = url + "&offset="+offset;
+  }
+  // console.log("getStacksContractTransactions url", url);
+  const response = await axios.get(url)
+  // console.log("getStacksContractTransactions ", response.data);
+  return response.data.results;
+}
+
 
 export const listenContract = async (address:string) => {
   const client = await connectWebSocketClient(wsUrl);

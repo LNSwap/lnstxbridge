@@ -133,7 +133,7 @@ class StacksManager {
     this.logger.verbose(`Using Stacks signer: ${this.address}`);
 
     const info = await getInfo();
-    this.logger.error("stacksmanager.133 info "+ JSON.stringify(info));
+    // this.logger.error("stacksmanager.133 info "+ JSON.stringify(info));
 
     // const currentBlock = await signer.provider!.getBlockNumber();
     const currentBlock = info.stacks_tip_height;

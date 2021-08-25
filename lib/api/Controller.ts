@@ -88,8 +88,9 @@ class Controller {
           const chainCurrency = getChainCurrency(base, quote, reverseSwap.orderSide, true);
 
           try {
-            console.log("controller.91 TransactionConfirmed? ", status)
+            // console.log("controller.91 TransactionConfirmed? ", status)
             const transactionHex = await this.service.getTransaction(chainCurrency, reverseSwap.transactionId!);
+            // console.log("controller.93 transactionHex? ", transactionHex)
 
             this.pendingSwapInfos.set(reverseSwap.id, {
               status,
@@ -100,13 +101,14 @@ class Controller {
               },
             });
           } catch (error) {
-            // If the transaction can't be queried with the service it's either a transaction on the Ethereum network,
+            // If the transaction can't be queried with the service it's either a transaction on the Ethereum/RSK/Stacks network,
             // or something is terribly wrong
             if (error.message !== ServiceErrors.NOT_SUPPORTED_BY_SYMBOL(chainCurrency).message) {
-              console.log("controller.ts NOT_SUPPORTED_BY_SYMBOL");
+              console.log("controller.106 NOT_SUPPORTED_BY_SYMBOL ", error);
               throw error;
             }
 
+            console.log("controller.110 ", reverseSwap.id, status)
             this.pendingSwapInfos.set(reverseSwap.id, {
               status,
               transaction: {
