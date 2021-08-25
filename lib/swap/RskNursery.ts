@@ -186,6 +186,7 @@ class RskNursery extends EventEmitter {
     });
 
     this.rskManager.contractEventHandler.on('eth.claim', async (transactionHash, preimageHash, preimage) => {
+      this.logger.error("rsknursery.189 on 'eth.claim " + transactionHash+ ", " + preimageHash + ", " + preimage);
       const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
         preimageHash: {
           [Op.eq]: getHexString(preimageHash),

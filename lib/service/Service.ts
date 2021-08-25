@@ -521,13 +521,13 @@ class Service {
       for (const [symbol, currency] of this.currencies) {
         if (currency.type === CurrencyType.ERC20) {
           if (!map.has('ETH')) {
-            console.log("service.ts 507 ", currency)
+            console.log("service.ts 507 estimateFee", currency)
             map.set('ETH', await estimateFee(currency));
           }
 
           continue;
         }
-        console.log("service.ts 513 ", currency)
+        console.log("service.ts 513 estimateFee ", currency.symbol)
         map.set(symbol, await estimateFee(currency));
       }
     }

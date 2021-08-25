@@ -549,8 +549,10 @@ class SwapManager {
       });
 
     } else {
-      this.logger.error("swapmanager.515 " + sendingCurrency.provider!)
-      const blockNumber = await sendingCurrency.provider!.getBlockNumber();
+      // this.logger.error("swapmanager.515 " + sendingCurrency.provider!)
+      // const blockNumber = await sendingCurrency.provider!.getBlockNumber();
+      const info = await getInfo()  
+      const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.onchainTimeoutBlockDelta;
 
       lockupAddress = this.getLockupContractAddress(sendingCurrency.type, args.quoteCurrency);
@@ -665,16 +667,16 @@ class SwapManager {
 
   private getCurrencies = (baseCurrency: string, quoteCurrency: string, orderSide: OrderSide) => {
     const { sending, receiving } = getSendingReceivingCurrency(baseCurrency, quoteCurrency, orderSide);
-    this.logger.error("swapmanager.668 " + stringify({
-      // sendingCurrency: {
-      //   ...this.getCurrency(sending),
-      //   wallet: this.walletManager.wallets.get(sending)!,
-      // },
-      receivingCurrency: {
-        ...this.getCurrency(receiving),
-        wallet: this.walletManager.wallets.get(receiving)!,
-      },
-    }));
+    // this.logger.error("swapmanager.668 " + stringify({
+    //   // sendingCurrency: {
+    //   //   ...this.getCurrency(sending),
+    //   //   wallet: this.walletManager.wallets.get(sending)!,
+    //   // },
+    //   receivingCurrency: {
+    //     ...this.getCurrency(receiving),
+    //     wallet: this.walletManager.wallets.get(receiving)!,
+    //   },
+    // }));
 
     return {
       sendingCurrency: {

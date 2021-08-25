@@ -17,6 +17,7 @@ import { ERC20SwapValues, EtherSwapValues } from '../consts/Types';
 import { getChainCurrency, getHexString, splitPairId } from '../Utils';
 import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
+import { TxBroadcastResult } from '@stacks/transactions';
 
 interface StacksNursery {
   // EtherSwap
@@ -77,6 +78,11 @@ class StacksNursery extends EventEmitter {
       },
     });
 
+    // remove later
+    const allReverseSwaps = await ReverseSwap.findAll();
+    console.log("allReverseSwaps: ", allReverseSwaps);
+
+
     for (const mempoolReverseSwap of mempoolReverseSwaps) {
       const { base, quote } = splitPairId(mempoolReverseSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, mempoolReverseSwap.orderSide, true);
@@ -112,6 +118,27 @@ class StacksNursery extends EventEmitter {
         reason,
       );
     });
+  }
+
+  public listenStacksContractTransaction = async (reverseSwap: ReverseSwap, transaction: TxBroadcastResult): Promise<void> => {
+    // transaction.wait(1).then(async () => {
+      this.logger.error("stacksnursery.120 listenStacksContractTransaction tx: "+ JSON.stringify(transaction))
+      if(transaction.error) {
+        this.emit(
+          'lockup.failedToSend',
+          await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionFailed),
+          transaction.error,
+        );
+      } else {
+        this.emit(
+          'lockup.confirmed',
+          await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
+          transaction.txid,
+        );
+      }
+    // }).catch(async (reason) => {
+
+    // });
   }
 
   private listenEtherSwap = () => {
@@ -203,6 +230,11 @@ class StacksNursery extends EventEmitter {
     });
 
     this.stacksManager.contractEventHandler.on('eth.claim', async (transactionHash, preimageHash, preimage) => {
+      this.logger.error("stacksnursery.228 on 'eth.claim " + transactionHash+ ", " + getHexString(preimageHash));
+
+      // const allReverseSwaps = await ReverseSwap.findAll();
+      // console.log("allReverseSwaps: ", allReverseSwaps);
+
       const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
         preimageHash: {
           [Op.eq]: getHexString(preimageHash),
@@ -213,6 +245,7 @@ class StacksNursery extends EventEmitter {
       });
 
       if (!reverseSwap) {
+        this.logger.error("stacksnursery.239 reverseswap not found")
         return;
       }
 

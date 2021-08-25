@@ -88,6 +88,7 @@ class Controller {
           const chainCurrency = getChainCurrency(base, quote, reverseSwap.orderSide, true);
 
           try {
+            console.log("controller.91 TransactionConfirmed? ", status)
             const transactionHex = await this.service.getTransaction(chainCurrency, reverseSwap.transactionId!);
 
             this.pendingSwapInfos.set(reverseSwap.id, {

@@ -49,6 +49,7 @@ import {
   stringify,
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
+import { TxBroadcastResult } from '@stacks/transactions';
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -717,8 +718,9 @@ class SwapNursery extends EventEmitter {
     });
 
     stacksNursery.on('claim', async (reverseSwap, preimage) => {
-      this.logger.error("listenstacksNursery claim: ");
+      this.logger.error("listenstacksNursery on claim!");
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+        this.logger.error("swapnursery.723 acquire reverseSwapLock: settleReverseSwapInvoice!");
         await this.settleReverseSwapInvoice(reverseSwap, preimage);
       });
     });
@@ -916,36 +918,40 @@ class SwapNursery extends EventEmitter {
     reverseSwap: ReverseSwap,
   ) => {
     try {
-      let contractTransaction: ContractTransaction;
+      // let oldcontractTransaction: ContractTransaction;
+      let contractTransaction: TxBroadcastResult;
 
-      if (reverseSwap.minerFeeOnchainAmount) {
-        contractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
-          getHexBuffer(reverseSwap.preimageHash),
-          BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
-          BigNumber.from(reverseSwap.minerFeeOnchainAmount).mul(etherDecimals),
-          reverseSwap.claimAddress!,
-          reverseSwap.timeoutBlockHeight,
-        );
-      } else {
+      // if (reverseSwap.minerFeeOnchainAmount) {
+      //   oldcontractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
+      //     getHexBuffer(reverseSwap.preimageHash),
+      //     BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
+      //     BigNumber.from(reverseSwap.minerFeeOnchainAmount).mul(etherDecimals),
+      //     reverseSwap.claimAddress!,
+      //     reverseSwap.timeoutBlockHeight,
+      //   );
+      // } else {
         contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
           getHexBuffer(reverseSwap.preimageHash),
           BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
           reverseSwap.claimAddress!,
           reverseSwap.timeoutBlockHeight,
         );
-      }
+      // }
 
-      this.stacksNursery!.listenContractTransaction(reverseSwap, contractTransaction);
-      this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.hash}`);
+      // listenContractTransaction
+      this.stacksNursery!.listenStacksContractTransaction(reverseSwap, contractTransaction);
+      this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
+      this.logger.error("swapnursery.943 TODO: add stacks tx fee calculation to setLockupTransaction")
       this.emit(
         'coins.sent',
         await this.reverseSwapRepository.setLockupTransaction(
           reverseSwap,
-          contractTransaction.hash,
-          calculateEthereumTransactionFee(contractTransaction),
+          contractTransaction.txid,
+          // calculateEthereumTransactionFee(contractTransaction),
+          1
         ),
-        contractTransaction.hash,
+        contractTransaction.txid,
       );
     } catch (error) {
       await this.handleReverseSwapSendFailed(reverseSwap, wallet.symbol, lndClient, error);

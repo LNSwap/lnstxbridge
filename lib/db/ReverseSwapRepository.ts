@@ -38,6 +38,7 @@ class ReverseSwapRepository {
   }
 
   public setReverseSwapStatus = (reverseSwap: ReverseSwap, status: string, failureReason?: string): Promise<ReverseSwap> => {
+    console.log("reverseswaprepository.41 update: "+ JSON.stringify(reverseSwap), status);
     return reverseSwap.update({
       status,
       failureReason,
@@ -45,6 +46,7 @@ class ReverseSwapRepository {
   }
 
   public setLockupTransaction = (reverseSwap: ReverseSwap, transactionId: string, minerFee: number, vout?: number): Promise<ReverseSwap> => {
+    console.log("reverseswaprepository.49 setLockupTransaction update");
     return reverseSwap.update({
       minerFee,
       transactionId,

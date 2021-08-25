@@ -180,6 +180,7 @@ class EthereumNursery extends EventEmitter {
     });
 
     this.ethereumManager.contractEventHandler.on('eth.claim', async (transactionHash, preimageHash, preimage) => {
+      this.logger.error("ethnursery.183 on 'eth.claim " + transactionHash+ ", " + preimageHash + ", " + preimage);
       const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
         preimageHash: {
           [Op.eq]: getHexString(preimageHash),

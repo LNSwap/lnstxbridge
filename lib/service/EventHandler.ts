@@ -69,7 +69,9 @@ class EventHandler extends EventEmitter {
    */
   private subscribeTransactions = () => {
     this.nursery.on('transaction', (swap, transaction, confirmed, isReverse) => {
+      this.logger.error("eventhandler.72 on transaction: " + swap + ", " + transaction + ", " + confirmed + " , " + isReverse);
       if (!isReverse) {
+        this.logger.error("eventhandler.74 on transaction: ");
         this.emit('swap.update', swap.id, {
           status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
         });
@@ -77,6 +79,7 @@ class EventHandler extends EventEmitter {
         // Reverse Swaps only emit the "transaction.confirmed" event
         // "transaction.mempool" is handled by the event "coins.sent"
         if (transaction instanceof Transaction) {
+          this.logger.error("eventhandler.82 on transaction: ");
           this.emit('swap.update', swap.id, {
             status: SwapUpdateEvent.TransactionConfirmed,
             transaction: {
@@ -85,6 +88,7 @@ class EventHandler extends EventEmitter {
             },
           });
         } else {
+          this.logger.error("eventhandler.91 on transaction: ");
           this.emit('swap.update', swap.id, {
             status: SwapUpdateEvent.TransactionConfirmed,
             transaction: {
@@ -159,7 +163,9 @@ class EventHandler extends EventEmitter {
     });
 
     this.nursery.on('coins.sent', (reverseSwap, transaction) => {
+      this.logger.error("eventhandler.166 on coins.sent: " + reverseSwap);
       if (transaction instanceof Transaction) {
+        this.logger.error("eventhandler.168 on coins.sent: ");
         this.emit('swap.update', reverseSwap.id, {
           status: SwapUpdateEvent.TransactionMempool,
           transaction: {
@@ -169,6 +175,7 @@ class EventHandler extends EventEmitter {
           },
         });
       } else {
+        this.logger.error("eventhandler.178 on coins.sent: ");
         this.emit('swap.update', reverseSwap.id, {
           status: SwapUpdateEvent.TransactionMempool,
           transaction: {
