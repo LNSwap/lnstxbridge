@@ -78,16 +78,19 @@ class ContractEventHandler extends EventEmitter {
     for (let index = startHeight; index < currentTip; index++) {
       // this.logger.error(`ceh.79 rescan loop ${index}`);
       const stacksBlockResults = await getStacksContractTransactions(contract,1,undefined,index);
-      this.logger.error(`ceh.82 stacksBlockResults ` + JSON.stringify(stacksBlockResults));
+      // this.logger.error(`ceh.82 stacksBlockResults ` + JSON.stringify(stacksBlockResults));
 
-      for (let index = 0; index < stacksBlockResults.length; index++) {
-        const tx = stacksBlockResults[index];
+      for (let k = 0; k < stacksBlockResults.length; k++) {
+        const tx = stacksBlockResults[k];
         if(tx.tx_status === "success" && tx.tx_type === "contract_call"){
-          // go get the event?
-          let func_args = tx.contract_call.function_args; // array of inputs
-          let events = (await getTx(tx.tx_id)).events;
-          this.logger.debug("got events: "+ events + ", " + func_args);
-          // TODO: parse events and emit stuff!!!
+          this.logger.error(`ceh.86 contractcall during rescan ${index} ` + JSON.stringify(stacksBlockResults));
+          // go get the event? - no need checkTx already emits required events!
+          this.checkTx(tx.tx_id);
+
+          // let func_args = tx.contract_call.function_args; // array of inputs
+          // let events = (await getTx(tx.tx_id)).events;
+          // this.logger.debug("got events: "+ events + ", " + func_args);
+          // // TODO: parse events and emit stuff!!!
         }
       }
 

@@ -215,7 +215,7 @@ class StacksNursery extends EventEmitter {
         true,
       );
 
-      this.logger.error("StacksNursery listenetherswap claimAddress, this.rskmanageraddress: " + etherSwapValues.claimAddress + ", " + this.stacksManager.address + ", " + JSON.stringify(etherSwapValues));
+      this.logger.error("StacksNursery listenetherswap claimAddress, this.stacksmanageraddress: " + etherSwapValues.claimAddress + ", " + this.stacksManager.address + ", " + JSON.stringify(etherSwapValues));
       // skip claimaddress check because Stacks claim address are dummy buffers...
       // if (etherSwapValues.claimAddress !== this.stacksManager.address) {
       //   this.emit(
