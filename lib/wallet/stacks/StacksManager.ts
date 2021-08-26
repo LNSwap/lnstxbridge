@@ -173,7 +173,7 @@ class StacksManager {
     // this.logger.error("stacksmanager.167 TODO subscribe to contract updates and check for any relevant thing.")
     // listenContract(this.stacksConfig.stxSwapAddress);
 
-    this.logger.error("TODO need to scan the blocks(?) and remove swaps from db if they're found...")
+    // this.logger.error("TODO need to scan the blocks(?) and remove swaps from db if they're found...")
 
     // this.provider.on('block', async (blockNumber: number) => {
     //   this.logger.silly(`Got new Stacks block: ${ blockNumber }`);
@@ -188,7 +188,7 @@ class StacksManager {
 
     for (const token of this.stacksConfig.tokens) {
       if (token.contractAddress) {
-        this.logger.error("stacksmanager.190 TODO: token wallets?!")
+        this.logger.error("stacksmanager.190 TODO: token wallets?! -- pending M4 on the grant application")
         // if (token.decimals) {
         //   if (!wallets.has(token.symbol)) {
         //     // Wrap the address in "utils.getAddress" to make sure it is a checksum one

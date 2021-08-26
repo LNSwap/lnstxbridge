@@ -209,9 +209,10 @@ class Boltz {
         } else if (chainTip.symbol === 'STX') {
           // this.logger.error("TODO boltz 210 stacks symbol "+ this.walletManager.stacksManager)
           if (this.walletManager.stacksManager) {
-            this.logger.error("TODO: boltz.212 stacksManager.contractEventHandler.rescan "+ this.walletManager.stacksManager)
+            // this.logger.error("TODO: boltz.212 stacksManager.contractEventHandler.rescan "+ this.walletManager.stacksManager)
             logRescan(chainTip);
             // TODO find a way to rescan if there was any contract calls from users starting with chaintip til now
+            // done
             rescanPromises.push(this.walletManager.stacksManager.contractEventHandler.rescan(chainTip.height));
           }
         } else {

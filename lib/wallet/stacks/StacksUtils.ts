@@ -7,18 +7,29 @@ import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
+import { estimateContractFunctionCall } from '@stacks/transactions';
+
+import { bufferCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
+import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
+
+const BigNum = require('bn.js');
 
 let network:string = "mocknet";
+let stacksNetwork:StacksNetwork = new StacksMainnet()
 let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
 let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/'
+
 if (network.includes('mocknet')) {
   coreApiUrl = 'http://localhost:3999';
   wsUrl = 'ws://localhost:3999/extended/v1/ws'
+  stacksNetwork = new StacksMocknet()
 } else if (network.includes('testnet')) {
   coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
   wsUrl = 'ws://stacks-node-api.testnet.stacks.co/'
+  stacksNetwork = new StacksTestnet()
 } else if (network.includes('regtest')) {
   coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
+  // stacksNetwork = new StacksRegtest()
 }
 
 // const apiConfig = new Configuration({
@@ -137,7 +148,72 @@ export const listenContract = async (address:string) => {
   */
 }
 
-// window is not defined?!
+export const calculateStacksTxFee = async (contract:string, functionName:string) => {
+  // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
+  let contractAddress = contract.split(".")[0];
+  let contractName = contract.split(".")[1];
+
+  const postConditionCode = FungibleConditionCode.GreaterEqual;
+  const postConditionAmount = new BigNum(100000);
+  const postConditions = [
+    makeContractSTXPostCondition(
+      contractAddress,
+      contractName,
+      postConditionCode,
+      postConditionAmount
+    )
+  ];
+
+  // Successful claim tx
+  // 0xfcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec
+  // amount
+  // 0x0000000000000000000000000018b1df
+  // claimAddress
+  // 0x01
+  // refundAddress
+  // 0x01
+  // timelock
+  // 0x0000000000000000000000000000405a
+
+  // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+  const functionArgs = [
+    // bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
+    bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+    bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+    bufferCV(Buffer.from('01','hex')),
+    bufferCV(Buffer.from('01','hex')),
+    bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+  ];
+  // console.log("stacksutil.187 functionargs: " + JSON.stringify(functionArgs));
+
+  const txOptions = {
+    contractAddress,
+    contractName,
+    functionName,
+    functionArgs: functionArgs,
+    senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+    validateWithAbi: true,
+    network: stacksNetwork,
+    postConditionMode: PostConditionMode.Allow,
+    postConditions,
+    anchorMode: AnchorMode.Any,
+    onFinish: data => {
+      console.log('Stacks claim Transaction:', JSON.stringify(data));
+    }
+  };
+
+  // this.toObject(txOptions)
+  // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
+
+  const transaction = await makeContractCall(txOptions);
+  // console.log("stacksutil.209 transaction: ", transaction)
+  const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+  // console.log("estimatedFee: ", estimateFee);
+  return Number(estimateFee);
+}
+
+
+// window is not defined?! -- I think we can use cross-fetch but meh no need.
 // export const getInfo = async () => {
 //   const infoApi = new InfoApi(apiConfig)
 //   const info = await infoApi.getCoreApiInfo()

@@ -5,6 +5,7 @@ import DataAggregator from './data/DataAggregator';
 import { BaseFeeType, OrderSide } from '../consts/Enums';
 import { etherDecimals, gweiDecimals } from '../consts/Consts';
 import { getChainCurrency, getPairId, mapToObject, splitPairId, stringify } from '../Utils';
+import { calculateStacksTxFee } from '../wallet/stacks/StacksUtils';
 
 type ReverseMinerFees = {
   lockup: number;
@@ -177,17 +178,23 @@ class FeeProvider {
 
       case 'STX': {
         const relativeFee = feeMap.get(chainCurrency)!;
-        const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
+        const claimCost = await calculateStacksTxFee('STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug', 'claimStx')
+        const lockupCost = await calculateStacksTxFee('STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug', 'lockStx')
+        
+        // const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
         // claimcost is wrong for STX but that should be OK.
-        this.logger.error("feeprovider.181 TODO: NO CLAIM/LOCK FEE estimation yet!! -relativeFee,claimCost " + relativeFee + ", " +claimCost)
+        // this.logger.error("feeprovider.181 TODO: NO CLAIM/LOCK FEE estimation yet!! -relativeFee, stxclaimCost " + relativeFee + ", " +claimCost)
+        // DONE!
+        this.logger.debug(`feeprovider.181 relativeFee, stxclaimCost, lockupCost: ${relativeFee}, ${claimCost}, ${lockupCost}`);
 
         this.minerFees.set(chainCurrency, {
-          normal: relativeFee,
-          // normal: claimCost,
+          // normal: relativeFee,
+          normal: claimCost,
           reverse: {
-            claim: relativeFee,
-            // claim: claimCost,
-            lockup: relativeFee,
+            // claim: relativeFee,
+            claim: claimCost,
+            lockup: lockupCost,
+            // lockup: relativeFee,
             // lockup: this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.lockup),
           },
         });

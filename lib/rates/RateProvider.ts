@@ -238,7 +238,7 @@ class RateProvider {
   private getLimits = (pair: string, base: string, quote: string, rate: number) => {
     const baseLimits = this.limits.get(base);
     const quoteLimits = this.limits.get(quote);
-    // this.logger.error("rateprovider.233 baseLimits, quoteLimits " + base+":"+ stringify(baseLimits) + ", " +quote+":"+ stringify(quoteLimits))
+    // this.logger.error("rateprovider.233 baseLimits, quoteLimits " + base+":"+ stringify(baseLimits) + ", " +quote+":"+ stringify(quoteLimits) + "," +rate)
 
     if (baseLimits && quoteLimits) {
       let minimalLimit = Math.max(quoteLimits.minimal, baseLimits.minimal * rate);
@@ -257,7 +257,8 @@ class RateProvider {
       // rateprovider.237 minimallimit:                   332115576.2205247,         45167718.36599137,                          4
       // this.logger.error("rateprovider.237 minimallimit: "+ minimalLimit + ", "+ minimalLimitBaseTransactionFee  + ", "+ minimalLimitQuoteTransactionFee);
 
-      this.logger.error("TODO: fix STX max/min limits");
+      // not fixed - so far it makes sense
+      // this.logger.error("TODO: fix STX max/min limits");
       return {
         maximal: Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10,
         // minimal: Math.ceil(minimalLimit), // no idea why this comes out 332115576
