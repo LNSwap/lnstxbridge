@@ -17,7 +17,8 @@ const BigNum = require('bn.js');
 
 let stacksNetwork:StacksNetwork = new StacksMainnet()
 let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
-let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/';
+let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/extended/v1/ws';
+wsUrl = 'ws://localhost:3999/extended/v1/ws'; // public instances seem to have socket timeout :(
 let stxSwapAddress = "STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3";
 let privateKey = 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501';
 
@@ -88,7 +89,7 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
     stacksNetwork = new StacksMocknet()
   } else if (network.includes('testnet')) {
     coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
-    wsUrl = 'ws://stacks-node-api.testnet.stacks.co/'
+    // wsUrl = 'wss://stacks-node-api.testnet.stacks.co/extended/v1/ws'
     stacksNetwork = new StacksTestnet()
   } else if (network.includes('regtest')) {
     coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';

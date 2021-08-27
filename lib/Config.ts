@@ -111,6 +111,9 @@ type StacksConfig = {
 type ApiConfig = {
   host: string;
   port: number;
+  sslKey: string;
+  sslCert: string;
+  sslEnabled: boolean;
 };
 
 type GrpcConfig = {
@@ -223,8 +226,11 @@ class Config {
       swapwitnessaddress: false,
 
       api: {
-        host: '127.0.0.1',
+        host: '0.0.0.0',
         port: 9001,
+        sslKey: '/root/lnstxbridge-frontend/privkey.pem',
+        sslCert: '/root/lnstxbridge-frontend/fullchain.pem',
+        sslEnabled: false,
       },
 
       grpc: {

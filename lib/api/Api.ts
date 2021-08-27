@@ -5,6 +5,9 @@ import Controller from './Controller';
 import { ApiConfig } from '../Config';
 import Service from '../service/Service';
 
+import { readFileSync } from 'fs';
+import * as https from 'https'; 
+
 class Api {
   private app: Application;
   private readonly controller: Controller;
@@ -34,10 +37,23 @@ class Api {
     await this.controller.init();
 
     await new Promise<void>((resolve) => {
-      this.app.listen(this.config.port, this.config.host, () => {
-        this.logger.info(`API server listening on: ${this.config.host}:${this.config.port}`);
-        resolve();
-      });
+      if(this.config.sslEnabled) {
+        const options = {
+          key: readFileSync(this.config.sslKey),
+          cert: readFileSync(this.config.sslCert),
+        };
+        console.log("sslenabled ", this.config.sslEnabled);
+        https.createServer(options, this.app).listen(this.config.port, this.config.host, () => {
+          this.logger.info(`API server listening on: ${this.config.host}:${this.config.port}`);
+          resolve();
+        });
+      } else {
+        this.app.listen(this.config.port, this.config.host, () => {
+          this.logger.info(`API server listening on: ${this.config.host}:${this.config.port}`);
+          resolve();
+        });
+      }
+
     });
   }
 
