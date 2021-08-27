@@ -21,10 +21,8 @@ import StacksWalletProvider from '../providers/StacksWalletProvider';
 
 import { deriveRootKeychainFromMnemonic, getAddress, deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID } from '@stacks/transactions';
-import { getInfo } from './StacksUtils';
-
-// TODO: Fetch CHAINID from configuration!!!
-const chainId = ChainID.Testnet
+import { getInfo, setStacksNetwork } from './StacksUtils';
+// import { StacksMainnet, StacksMocknet, StacksNetwork, StacksTestnet } from '@stacks/network';
 
 type Network = {
   chainId: number;
@@ -47,6 +45,8 @@ class StacksManager {
   public address!: string;
   public network!: Network;
   public btcAddress!: string;
+  public privateKey!: string;
+  // public stacksNetwork!: StacksNetwork;
 
   public tokenAddresses = new Map<string, string>();
   public stacksClient: any;
@@ -93,9 +93,21 @@ class StacksManager {
   }
 
   public init = async (mnemonic: string, chainTipRepository: ChainTipRepository): Promise<Map<string, Wallet>> => {
-    this.logger.info('StacksManager.90 INIT injectedprovider');
+    // this.logger.info('StacksManager.90 INIT injectedprovider');
     await this.provider.init();
     
+    let chainId = ChainID.Testnet;
+    if(this.stacksConfig.providerEndpoint.includes('mainnet')){
+      chainId = ChainID.Mainnet;
+    }
+
+    // this.stacksNetwork = new StacksMocknet();
+    // if(this.stacksConfig.providerEndpoint.includes('testnet')){
+    //   this.stacksNetwork = new StacksTestnet();
+    // } else if (this.stacksConfig.providerEndpoint.includes("mainnet")) {
+    //   this.stacksNetwork = new StacksMainnet();
+    // }
+
     // const network = await this.provider.getNetwork();
     // this.network = {
     //   name: network.name !== 'unknown' ? network.name : undefined,
@@ -108,7 +120,7 @@ class StacksManager {
     // this.logger.error('stacksmanager init network, '+ network);
   
     const signer = await deriveRootKeychainFromMnemonic(mnemonic);
-    this.logger.error("stacksmanager.105 got signer: " + JSON.stringify(signer));
+    this.logger.verbose("stacksmanager.105 got signer: " + JSON.stringify(signer));
     // const signer = EthersWallet.fromMnemonic(mnemonic).connect(this.provider);
     // this.address = await signer.getAddress();
 
@@ -117,8 +129,10 @@ class StacksManager {
 
     
     const derivedData = await deriveStxAddressChain(chainId)(signer)
-    this.logger.error("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
+    this.logger.verbose("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
     this.address = derivedData.address;
+    this.privateKey = derivedData.privateKey;
+    setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey);
 
     this.stxswapaddress = this.stacksConfig.stxSwapAddress;
 
@@ -137,7 +151,7 @@ class StacksManager {
 
     // const currentBlock = await signer.provider!.getBlockNumber();
     const currentBlock = info.stacks_tip_height;
-    this.logger.error("StacksManager currentBlock: "+ currentBlock);
+    this.logger.verbose("StacksManager currentBlock: "+ currentBlock);
     const chainTip = await chainTipRepository.findOrCreateTip('STX', currentBlock);
 
     // , this.erc20Swap
@@ -261,7 +275,7 @@ class StacksManager {
 
 async function checkblockheight (chainTipRepository, chainTip) {
   const info = await getInfo();
-  console.log("regular check for stx block height: " + info.stacks_tip_height)
+  console.log("Checking for Stacks block height: " + info.stacks_tip_height)
   chainTipRepository.updateTip(chainTip, info.stacks_tip_height)
 }
 

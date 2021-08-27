@@ -21,6 +21,7 @@ import { BigNumber } from 'ethers';
 import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult, makeContractSTXPostCondition } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 import { getHexString } from '../../../Utils';
+// import StacksManager from '../../../wallet/stacks/StacksManager';
 
 const BigNum = require('bn.js');
 
@@ -49,6 +50,7 @@ export const builder = {
 };
 
 export const handler = async (argv: Arguments<any>): Promise<void> => {
+
   // console.log("stx claim: ", argv.provider, argv.signer, argv, argv._);
   // console.log(process.argv.slice(2))
   let allargs = process.argv.slice(2);
@@ -181,6 +183,7 @@ const claimStx = async (
     functionName: 'claimStx',
     functionArgs: functionArgs,
     senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+    // senderKey: StacksManager
     validateWithAbi: true,
     network,
     postConditionMode: PostConditionMode.Allow,

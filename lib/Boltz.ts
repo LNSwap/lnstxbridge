@@ -146,22 +146,22 @@ class Boltz {
 
   public start = async (): Promise<void> => {
     try {
-      this.logger.error(`boltz 149 start1 ` + JSON.stringify(Array.from(this.currencies)) + '\n');
+      // this.logger.error(`boltz 149 start1 ` + JSON.stringify(Array.from(this.currencies)) + '\n');
       await this.db.migrate(this.currencies);
-      this.logger.error(`start2`);
+      // this.logger.error(`start2`);
       await this.db.init();
-      this.logger.error(`after db init`);
+      // this.logger.error(`after db init`);
       const chainTipRepository = new ChainTipRepository();
 
       // Query the chain tips now to avoid them being updated after the chain clients are initialized
       const chainTips = await chainTipRepository.getChainTips();
 
-      this.logger.error(`boltz.159 loop currencies\n`);
+      this.logger.verbose(`boltz.159 loop currencies\n`);
       for (const [, currency] of this.currencies) {
         
         // console.log("currency: ", currency);
         if (currency.chainClient) {
-          this.logger.error(`boltz start loop currency connectChainClient: ${currency}` + JSON.stringify(currency) + '\n');
+          // this.logger.error(`boltz start loop currency connectChainClient: ${currency}` + JSON.stringify(currency) + '\n');
           await this.connectChainClient(currency.chainClient, chainTipRepository);
 
           if (currency.lndClient) {
@@ -195,7 +195,7 @@ class Boltz {
       const rescanPromises: Promise<void>[] = [];
 
       for (const chainTip of chainTips) {
-        this.logger.error("rescanpromise chaintip: " + chainTip.symbol);
+        this.logger.verbose("rescanpromise chaintip: " + chainTip.symbol);
         if (chainTip.symbol === 'ETH') {
           if (this.walletManager.ethereumManager) {
             logRescan(chainTip);

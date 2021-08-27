@@ -11,26 +11,15 @@ import { estimateContractFunctionCall } from '@stacks/transactions';
 
 import { bufferCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
+import { StacksConfig } from 'lib/Config';
 
 const BigNum = require('bn.js');
 
-let network:string = "mocknet";
 let stacksNetwork:StacksNetwork = new StacksMainnet()
 let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
-let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/'
-
-if (network.includes('mocknet')) {
-  coreApiUrl = 'http://localhost:3999';
-  wsUrl = 'ws://localhost:3999/extended/v1/ws'
-  stacksNetwork = new StacksMocknet()
-} else if (network.includes('testnet')) {
-  coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
-  wsUrl = 'ws://stacks-node-api.testnet.stacks.co/'
-  stacksNetwork = new StacksTestnet()
-} else if (network.includes('regtest')) {
-  coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
-  // stacksNetwork = new StacksRegtest()
-}
+let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/';
+let stxSwapAddress = "STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3";
+let privateKey = 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501';
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -60,7 +49,9 @@ export const getGasPrice = async (provider: providers.Provider, gasPrice?: numbe
 };
 
 export const getAddressBalance = async (address:string) => {
-  console.log("started TEST");
+  console.log("started getAddressBalance ", coreApiUrl);
+  // coreApiUrl = stacksNetwork.coreApiUrl;
+
   // const address = "ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
   const url = `${coreApiUrl}/extended/v1/address/${address}/balances`;
   const response = await axios.get(url)
@@ -86,10 +77,37 @@ export const getAddressBalance = async (address:string) => {
   //   non_fungible_tokens: {}
   // }
   
+}
 
+export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string) => {
+  // let network:string = "mocknet";
+ 
+  if (network.includes("localhost")) {
+    coreApiUrl = 'http://localhost:3999';
+    wsUrl = 'ws://localhost:3999/extended/v1/ws'
+    stacksNetwork = new StacksMocknet()
+  } else if (network.includes('testnet')) {
+    coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
+    wsUrl = 'ws://stacks-node-api.testnet.stacks.co/'
+    stacksNetwork = new StacksTestnet()
+  } else if (network.includes('regtest')) {
+    coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
+    // stacksNetwork = new StacksRegtest()
+    stacksNetwork = new StacksMocknet()
+  }
+
+  stxSwapAddress = stacksConfig.stxSwapAddress;
+  privateKey = derivedPrivateKey;
+
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'providerEndpoint': network, 'privateKey': privateKey};
+}
+
+export const getStacksNetwork = () => {
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey};
 }
 
 export const getFee = async () => {
+  // console.log("stacksutils.95 getFee ", coreApiUrl);
   const url = `${coreApiUrl}/v2/fees/transfer`;
   const response = await axios.get(url)
   // console.log("stacksutils  getFee", response.data);
@@ -191,7 +209,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
     contractName,
     functionName,
     functionArgs: functionArgs,
-    senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+    senderKey: getStacksNetwork().privateKey,
     validateWithAbi: true,
     network: stacksNetwork,
     postConditionMode: PostConditionMode.Allow,

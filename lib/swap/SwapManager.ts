@@ -84,7 +84,7 @@ class SwapManager {
   }
 
   public init = async (currencies: Currency[]): Promise<void>=> {
-    console.log("***swapmanager.ts init");
+    // console.log("***swapmanager.ts init");
     currencies.forEach((currency) => {
       this.currencies.set(currency.symbol, currency);
     });
@@ -225,7 +225,7 @@ class SwapManager {
       const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
 
-      this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
+      // this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
       claimAddress = await receivingCurrency.wallet.getAddress();
       // claimAddress = await receivingCurrency.wallet.
       this.logger.error("swapmanager.228 " + stringify({

@@ -3,23 +3,23 @@ import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
 import { getHexString, stringify } from '../../Utils';
-import { getGasPrice } from './StacksUtils';
+import { getGasPrice, getStacksNetwork } from './StacksUtils';
 import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
 // makeContractCall, , broadcastTransaction, makeStandardSTXPostCondition
 import { bufferCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
-import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
+// import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 
 const BigNum = require('bn.js');
 
-let networkconf:string = "mocknet";
-let network = new StacksTestnet();
-if(networkconf=="mainnet"){
-  network = new StacksMainnet();
-} else if(networkconf=="mocknet") {
-  network = new StacksMocknet()
-}
+// let networkconf:string = "mocknet";
+// let network = new StacksTestnet();
+// if(networkconf=="mainnet"){
+//   network = new StacksMainnet();
+// } else if(networkconf=="mocknet") {
+//   network = new StacksMocknet()
+// }
 
 class ContractHandler {
   private etherSwap!: EtherSwap;
@@ -123,9 +123,9 @@ class ContractHandler {
       contractName: this.contractName,
       functionName: 'lockStx',
       functionArgs: functionArgs,
-      senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+      senderKey: getStacksNetwork().privateKey,
       validateWithAbi: true,
-      network,
+      network: getStacksNetwork().stacksNetwork,
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
@@ -134,7 +134,7 @@ class ContractHandler {
     // this.logger.error("stacks contracthandler.84 txOptions: "+ stringify(txOptions));
 
     const transaction = await makeContractCall(txOptions);
-    return broadcastTransaction(transaction, network);
+    return broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
 
     // return this.etherSwap.lock(preimageHash, claimAddress, timeLock, {
     //   value: amount,
@@ -210,9 +210,9 @@ class ContractHandler {
       contractName: this.contractName,
       functionName: 'claimStx',
       functionArgs: functionArgs,
-      senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+      senderKey: getStacksNetwork().privateKey,
       validateWithAbi: true,
-      network,
+      network: getStacksNetwork().stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
       postConditions,
       anchorMode: AnchorMode.Any,
@@ -225,7 +225,7 @@ class ContractHandler {
     // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
 
     const transaction = await makeContractCall(txOptions);
-    return broadcastTransaction(transaction, network);
+    return broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
 
     
 

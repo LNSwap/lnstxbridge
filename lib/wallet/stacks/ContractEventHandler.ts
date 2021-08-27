@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 // import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 // import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
-import { parseBuffer, getTx, getInfo, getStacksContractTransactions } from './StacksUtils';
+import { parseBuffer, getTx, getInfo, getStacksContractTransactions, getStacksNetwork } from './StacksUtils';
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 // import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
 
@@ -12,13 +12,13 @@ import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
 // import ChainTipRepository from 'lib/db/ChainTipRepository';
 
-let network:string = "mocknet";
-let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/extended/v1/ws'
-if (network.includes('testnet')) {
-  wsUrl = 'wss://stacks-node-api.testnet.stacks.co/extended/v1/ws'
-} else if(network.includes("mocknet")){
-  wsUrl = "ws://localhost:3999/extended/v1/ws"
-}
+// let network:string = "mocknet";
+// let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/extended/v1/ws'
+// if (network.includes('testnet')) {
+//   wsUrl = 'wss://stacks-node-api.testnet.stacks.co/extended/v1/ws'
+// } else if(network.includes("mocknet")){
+//   wsUrl = "ws://localhost:3999/extended/v1/ws"
+// }
 
 interface ContractEventHandler {
   // EtherSwap contract events
@@ -58,7 +58,7 @@ class ContractEventHandler extends EventEmitter {
   public init = (contract:string): void => {
     this.contractAddress = contract.split(".")[0]
     this.contractName = contract.split(".")[1]
-    this.logger.debug("stacks contracteventhandler.init: "+ this.contractAddress + "." + this.contractName + " on " + wsUrl);
+    this.logger.debug("stacks contracteventhandler.init: "+ this.contractAddress + "." + this.contractName + " on " + getStacksNetwork().wsUrl);
 
     // this.etherSwap = etherSwap;
     // this.erc20Swap = erc20Swap;
@@ -162,14 +162,15 @@ class ContractEventHandler extends EventEmitter {
 
   private subscribeContractEvents = async (contract:string) => {
 
-    const client = await connectWebSocketClient(wsUrl);
-    console.log("stacks contracteventhandler.134 started listening to txns for ", contract, this.contractAddress);
+    const client = await connectWebSocketClient(getStacksNetwork().wsUrl);
+    console.log("stacks contracteventhandler.134 started listening to txns for ", contract, this.contractAddress, getStacksNetwork().wsUrl);
     // await client.subscribeAddressTransactions(contract, event => {
     //   console.log("stacks contracteventhandler.142 got event ", stringify(event));
       
     // });
 
-    await client.subscribeAddressTransactions(this.contractAddress, event => {
+    // this.contractAddress -> was working but wrong!
+    await client.subscribeAddressTransactions(contract, event => {
       //works!!
       console.log("stacks contracteventhandler.146 got event ", stringify(event));
 

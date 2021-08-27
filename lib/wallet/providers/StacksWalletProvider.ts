@@ -6,14 +6,14 @@ import WalletProviderInterface, { SentTransaction, WalletBalance } from './Walle
 import { BIP32Interface } from 'bip32';
 import { deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID, AnchorMode, makeSTXTokenTransfer, broadcastTransaction } from '@stacks/transactions';
-import { getAddressBalance } from '../stacks/StacksUtils'
-import { StacksTestnet, StacksMainnet } from '@stacks/network';
+import { getAddressBalance, getStacksNetwork } from '../stacks/StacksUtils'
+// import { StacksTestnet, StacksMainnet } from '@stacks/network';
 
-let networkconf:string = "testnet";
-let network = new StacksTestnet();
-if(networkconf=="mainnet"){
-  network = new StacksMainnet();
-}
+// let networkconf:string = "testnet";
+// let network = new StacksTestnet();
+// if(networkconf=="mainnet"){
+//   network = new StacksMainnet();
+// }
 
 class StacksWalletProvider implements WalletProviderInterface {
   public readonly symbol: string;
@@ -35,7 +35,8 @@ class StacksWalletProvider implements WalletProviderInterface {
 
   public getBalance = async (): Promise<WalletBalance> => {
     const myaddress = await this.getAddress();
-    const balance = await getAddressBalance(myaddress)
+    // this.logger.debug(`stackswalletprovider.38 ${this.stacksNetwork}`);
+    const balance = await getAddressBalance(myaddress);
     // const balance = (await this.signer.getBalance()).div(etherDecimals).toNumber();
 
     return {
@@ -50,8 +51,8 @@ class StacksWalletProvider implements WalletProviderInterface {
     const txOptions = {
       recipient: address,
       amount: amount,
-      senderKey: 'b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01',
-      network,
+      senderKey: getStacksNetwork().privateKey,
+      network: getStacksNetwork().stacksNetwork,
       // memo: 'test memo',
       // nonce: new BigNum(0), // set a nonce manually if you don't want builder to fetch from a Stacks node
       // fee: new BigNum(200), // set a tx fee if you don't want the builder to estimate
@@ -62,10 +63,10 @@ class StacksWalletProvider implements WalletProviderInterface {
     
     // to see the raw serialized tx
     const serializedTx = transaction.serialize().toString('hex');
-    this.logger.error("stackswalletprovider.64 serializedTx: " + serializedTx)
+    this.logger.debug("stackswalletprovider.64 sendToAddress serializedTx: " + serializedTx)
     
     // broadcasting transaction to the specified network
-    const broadcastResponse = await broadcastTransaction(transaction, network);
+    const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
     const txId = broadcastResponse.txid;
 
     return {

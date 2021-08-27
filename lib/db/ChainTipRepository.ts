@@ -19,7 +19,7 @@ class ChainTipRepository {
       },
     });
 
-    console.log("findOrCreateTip: ", symbol, JSON.stringify(chainTip));
+    // console.log("findOrCreateTip: ", symbol, JSON.stringify(chainTip));
     return chainTip;
   }
 

@@ -7,16 +7,15 @@
 ;; Locks stx for a swap in the contract
 ;; @notice The amount locked is the stx sent in the transaction and the refund address is the sender of the transaction
 ;; @param preimageHash Preimage hash of the swap
-;; @param claimAddress Address that can claim the locked stx
 ;; @param timelock Block height after which the locked stx can be refunded
-(define-public (lockStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+(define-public (lockStx (preimageHash (buff 32)) (amount (buff 16)) (timelock (buff 16)))
   (begin
     (asserts! (> (buff-to-uint-le amount) u0) (err false))
-    (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf preimageHash amount claimAddress refundAddress timelock)) false) (err false))
+    (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf preimageHash amount timelock)) false) (err false))
     (unwrap-panic (stx-transfer? (buff-to-uint-le amount) tx-sender (as-contract tx-sender)))
-    (map-set swaps {hash: (hashValuesbuf preimageHash amount claimAddress refundAddress timelock)} {locked: true, initiator: tx-sender})
+    (map-set swaps {hash: (hashValuesbuf preimageHash amount timelock)} {locked: true, initiator: tx-sender})
     (print "lock")
-    (print (hashValuesbuf preimageHash amount claimAddress refundAddress timelock))
+    (print (hashValuesbuf preimageHash amount timelock))
     (ok true)
   )
 )
@@ -25,19 +24,17 @@
 ;; @dev To query the arguments of this function, get the "Lockup" event logs for the SHA256 hash of the preimage
 ;; @param preimage Preimage of the swap
 ;; @param amount Amount locked in the contract for the swap in mstx
-;; @param refundAddress Address that locked the stx in the contract
 ;; @param timelock Block height after which the locked stx can be refunded
-(define-public (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+(define-public (claimStx (preimage (buff 32)) (amount (buff 16)) (timelock (buff 16)))
   (let (
     (claimer tx-sender)
     )
   (begin
-    (print (hashValuesbuf (sha256 preimage) amount claimAddress refundAddress timelock))
-    (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf (sha256 preimage) amount claimAddress refundAddress timelock)) true) (err u1000))
-    (map-delete swaps {hash: (hashValuesbuf (sha256 preimage) amount claimAddress refundAddress timelock)})
+    (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf (sha256 preimage) amount timelock)) true) (err u1000))
+    (map-delete swaps {hash: (hashValuesbuf (sha256 preimage) amount timelock)})
     (try! (as-contract (stx-transfer? (buff-to-uint-le amount) tx-sender claimer)))
     (print "claim")
-    (print (hashValuesbuf (sha256 preimage) amount claimAddress refundAddress timelock))
+    (print (hashValuesbuf (sha256 preimage) amount timelock))
     (ok u1008)
   ))
 )
@@ -47,20 +44,19 @@
 ;; @dev For further explanations and reasoning behind the statements in this function, check the "claim" function
 ;; @param preimageHash Preimage hash of the swap
 ;; @param amount Amount locked in the contract for the swap in mstx
-;; @param claimAddress Address that that was destined to claim the funds
 ;; @param timelock Block height after which the locked stx can be refunded
-(define-public (refundStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+(define-public (refundStx (preimageHash (buff 32)) (amount (buff 16)) (timelock (buff 16)))
   (let (
     (claimer tx-sender)
     )
   (begin
     (asserts! (> block-height (buff-to-uint-le timelock)) (err u1001))
-    (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf preimageHash amount claimAddress refundAddress timelock)) true) (err u1000))
-    (asserts! (is-eq claimer (default-to 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ (get initiator (map-get? swaps {hash: (hashValuesbuf preimageHash amount claimAddress refundAddress timelock)})))) (err u1002))
-    (map-delete swaps {hash: (hashValuesbuf preimageHash amount claimAddress refundAddress timelock)})
+    (asserts! (is-eq (checkSwapIsLocked (hashValuesbuf preimageHash amount timelock)) true) (err u1000))
+    (asserts! (is-eq claimer (default-to 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ (get initiator (map-get? swaps {hash: (hashValuesbuf preimageHash amount timelock)})))) (err u1002))
+    (map-delete swaps {hash: (hashValuesbuf preimageHash amount timelock)})
     (try! (as-contract (stx-transfer? (buff-to-uint-le amount) tx-sender claimer)))
     (print "refund")
-    (print (hashValuesbuf preimageHash amount claimAddress refundAddress timelock))
+    (print (hashValuesbuf preimageHash amount timelock))
     (ok u1008)
   ))
 )
@@ -68,22 +64,16 @@
 ;; Hashes all the values of a swap with Keccak256
 ;; @param preimageHash Preimage hash of the swap
 ;; @param amount Amount the swap has locked in mstx
-;; @param claimAddress Address that can claim the locked stx
-;; @param refundAddress Address that locked the stx and can refund them
 ;; @param timelock Block height after which the locked stx can be refunded
 ;; @return Value hash of the swap
-(define-private (hashValuesbuf (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
-  (keccak256 (concat preimageHash (concat amount (concat claimAddress (concat refundAddress timelock)))))
+(define-private (hashValuesbuf (preimageHash (buff 32)) (amount (buff 16)) (timelock (buff 16)))
+  (keccak256 (concat preimageHash (concat amount timelock)))
 )
 
 ;; true: swap with hash has stx locked
 ;; false: swap with hash does not exist
 (define-private (checkSwapIsLocked (hash (buff 32)))
   (default-to false (get locked (map-get? swaps {hash: hash})))
-)
-
-(define-public (checkSwapIsLockedpub (hash (buff 32)))
-  (ok (default-to false (get locked (map-get? swaps {hash: hash}))))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -155,3 +145,4 @@
     data: data
   })
 )
+

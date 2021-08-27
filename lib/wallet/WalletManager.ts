@@ -160,7 +160,7 @@ class WalletManager {
     }
 
     if (this.ethereumManager) {
-      this.logger.error("inited ethereumManager inside WalletManager");
+      // this.logger.error("inited ethereumManager inside WalletManager");
       const ethereumWallets = await this.ethereumManager.init(this.mnemonic, chainTipRepository);
 
       for (const [symbol, ethereumWallet] of ethereumWallets) {
@@ -169,7 +169,7 @@ class WalletManager {
     }
 
     if (this.rskManager) {
-      this.logger.error("inited rskManager inside WalletManager");
+      // this.logger.error("inited rskManager inside WalletManager");
       const rskWallets = await this.rskManager.init(this.mnemonic, chainTipRepository);
 
       for (const [symbol, rskWallet] of rskWallets) {
@@ -178,12 +178,12 @@ class WalletManager {
     }
 
     if (this.stacksManager) {
-      this.logger.error("walletmanager.179 init stacksManager inside WalletManager");
+      // this.logger.error("walletmanager.179 init stacksManager inside WalletManager");
       // this.mnemonic, chainTipRepository
       const stacksWallets = await this.stacksManager.init(this.mnemonic, chainTipRepository);
 
       for (const [symbol, stacksWallet] of stacksWallets) {
-        this.logger.error("walletmanager.185 wallets.set " + stacksWallet);
+        // this.logger.verbose("walletmanager.185 wallets.set " + stacksWallet);
         this.wallets.set(symbol, stacksWallet);
       }
     }

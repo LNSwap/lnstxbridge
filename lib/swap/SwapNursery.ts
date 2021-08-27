@@ -196,17 +196,17 @@ class SwapNursery extends EventEmitter {
     });
 
     if (this.ethereumNursery) {
-      this.logger.error("swapnursery this.ethereumNursery");
+      // this.logger.error("swapnursery this.ethereumNursery");
       await this.listenEthereumNursery(this.ethereumNursery);
     }
 
     if (this.rskNursery) {
-      this.logger.error("swapnursery this.listenRskNursery");
+      // this.logger.error("swapnursery this.listenRskNursery");
       await this.listenRskNursery(this.rskNursery!);
     }
 
     if (this.stacksNursery) {
-      this.logger.error("swapnursery this.listenstacksNursery");
+      // this.logger.error("swapnursery this.listenstacksNursery");
       await this.listenStacksNursery(this.stacksNursery!);
     }
 

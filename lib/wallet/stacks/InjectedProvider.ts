@@ -24,7 +24,7 @@ import PendingEthereumTransactionRepository from '../../db/PendingEthereumTransa
 //   // MicroblocksApi,
 // } from '@stacks/blockchain-api-client';
 
-import { RPCClient } from '@stacks/rpc-client';
+// import { RPCClient } from '@stacks/rpc-client';
 
 enum EthProviderService {
   Infura = 'Infura',
@@ -49,7 +49,7 @@ class InjectedProvider implements providers.Provider {
   private static readonly requestTimeout = 5000;
 
   constructor(private logger: Logger, config: StacksConfig) {
-    this.logger.error(`Stacks injectedprovider constructor: ` + JSON.stringify(config));
+    // this.logger.error(`Stacks injectedprovider constructor: ` + JSON.stringify(config));
     // if (config.providerEndpoint) {
       
     //   // stacks will have blockchain-api-client
@@ -101,7 +101,7 @@ class InjectedProvider implements providers.Provider {
     //   this.logger.error(`NO_PROVIDER_SPECIFIED: `);
     //   throw Errors.NO_PROVIDER_SPECIFIED();
     // }
-    this.logger.error("injectedprovider 104, end of constructor")
+    // this.logger.error("injectedprovider 104, end of constructor")
   }
 
   public init = async (): Promise<void> => {
@@ -135,7 +135,7 @@ class InjectedProvider implements providers.Provider {
 
     const networksAreSame = networks.every((network) => network.chainId === networks[0].chainId);
 
-    this.logger.error(`****************stacks injectedprovider.138`);
+    // this.logger.error(`****************stacks injectedprovider.138`);
     if (!networksAreSame) {
       throw Errors.UNEQUAL_PROVIDER_NETWORKS(networks);
     }
@@ -150,25 +150,25 @@ class InjectedProvider implements providers.Provider {
     }
   }
 
-  public test = async () => {
-    console.log("started TEST");
-    // let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
-    // if (env.includes('mocknet')) {
-    //   coreApiUrl = 'http://localhost:20080';
-    //   // coreApiUrl = 'https://dull-liger-41.loca.lt';
-    // } else if (env.includes('testnet')) {
-      let coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
-    // } else if (env.includes('regtest')) {
-    //   coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
-    // }
-    // const client = new InfoApi(new Configuration("stacks-node-api.testnet.stacks.co",))
-    const client = new RPCClient(coreApiUrl);
-    const address = "ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
-    const url = `${client.url}/extended/v1/address/${address}/balances`;
-    const response = await fetch(url, { credentials: 'omit' });
-    const data = await response.json();
-    console.log("injectedprovider 170 test", data);
-  }
+  // public test = async () => {
+  //   console.log("started TEST");
+  //   // let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
+  //   // if (env.includes('mocknet')) {
+  //   //   coreApiUrl = 'http://localhost:20080';
+  //   //   // coreApiUrl = 'https://dull-liger-41.loca.lt';
+  //   // } else if (env.includes('testnet')) {
+  //     let coreApiUrl = 'https://stacks-node-api.testnet.stacks.co';
+  //   // } else if (env.includes('regtest')) {
+  //   //   coreApiUrl = 'https://stacks-node-api.regtest.stacks.co';
+  //   // }
+  //   // const client = new InfoApi(new Configuration("stacks-node-api.testnet.stacks.co",))
+  //   const client = new RPCClient(coreApiUrl);
+  //   const address = "ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
+  //   const url = `${client.url}/extended/v1/address/${address}/balances`;
+  //   const response = await fetch(url, { credentials: 'omit' });
+  //   const data = await response.json();
+  //   console.log("injectedprovider 170 test", data);
+  // }
 
   /*
    * Method calls

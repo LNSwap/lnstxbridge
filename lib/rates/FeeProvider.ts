@@ -5,7 +5,7 @@ import DataAggregator from './data/DataAggregator';
 import { BaseFeeType, OrderSide } from '../consts/Enums';
 import { etherDecimals, gweiDecimals } from '../consts/Consts';
 import { getChainCurrency, getPairId, mapToObject, splitPairId, stringify } from '../Utils';
-import { calculateStacksTxFee } from '../wallet/stacks/StacksUtils';
+import { calculateStacksTxFee, getStacksNetwork } from '../wallet/stacks/StacksUtils';
 
 type ReverseMinerFees = {
   lockup: number;
@@ -178,8 +178,8 @@ class FeeProvider {
 
       case 'STX': {
         const relativeFee = feeMap.get(chainCurrency)!;
-        const claimCost = await calculateStacksTxFee('STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug', 'claimStx')
-        const lockupCost = await calculateStacksTxFee('STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug', 'lockStx')
+        const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx')
+        const lockupCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'lockStx')
         
         // const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
         // claimcost is wrong for STX but that should be OK.

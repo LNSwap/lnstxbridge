@@ -24,10 +24,10 @@ jobs:
         run: npm ci
 
       - name: Start containers
-        run: npm run docker:regtest && npm run stacks:mocknet
+        run: npm run docker:regtest && npm run docker:geth
 
-      - name: Deploy Stacks contracts
-        run: sleep 240 && npm run stacks:fund && sleep 30 && npm run stacks:deploy
+      - name: Deploy Ethereum contracts
+        run: sleep 15 && npm run docker:geth:deploy
 
       - name: Compile
         run: npm run compile
