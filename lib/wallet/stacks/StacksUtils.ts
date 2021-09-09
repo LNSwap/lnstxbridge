@@ -140,6 +140,11 @@ export const getStacksRawTransaction = async (txid:string) => {
 }
 
 export const getStacksContractTransactions = async (address:string, limit?:number, offset?:number, height?:number) => {
+
+  if(height==0){
+    return [];
+  }
+
   let url = `${coreApiUrl}/extended/v1/address/${address}/transactions?limit=${limit}&height=${height}`;
   if(offset){
     url = url + "&offset="+offset;
