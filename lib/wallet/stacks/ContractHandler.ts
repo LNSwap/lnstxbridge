@@ -63,7 +63,7 @@ class ContractHandler {
 
     amount = amount.div(etherDecimals).div(100)
     let decimalamount = parseInt(amount.toString(),10) + 1
-    this.logger.error("contracthandler.65 smaller amount: "+ amount + ", "+ decimalamount)
+    this.logger.verbose("contracthandler.65 smaller amount: "+ amount + ", "+ decimalamount)
 
     
 
@@ -108,7 +108,7 @@ class ContractHandler {
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from(tl3,'hex')),
     ];
-    this.logger.error("stacks contracthandler.80 functionargs: "+stringify(functionArgs));
+    this.logger.verbose("stacks contracthandler.111 functionargs: "+stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),
@@ -195,7 +195,7 @@ class ContractHandler {
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from(tl3,'hex')),
     ];
-    this.logger.error("stacks contracthandler.80 functionargs: " + stringify(functionArgs));
+    this.logger.verbose("stacks contracthandler.198 functionargs: " + stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),

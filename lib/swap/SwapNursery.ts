@@ -320,7 +320,7 @@ class SwapNursery extends EventEmitter {
             break;
 
           case CurrencyType.Stx:
-            this.logger.error("swapnursery reverseswap invoice.paid lockupStx for" + quote);
+            this.logger.debug("swapnursery reverseswap invoice.paid lockupStx for " + quote);
             await this.lockupStx(
               wallet,
               lndClient!,

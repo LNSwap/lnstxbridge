@@ -228,7 +228,7 @@ class SwapManager {
       // this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
       claimAddress = await receivingCurrency.wallet.getAddress();
       // claimAddress = await receivingCurrency.wallet.
-      this.logger.error("swapmanager.228 " + stringify({
+      this.logger.info("swapmanager.228 " + stringify({
         id,
         pair,
         timeoutBlockHeight,
@@ -251,7 +251,7 @@ class SwapManager {
     } else {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
 
-      this.logger.error("swapmanager.237 " + receivingCurrency.provider!);
+      this.logger.info("swapmanager.237 " + receivingCurrency.provider!);
       const blockNumber = await receivingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
 
@@ -561,7 +561,7 @@ class SwapManager {
       refundAddress = await this.walletManager.wallets.get(sendingCurrency.symbol)!.getAddress();
       refundAddress = refundAddress.toLowerCase();
 
-      this.logger.error("prepared reverse swap stuff: " + blockNumber + ", " + lockupAddress + ", " + refundAddress);
+      this.logger.verbose("prepared reverse swap data: " + blockNumber + ", " + lockupAddress + ", " + refundAddress);
 
       await this.reverseSwapRepository.addReverseSwap({
         id,
@@ -601,7 +601,7 @@ class SwapManager {
       const lightningCurrency = getLightningCurrency(base, quote, swap.orderSide, isReverse);
 
       if ((swap.status === SwapUpdateEvent.SwapCreated || swap.status === SwapUpdateEvent.MinerFeePaid) && isReverse) {
-        this.logger.error("swapmanager recreateFilters foreach SwapCreated chainCurrency " + chainCurrency);
+        this.logger.info("swapmanager recreateFilters foreach SwapCreated chainCurrency " + chainCurrency);
         const reverseSwap = swap as ReverseSwap;
 
         const { lndClient } = this.currencies.get(lightningCurrency)!;
@@ -616,7 +616,7 @@ class SwapManager {
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
-          this.logger.error("swapmanager recreateFilters foreach TransactionConfirmed chainCurrency " + chainCurrency);
+          this.logger.info("swapmanager recreateFilters foreach TransactionConfirmed chainCurrency " + chainCurrency);
           const transactionId = reverseBuffer(getHexBuffer((swap as ReverseSwap).transactionId!));
           chainClient.addInputFilter(transactionId);
 
@@ -630,7 +630,7 @@ class SwapManager {
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
-          this.logger.error("swapmanager recreateFilters foreach else chainCurrency " + chainCurrency);
+          this.logger.info("swapmanager recreateFilters foreach else chainCurrency " + chainCurrency);
           const wallet = this.walletManager.wallets.get(chainCurrency)!;
           const outputScript = wallet.decodeAddress(swap.lockupAddress);
 
@@ -702,7 +702,7 @@ class SwapManager {
   }
 
   private getLockupContractAddress = (type: CurrencyType, quoteCurrency: string): string => {
-    this.logger.error("getLockupContractAddress CurrencyType: " + type)
+    this.logger.verbose("getLockupContractAddress CurrencyType: " + type)
     const ethereumManager = this.walletManager.ethereumManager!;
     const rskManager = this.walletManager.rskManager!;
     const stacksManager = this.walletManager.stacksManager!;

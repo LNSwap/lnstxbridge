@@ -70,7 +70,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   console.log("boltzAddress: ", boltzAddress);
 
   if (boltzAddress === undefined) {
-    console.log('Could not lock coins because the address of Stacks.Swap could not be queried');
+    console.log('Could not lock coins because the address of LNStacks.Swap could not be queried');
     return;
   }
 
@@ -118,7 +118,7 @@ const lockupStx = async (
 
   amount = amount.div(etherDecimals)
   let decimalamount = parseInt(amount.toString(),10) + 1
-  console.log("contracthandler.65 smaller amount: "+ amount + ", "+ decimalamount)
+  console.log("lockup.121 smaller amount: "+ amount + ", "+ decimalamount)
 
   
 
