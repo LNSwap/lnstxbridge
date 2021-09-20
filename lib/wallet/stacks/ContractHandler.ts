@@ -8,7 +8,7 @@ import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
 // makeContractCall, , broadcastTransaction, makeStandardSTXPostCondition
-import { bufferCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
+import { bufferCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
 // import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 
 const BigNum = require('bn.js');
@@ -107,6 +107,7 @@ class ContractHandler {
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from(tl3,'hex')),
+      standardPrincipalCV(claimAddress),
     ];
     this.logger.verbose("stacks contracthandler.111 functionargs: "+stringify(functionArgs));
 
