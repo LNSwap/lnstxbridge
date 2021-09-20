@@ -7,9 +7,9 @@ import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { estimateContractFunctionCall } from '@stacks/transactions';
+import { estimateContractFunctionCall, standardPrincipalCVFromAddress } from '@stacks/transactions';
 
-import { bufferCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
+import { bufferCV, stringAsciiCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
 
@@ -205,15 +205,30 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
   // timelock
   // 0x0000000000000000000000000000405a
 
-  // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
-  const functionArgs = [
-    // bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
-    bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-    bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
-    bufferCV(Buffer.from('01','hex')),
-    bufferCV(Buffer.from('01','hex')),
-    bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-  ];
+  var functionArgs: any[] = [];
+  if(functionName=="lockStx") {
+    const spCV = standardPrincipalCV("ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF");
+    functionArgs = [
+      bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
+      bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+      bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+      spCV,
+    ];
+  } else {
+    // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+    functionArgs = [
+      // bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
+      bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+      bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('01','hex')),
+      bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+    ];
+  }
+
   // console.log("stacksutil.187 functionargs: " + JSON.stringify(functionArgs));
 
   const txOptions = {
