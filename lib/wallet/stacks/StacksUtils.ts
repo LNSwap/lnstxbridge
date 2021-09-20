@@ -208,18 +208,16 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
   let functionArgs: any[] = [];
   if(functionName.includes("lockStx")) {
     functionArgs = [
-      bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
       bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
       bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-      standardPrincipalCV("ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF"),
+      standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
     ];
   } else {
     // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
     functionArgs = [
-      // bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
       bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
       bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
       bufferCV(Buffer.from('01','hex')),
@@ -228,7 +226,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
     ];
   }
 
-  console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
 
   const txOptions = {
     contractAddress,
