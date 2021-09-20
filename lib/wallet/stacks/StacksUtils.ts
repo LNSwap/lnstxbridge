@@ -7,9 +7,9 @@ import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { estimateContractFunctionCall, standardPrincipalCVFromAddress } from '@stacks/transactions';
+import { estimateContractFunctionCall } from '@stacks/transactions';
 
-import { bufferCV, stringAsciiCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
+import { bufferCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
 
