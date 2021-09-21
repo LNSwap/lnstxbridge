@@ -158,7 +158,7 @@ export const querySwapValuesFromTx = async (txid:string): Promise<EtherSwapValue
     let claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr
     let refundAddress = txData.contract_call.function_args.filter(a=>a.name=="refundAddress")[0].repr
     let timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr
-    timelock = timelock.toString(10).toNumber();
+    timelock = parseInt(timelock.toString(10));
     console.log("lockFound fetched from Tx: ", preimageHash,amount,claimAddress,refundAddress,timelock);
 
   // } else if(txData.contract_call.function_name.includes("claim")){
