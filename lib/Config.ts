@@ -230,7 +230,7 @@ class Config {
         port: 9001,
         sslKey: '/root/lnstxbridge-frontend/privkey.pem',
         sslCert: '/root/lnstxbridge-frontend/fullchain.pem',
-        sslEnabled: false,
+        sslEnabled: true,
       },
 
       grpc: {

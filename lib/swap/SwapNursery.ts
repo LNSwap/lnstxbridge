@@ -478,7 +478,7 @@ class SwapNursery extends EventEmitter {
       case CurrencyType.Stx:
         // TODO: this happens when invoice can not be paid / no route
         // + stringify(this.walletManager.stacksManager!) 
-        this.logger.error("???swapnursery.476 " + ", " + swap.lockupTransactionId!);
+        this.logger.error("swapnursery.476 attemptSettleSwap, " + swap.lockupTransactionId!);
         // this.logger.verbose("???480 swap: " + stringify(swap));
         // error: Unhandled rejection: Cannot read property 'etherSwap' of undefined
         // transactionhash = 0xb7c491801d4aee63263c69734fb66cd5e64b0b9 is shorter compared to stacks chain 
