@@ -154,7 +154,7 @@ export const querySwapValuesFromTx = async (txid:string): Promise<EtherSwapValue
   // if(txData.contract_call.function_name.includes("lock")){
     let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
     let amount = txData.contract_call.function_args.filter(a=>a.name=="amount")[0].repr
-    amount = amount.mul(etherDecimals).mul(100)
+    amount = BigNumber.from(amount).mul(etherDecimals).mul(100);
     let claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr
     let refundAddress = txData.contract_call.function_args.filter(a=>a.name=="refundAddress")[0].repr
     let timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr
