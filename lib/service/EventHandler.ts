@@ -89,6 +89,7 @@ class EventHandler extends EventEmitter {
           });
         }
         // removing this because otherwise stacks tx is marked as confirmed as soon as coins.sent
+        // this is moved to swapnursery listenstackstx
         // else {
         //   this.logger.error("eventhandler.91 on transaction: ");
         //   this.emit('swap.update', swap.id, {

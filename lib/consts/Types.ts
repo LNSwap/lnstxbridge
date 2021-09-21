@@ -1,5 +1,6 @@
 import { BigNumber } from 'ethers';
 import { ERC20 } from 'boltz-core/typechain/ERC20';
+import { SwapUpdateEvent } from './Enums';
 
 export type EtherSwapValues = {
   preimageHash: Buffer;
@@ -178,4 +179,24 @@ export type WalletInfo = {
   paytxfee: number;
   hdseedid?: string;
   private_keys_enabled: boolean;
+};
+
+export type TransactionInfo = {
+  eta?: number;
+
+  id: string;
+  hex?: string;
+};
+
+export type SwapUpdate = {
+  status: SwapUpdateEvent;
+  failureReason?: string;
+
+  zeroConfRejected?: boolean;
+  transaction?: TransactionInfo;
+
+  channel?: {
+    fundingTransactionId: string;
+    fundingTransactionVout: number;
+  },
 };

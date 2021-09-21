@@ -13,7 +13,7 @@ import ReverseSwapRepository from '../db/ReverseSwapRepository';
 import { CurrencyType, SwapUpdateEvent } from '../consts/Enums';
 // import EthereumManager from '../wallet/ethereum/EthereumManager';
 // import RskManager from '../wallet/rsk/RskManager';
-import { ERC20SwapValues, EtherSwapValues } from '../consts/Types';
+import { ERC20SwapValues, EtherSwapValues, SwapUpdate } from '../consts/Types';
 import { getChainCurrency, getHexString, splitPairId } from '../Utils';
 import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
@@ -48,6 +48,9 @@ interface StacksNursery {
 
   on(event: 'claim', listener: (reverseSwap: ReverseSwap, preimage: Buffer) => void): this;
   emit(event: 'claim', reverseSwap: ReverseSwap, preimage: Buffer): boolean;
+
+  on(event: 'swap.update', listener: (id: string, message: SwapUpdate) => void): this;
+  emit(event: 'swap.update', id: string, message: SwapUpdate): boolean;
 }
 
 class StacksNursery extends EventEmitter {
@@ -107,7 +110,7 @@ class StacksNursery extends EventEmitter {
       } catch (error) {
         this.logger.error(`stacksnursery.106 error ${error}`);
         // TODO: retry finding that transaction
-        // If the provider can't find the transaction, it is not on the Ethereum chain
+        // If the provider can't find the transaction, it is not on the chain
       }
     }
   }
@@ -139,6 +142,7 @@ class StacksNursery extends EventEmitter {
         );
       } else {
         // TODO: this causes transaction.confirmed immediately - need to add another state mempool here
+        // no this is lockup.confirmed not transaction.confirmed
         this.emit(
           'lockup.confirmed',
           await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
@@ -172,12 +176,12 @@ class StacksNursery extends EventEmitter {
   }
 
   private listenEtherSwap = () => {
-    this.logger.error("StacksNursery.118 listenEtherSwap enter")
+    // this.logger.debug("StacksNursery.118 listenEtherSwap enter")
     this.stacksManager.contractEventHandler.on('eth.lockup', async (
       transactionHash,
       etherSwapValues,
     ) => {
-      this.logger.error("StacksNursery listenEtherSwap eth.lockup enter " + getHexString(etherSwapValues.preimageHash));
+      this.logger.verbose("StacksNursery listenEtherSwap eth.lockup enter " + getHexString(etherSwapValues.preimageHash));
       let swap = await this.swapRepository.getSwap({
         preimageHash: {
           [Op.eq]: getHexString(etherSwapValues.preimageHash),
@@ -191,7 +195,37 @@ class StacksNursery extends EventEmitter {
       });
 
       if (!swap) {
-        this.logger.error("StacksNursery.137 swap not found!")
+        this.logger.error("StacksNursery.137 swap not found! " + transactionHash);
+
+        // check if this is our own lockup that user needs to claim from GUI so just set tx to confirmed and exit
+        let reverseswap = await this.reverseSwapRepository.getReverseSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(etherSwapValues.preimageHash),
+          },
+          status: {
+            [Op.or]: [
+              SwapUpdateEvent.TransactionMempool,
+            ],
+          },
+        });
+        if(reverseswap){
+          this.logger.error("StacksNursery.209 reverseswap self lockup found " + reverseswap.transactionId!);
+          try {
+            const transaction = await getTx(reverseswap!.transactionId!)
+            this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${reverseswap.id}: ${reverseswap.transactionId}, ${transaction}`);
+            // this.checkStacksTransaction(reverseswap, transaction);
+            this.emit('swap.update', reverseswap.id, {
+              status: SwapUpdateEvent.TransactionConfirmed,
+              transaction: {
+                id: transaction,
+              },
+            });
+            this.logger.debug(`stacksNursery.244 after swap.update transaction.confirmed`);
+          } catch (error) {
+            this.logger.error(`stacksnursery.215 error ${error}`);
+          }
+        }
+
         return;
       }
 
@@ -207,7 +241,7 @@ class StacksNursery extends EventEmitter {
       // 0x000000000000000000000000001e708f
       // *100 + 100 because stx is 10^6 while boltz is 10^8
       let swapamount = (parseInt(etherSwapValues.amount + "",16) * 100) + 100
-      this.logger.error("stacksnursery.150 etherSwapValues.amount, swapamount, transactionHash " + etherSwapValues.amount + ", " + swapamount + ", " + transactionHash)
+      this.logger.verbose("stacksnursery.150 etherSwapValues.amount, swapamount, transactionHash " + etherSwapValues.amount + ", " + swapamount + ", " + transactionHash)
       swap = await this.swapRepository.setLockupTransaction(
         swap,
         transactionHash,
@@ -228,7 +262,7 @@ class StacksNursery extends EventEmitter {
       // }
 
       let swaptimelock = parseInt(etherSwapValues.timelock + "",16) 
-      this.logger.error("etherSwapValues.timelock, swap.timeoutBlockHeight " +etherSwapValues.timelock + ", " + swap.timeoutBlockHeight)
+      this.logger.verbose("etherSwapValues.timelock, swap.timeoutBlockHeight " +etherSwapValues.timelock + ", " + swap.timeoutBlockHeight)
       // etherSwapValues.timelock
       if (swaptimelock !== swap.timeoutBlockHeight) {
         this.emit(
@@ -244,7 +278,7 @@ class StacksNursery extends EventEmitter {
 
         // 1995138440000000000,
         const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
-        this.logger.error("swap.expectedAmount, expectedAmount , etherSwapValues.amount" +swap.expectedAmount+ ", " + expectedAmount + ", " + etherSwapValues.amount)
+        this.logger.verbose("swap.expectedAmount, expectedAmount , etherSwapValues.amount" +swap.expectedAmount+ ", " + expectedAmount + ", " + etherSwapValues.amount)
         // etherSwapValues.amount
         if (expectedAmount.gt(bigswapamount)) {
           this.emit(
@@ -260,7 +294,7 @@ class StacksNursery extends EventEmitter {
     });
 
     this.stacksManager.contractEventHandler.on('eth.claim', async (transactionHash, preimageHash, preimage) => {
-      this.logger.error("stacksnursery.228 on 'eth.claim " + transactionHash+ ", " + getHexString(preimageHash));
+      this.logger.debug("stacksnursery.228 on 'eth.claim " + transactionHash+ ", " + getHexString(preimageHash));
 
       // const allReverseSwaps = await ReverseSwap.findAll();
       // console.log("allReverseSwaps: ", allReverseSwaps);
