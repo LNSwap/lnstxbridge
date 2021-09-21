@@ -12,6 +12,7 @@ import { estimateContractFunctionCall } from '@stacks/transactions';
 import { bufferCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
+import { EtherSwapValues } from 'lib/consts/Types';
 
 const BigNum = require('bn.js');
 
@@ -143,6 +144,35 @@ export const getStacksRawTransaction = async (txid:string) => {
   const url = `${coreApiUrl}/extended/v1/tx/${txid}/raw`;
   const response = await axios.get(url)
   return response.data.raw_tx;
+}
+
+export const querySwapValuesFromTx = async (txid:string): Promise<EtherSwapValues> => {
+  const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
+  const response = await axios.get(url)
+  const txData = response.data;
+
+  // if(txData.contract_call.function_name.includes("lock")){
+    let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
+    let amount = txData.contract_call.function_args.filter(a=>a.name=="amount")[0].repr
+    let claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr
+    let refundAddress = txData.contract_call.function_args.filter(a=>a.name=="refundAddress")[0].repr
+    let timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr
+    console.log("lockFound fetched from Tx: ", preimageHash,amount,claimAddress,refundAddress,timelock);
+
+  // } else if(txData.contract_call.function_name.includes("claim")){
+
+  // } else {
+  //   // refundStx call
+
+  // }
+
+  return {
+    amount: amount,
+    claimAddress: claimAddress,
+    refundAddress: refundAddress,
+    timelock: timelock.toNumber(),
+    preimageHash: parseBuffer(preimageHash),
+  };
 }
 
 export const getStacksContractTransactions = async (address:string, limit?:number, offset?:number, height?:number) => {

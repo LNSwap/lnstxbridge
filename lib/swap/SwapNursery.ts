@@ -50,6 +50,7 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
+import { querySwapValuesFromTx } from 'lib/wallet/stacks/StacksUtils';
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -476,11 +477,17 @@ class SwapNursery extends EventEmitter {
     
       case CurrencyType.Stx:
         // TODO: this happens when invoice can not be paid / no route
-        // this.logger.error("???swapnursery.476 " + stringify(this.walletManager.stacksManager!))
+        // + stringify(this.walletManager.stacksManager!) 
+        this.logger.error("???swapnursery.476 " + ", " + swap.lockupTransactionId!);
+        // this.logger.verbose("???480 swap: " + stringify(swap));
+        // error: Unhandled rejection: Cannot read property 'etherSwap' of undefined
+        // transactionhash = 0xb7c491801d4aee63263c69734fb66cd5e64b0b9 is shorter compared to stacks chain 
+        // 0xb7c491801d4aee63263c69734fb66cd5e64b0b9d47f943216bef31feaec2959c
         await this.claimStx(
           this.walletManager.stacksManager!.contractHandler,
           swap,
-          await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+          // await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+          await querySwapValuesFromTx(swap.lockupTransactionId!),
           outgoingChannelId,
         );
         break;
