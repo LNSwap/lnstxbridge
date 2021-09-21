@@ -87,15 +87,17 @@ class EventHandler extends EventEmitter {
               hex: transaction.toHex(),
             },
           });
-        } else {
-          this.logger.error("eventhandler.91 on transaction: ");
-          this.emit('swap.update', swap.id, {
-            status: SwapUpdateEvent.TransactionConfirmed,
-            transaction: {
-              id: transaction,
-            },
-          });
         }
+        // removing this because otherwise stacks tx is marked as confirmed as soon as coins.sent
+        // else {
+        //   this.logger.error("eventhandler.91 on transaction: ");
+        //   this.emit('swap.update', swap.id, {
+        //     status: SwapUpdateEvent.TransactionConfirmed,
+        //     transaction: {
+        //       id: transaction,
+        //     },
+        //   });
+        // }
       }
     });
   }

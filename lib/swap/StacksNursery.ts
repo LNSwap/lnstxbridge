@@ -138,6 +138,7 @@ class StacksNursery extends EventEmitter {
           transaction.error,
         );
       } else {
+        // TODO: this causes transaction.confirmed immediately - need to add another state mempool here
         this.emit(
           'lockup.confirmed',
           await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),

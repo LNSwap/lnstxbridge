@@ -46,7 +46,7 @@ import {
   getLightningCurrency,
   getRate,
   splitPairId,
-  stringify,
+  // stringify,
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
@@ -475,7 +475,8 @@ class SwapNursery extends EventEmitter {
         break;
     
       case CurrencyType.Stx:
-        this.logger.error("???swapnursery.476 " + stringify(this.walletManager.stacksManager!))
+        // TODO: this happens when invoice can not be paid / no route
+        // this.logger.error("???swapnursery.476 " + stringify(this.walletManager.stacksManager!))
         await this.claimStx(
           this.walletManager.stacksManager!.contractHandler,
           swap,
