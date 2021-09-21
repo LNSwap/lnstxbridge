@@ -50,7 +50,7 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
-import { querySwapValuesFromTx } from 'lib/wallet/stacks/StacksUtils';
+import { querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
