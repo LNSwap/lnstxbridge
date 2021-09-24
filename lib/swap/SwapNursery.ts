@@ -98,6 +98,11 @@ interface SwapNursery {
 
   on(event: 'invoice.settled', listener: (reverseSwap: ReverseSwap) => void): this;
   emit(event: 'invoice.settled', reverseSwap: ReverseSwap): boolean;
+
+  //  added to cover stacks tx mempool -> confirmed
+  on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
+  emit(event: 'tx.sent', reverseSwap: ReverseSwap): boolean;
+
 }
 
 class SwapNursery extends EventEmitter {
@@ -730,6 +735,13 @@ class SwapNursery extends EventEmitter {
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.logger.error("swapnursery.723 acquire reverseSwapLock: settleReverseSwapInvoice!");
         await this.settleReverseSwapInvoice(reverseSwap, preimage);
+      });
+    });
+
+    stacksNursery.on('tx.sent', async (reverseSwap, transactionHash) => {
+      this.logger.error(`swapnursery.741 tx.sent ${reverseSwap} ${transactionHash}`);
+      await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+        this.emit('transaction', reverseSwap, transactionHash, true, true);
       });
     });
 

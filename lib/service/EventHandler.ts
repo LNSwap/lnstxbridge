@@ -7,6 +7,7 @@ import { SwapUpdateEvent } from '../consts/Enums';
 import ReverseSwap from '../db/models/ReverseSwap';
 import { Currency } from '../wallet/WalletManager';
 import ChannelCreation from '../db/models/ChannelCreation';
+import { stringify } from '../../lib/Utils';
 
 type TransactionInfo = {
   eta?: number;
@@ -69,7 +70,7 @@ class EventHandler extends EventEmitter {
    */
   private subscribeTransactions = () => {
     this.nursery.on('transaction', (swap, transaction, confirmed, isReverse) => {
-      this.logger.error("eventhandler.72 on transaction: " + swap + ", " + transaction + ", " + confirmed + " , " + isReverse);
+      this.logger.error("eventhandler.72 on transaction: " + stringify(swap) + ", " + transaction + ", " + confirmed + " , " + isReverse);
       if (!isReverse) {
         this.logger.error("eventhandler.74 on transaction: ");
         this.emit('swap.update', swap.id, {
@@ -87,11 +88,24 @@ class EventHandler extends EventEmitter {
               hex: transaction.toHex(),
             },
           });
-        }
+        } else if (confirmed && swap.status == "transaction.confirmed") {
+          // for stacks tx.sent event from stacksnursery -> swapnursery -> here
+          this.logger.error(`eventhandler.95 on transaction: ${transaction}`);
+          this.emit('swap.update', swap.id, {
+            status: SwapUpdateEvent.TransactionConfirmed,
+            transaction: {
+              id: transaction.toString(),
+              // hex: transaction.toHex(),
+            },
+          });
+       } else {
+         this.logger.error("eventhandler.104 transaction NOT confirmed");
+       }
+
         // removing this because otherwise stacks tx is marked as confirmed as soon as coins.sent
         // this is moved to swapnursery listenstackstx
         // else {
-        //   this.logger.error("eventhandler.91 on transaction: ");
+        //   this.logger.error("eventhandler.91 on transaction: " + stringify(transaction));
         //   this.emit('swap.update', swap.id, {
         //     status: SwapUpdateEvent.TransactionConfirmed,
         //     transaction: {
@@ -101,6 +115,16 @@ class EventHandler extends EventEmitter {
         // }
       }
     });
+
+    // this.nursery.on('tx.sent', (swap, transaction) => {
+    //   this.logger.error("eventhandler.91 on transaction: " + stringify(transaction));
+    //   this.emit('swap.update', swap.id, {
+    //     status: SwapUpdateEvent.TransactionConfirmed,
+    //     transaction: {
+    //       id: transaction,
+    //     },
+    //   });
+    // });
   }
 
   /**
