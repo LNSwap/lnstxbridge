@@ -1,5 +1,5 @@
 # LN - STX Bridge
-## Submarine Swaps between STX <-> Bitcoin on Lightning Network
+## Submarine Swaps between STX on Stacks <-> Bitcoin on Lightning Network
 
 * This app enables functionality as described in https://github.com/stacksgov/Stacks-Grants/issues/172
 
@@ -10,8 +10,9 @@
 * start btc & lnd  
 `npm run docker:regtest`
 * start stacks  
-`npm run docker:stacks`
-* deploy latest Clarity contract under contracts/  
+`npm run stacks:mocknet`
+* fund a regtest account and deploy latest Clarity contract under contracts/  
+`npm run stacks:fund && npm run stacks:deploy`
 * copy boltz.conf to ~/.boltz/boltz.conf and modify as needed  
 * start the app  
 `npm run start`
