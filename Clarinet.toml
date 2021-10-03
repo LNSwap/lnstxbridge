@@ -1,0 +1,6 @@
+[project]
+name = "lnstxbridge"
+
+[contracts.stxswap]
+path = "contracts/stxswap_v7.clar"
+depends_on = []

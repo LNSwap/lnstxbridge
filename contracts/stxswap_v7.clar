@@ -120,7 +120,7 @@
 )
 
 ;; Convert a little-endian 16-byte buff into a uint.
-(define-private (buff-to-uint-le (word (buff 16)))
+(define-read-only (buff-to-uint-le (word (buff 16)))
   (get acc
     (fold add-and-shift-uint-le (list u0 u1 u2 u3 u4 u5 u6 u7 u8 u9 u10 u11 u12 u13 u14 u15) { acc: u0, data: word })
   )
