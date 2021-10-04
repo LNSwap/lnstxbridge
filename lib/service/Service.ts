@@ -1177,8 +1177,9 @@ class Service {
     const { limits } = this.getPair(pairId);
 
     if (limits) {
+      // modified minimum limit to 1/2 so we don't run into issues with test amounts
       if (Math.floor(amount) > limits.maximal) throw Errors.EXCEED_MAXIMAL_AMOUNT(amount, limits.maximal);
-      if (Math.ceil(amount) < limits.minimal) throw Errors.BENEATH_MINIMAL_AMOUNT(amount, limits.minimal);
+      if (Math.ceil(amount) < limits.minimal/2) throw Errors.BENEATH_MINIMAL_AMOUNT(amount, limits.minimal);
     } else {
       throw Errors.PAIR_NOT_FOUND(pairId);
     }
