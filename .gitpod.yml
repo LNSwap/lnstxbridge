@@ -7,21 +7,27 @@ tasks:
       nvm install 14
       mkdir ~/.boltz
       cp boltz.conf ~/.boltz/boltz.conf
-      sleep 200
-      npm run start
+      npm i
+      sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
+      npm run dev
     command: echo 'start script'
   - init: |
       npm run docker:regtest
       docker exec -it regtest bash
-      alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'
+      echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
   - init: |
+      npm i -g shx rimraf 
       npm run stacks:mocknet
-      sleep 180
-      npm run stacks:fund && npm run stacks:deploy
+      sleep 30
+      npm run stacks:fund
+      sleep 10
+      npm run stacks:deploy
     # fund the operator account as well!
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
     onOpen: open-browser
+  - port: 3999
+    onOpen: open-preview
   - port: 9001
     onOpen: open-browser
