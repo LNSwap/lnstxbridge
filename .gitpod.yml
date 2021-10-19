@@ -21,9 +21,11 @@ tasks:
       npm run stacks:mocknet
       sleep 180
       npm run stacks:fund
+      SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer
       sleep 10
       npm run stacks:deploy
     # fund the operator account as well!
+    # SIGNER=ST3P4DRFSWGD6S58VQ4QWEHM1JW34XM6WNVYZAH3N npm run stacks:fund:signer
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
