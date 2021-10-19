@@ -9,17 +9,17 @@ tasks:
       cp boltz.conf ~/.boltz/boltz.conf
       npm i
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
-      npm run dev
-    command: echo 'start script'
+    command: npm run dev
   - init: |
-      sleep 30
       npm run docker:regtest
+    command: >
       docker exec -it regtest bash
       echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
   - init: |
       npm i -g shx rimraf 
       npm run stacks:mocknet
       sleep 180
+    command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer
       sleep 10
@@ -32,6 +32,7 @@ ports:
     onOpen: ignore
   - port: 3999
     onOpen: open-preview
+    visibility: public
   - port: 9001
     onOpen: open-preview
     visibility: public
