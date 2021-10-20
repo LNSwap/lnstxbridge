@@ -133,7 +133,8 @@ class StacksManager {
     this.address = derivedData.address;
     this.privateKey = derivedData.privateKey;
 
-    const signerAccountInfo = await getAccountInfo();
+    const signerAccountInfo = await getAccountInfo(derivedData.address);
+    this.logger.verbose("stacksmanager.137 signerAccountInfo "+ JSON.stringify(signerAccountInfo));
     setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey, derivedData.address, signerAccountInfo.nonce);
 
     this.stxswapaddress = this.stacksConfig.stxSwapAddress;

@@ -8,13 +8,16 @@ tasks:
       mkdir ~/.boltz
       cp boltz.conf ~/.boltz/boltz.conf
       npm i
+      npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     command: npm run dev
   - init: |
-      npm run docker:regtest
+      docker ps
+      sleep 60
     command: >
       docker exec -it regtest bash
       echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
+    # docker stop regtest &&  docker rm regtest && npm run docker:regtest
   - init: |
       npm i -g shx rimraf 
       npm run stacks:mocknet
