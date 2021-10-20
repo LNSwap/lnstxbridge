@@ -21,7 +21,7 @@ import StacksWalletProvider from '../providers/StacksWalletProvider';
 
 import { deriveRootKeychainFromMnemonic, getAddress, deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID } from '@stacks/transactions';
-import { getInfo, setStacksNetwork } from './StacksUtils';
+import { getAccountInfo, getInfo, setStacksNetwork } from './StacksUtils';
 // import { StacksMainnet, StacksMocknet, StacksNetwork, StacksTestnet } from '@stacks/network';
 
 type Network = {
@@ -132,7 +132,9 @@ class StacksManager {
     this.logger.verbose("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
     this.address = derivedData.address;
     this.privateKey = derivedData.privateKey;
-    setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey);
+
+    const signerAccountInfo = await getAccountInfo();
+    setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey, derivedData.address, signerAccountInfo.nonce);
 
     this.stxswapaddress = this.stacksConfig.stxSwapAddress;
 

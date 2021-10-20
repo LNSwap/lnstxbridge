@@ -32,7 +32,9 @@ let stacksNetwork:StacksNetwork = new StacksMainnet()
 let coreApiUrl = 'http://localhost:3999';
 let wsUrl = 'ws://localhost:3999/extended/v1/ws'; 
 let stxSwapAddress = "STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3";
-let privateKey = 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501';
+let privateKey = '';
+let signerAddress = 'SP13R6D5P5TYE71D81GZQWSD9PGQMQQN54A2YT3BY';
+let nonce = 0;
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -92,7 +94,7 @@ export const getAddressBalance = async (address:string) => {
   
 }
 
-export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string) => {
+export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string, signerAddress: string, signerNonce: number) => {
   // let network:string = "mocknet";
  
   if (network.includes("localhost")) {
@@ -113,12 +115,14 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
 
   stxSwapAddress = stacksConfig.stxSwapAddress;
   privateKey = derivedPrivateKey;
+  signerAddress = signerAddress;
+  nonce = signerNonce;
 
-  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'providerEndpoint': network, 'privateKey': privateKey};
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'providerEndpoint': network, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce};
 }
 
 export const getStacksNetwork = () => {
-  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey};
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce};
 }
 
 export const getFee = async () => {
@@ -135,6 +139,19 @@ export const getInfo = async () => {
   // console.log("stacksutils getInfo", response.data);
   return response.data;
 }
+
+export const getAccountInfo = async () => {
+  // const signerAddress 
+  const url = `${coreApiUrl}/v2/info/accounts/${signerAddress}`;
+  const response = await axios.get(url)
+  // console.log("stacksutils getInfo", response.data);
+  return response.data;
+}
+
+export const incrementNonce = () => {
+  nonce = nonce + 1;
+}
+
 export const getTx = async (txid:string) => {
   const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
   const response = await axios.get(url)

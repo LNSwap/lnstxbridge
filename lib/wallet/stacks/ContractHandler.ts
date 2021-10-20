@@ -3,7 +3,7 @@ import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
 import { getHexString, stringify } from '../../Utils';
-import { getGasPrice, getStacksNetwork } from './StacksUtils';
+import { getGasPrice, getStacksNetwork, incrementNonce } from './StacksUtils';
 import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
@@ -119,18 +119,24 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
+    const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.contractAddress,
       contractName: this.contractName,
       functionName: 'lockStx',
       functionArgs: functionArgs,
-      senderKey: getStacksNetwork().privateKey,
+      senderKey: stacksNetworkData.privateKey,
       validateWithAbi: true,
-      network: getStacksNetwork().stacksNetwork,
+      network: stacksNetworkData.stacksNetwork,
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
       fee: new BigNum(100000),
+      nonce: new BigNum(stacksNetworkData.nonce),
+      onFinish: data => {
+        console.log('Stacks lock Transaction:', JSON.stringify(data));
+        incrementNonce();
+      }
     };
 
     // this.logger.error("stacks contracthandler.84 txOptions: "+ stringify(txOptions));
@@ -207,19 +213,22 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
+    const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.contractAddress,
       contractName: this.contractName,
       functionName: 'claimStx',
       functionArgs: functionArgs,
-      senderKey: getStacksNetwork().privateKey,
+      senderKey: stacksNetworkData.privateKey,
       validateWithAbi: true,
-      network: getStacksNetwork().stacksNetwork,
+      network: stacksNetworkData.stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
       postConditions,
       anchorMode: AnchorMode.Any,
+      nonce: stacksNetworkData.nonce,
       onFinish: data => {
         console.log('Stacks claim Transaction:', JSON.stringify(data));
+        incrementNonce();
       }
     };
 
