@@ -9,7 +9,14 @@ import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 import { estimateContractFunctionCall } from '@stacks/transactions';
 
-import { bufferCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall } from '@stacks/transactions';
+import { bufferCV, 
+  standardPrincipalCV, 
+  AnchorMode, 
+  FungibleConditionCode, 
+  makeContractSTXPostCondition, 
+  createSTXPostCondition,
+  PostConditionMode, 
+  makeContractCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
 import { EtherSwapValues } from 'lib/consts/Types';
@@ -286,6 +293,111 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
   return Number(estimateFee);
 }
 
+export const calculateStxLockFee = async (contract:string, preimageHash: string) => {
+  // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
+  let contractAddress = contract.split(".")[0];
+  let contractName = contract.split(".")[1];
+
+  const postConditionCode = FungibleConditionCode.GreaterEqual;
+  const postConditionAmount = new BigNum(100000);
+  const postConditions = [
+    createSTXPostCondition(contract, postConditionCode, postConditionAmount),
+    // makeStandardSTXPostCondition(
+    //   contractAddress,
+    //   contractName,
+    //   postConditionCode,
+    //   postConditionAmount
+    // )
+  ];
+
+  let functionArgs = [
+    bufferCV(Buffer.from(preimageHash, 'hex')),
+    bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+    bufferCV(Buffer.from('01','hex')),
+    bufferCV(Buffer.from('01','hex')),
+    bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+    standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
+  ];
+
+  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+
+  const txOptions = {
+    contractAddress,
+    contractName,
+    functionName: 'lockStx',
+    functionArgs: functionArgs,
+    senderKey: getStacksNetwork().privateKey,
+    validateWithAbi: true,
+    network: stacksNetwork,
+    postConditionMode: PostConditionMode.Allow,
+    postConditions,
+    anchorMode: AnchorMode.Any,
+    onFinish: data => {
+      console.log('Stacks claim Transaction:', JSON.stringify(data));
+    }
+  };
+
+  // this.toObject(txOptions)
+  // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
+
+  const transaction = await makeContractCall(txOptions);
+  // console.log("stacksutil.209 transaction: ", transaction)
+  const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+  // console.log("estimatedFee: ", estimateFee);
+  return Number(estimateFee);
+}
+
+export const calculateStxClaimFee = async (contract:string, preimage: string, amount: string, timelock: string) => {
+  // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
+  let contractAddress = contract.split(".")[0];
+  let contractName = contract.split(".")[1];
+
+  const postConditionCode = FungibleConditionCode.GreaterEqual;
+  const postConditionAmount = new BigNum(100000);
+  const postConditions = [
+    makeContractSTXPostCondition(
+      contractAddress,
+      contractName,
+      postConditionCode,
+      postConditionAmount
+    )
+  ];
+
+  let functionArgs = [
+    bufferCV(Buffer.from(preimage, 'hex')),
+    bufferCV(Buffer.from(amount,'hex')),
+    bufferCV(Buffer.from('01','hex')),
+    bufferCV(Buffer.from('01','hex')),
+    bufferCV(Buffer.from(timelock,'hex')),
+  ];
+
+  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+
+  const txOptions = {
+    contractAddress,
+    contractName,
+    functionName: 'claimStx',
+    functionArgs: functionArgs,
+    senderKey: getStacksNetwork().privateKey,
+    validateWithAbi: true,
+    network: stacksNetwork,
+    postConditionMode: PostConditionMode.Allow,
+    postConditions,
+    anchorMode: AnchorMode.Any,
+    onFinish: data => {
+      console.log('Stacks claim Transaction:', JSON.stringify(data));
+    }
+  };
+
+  // this.toObject(txOptions)
+  // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
+
+  const transaction = await makeContractCall(txOptions);
+  // console.log("stacksutil.209 transaction: ", transaction)
+  const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+  // console.log("estimatedFee: ", estimateFee);
+  return Number(estimateFee);
+}
 
 // window is not defined?! -- I think we can use cross-fetch but meh no need.
 // export const getInfo = async () => {
