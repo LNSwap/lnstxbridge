@@ -4,7 +4,7 @@ import Errors from './Errors';
 import Logger from '../Logger';
 import Service from '../service/Service';
 import SwapNursery from '../swap/SwapNursery';
-import ServiceErrors from '../service/Errors';
+// import ServiceErrors from '../service/Errors';
 import { SwapUpdate } from '../service/EventHandler';
 import { SwapType, SwapUpdateEvent } from '../consts/Enums';
 import { getChainCurrency, getHexBuffer, getVersion, mapToObject, splitPairId, stringify } from '../Utils';
@@ -103,10 +103,17 @@ class Controller {
           } catch (error) {
             // If the transaction can't be queried with the service it's either a transaction on the Ethereum/RSK/Stacks network,
             // or something is terribly wrong
-            if (error.message !== ServiceErrors.NOT_SUPPORTED_BY_SYMBOL(chainCurrency).message) {
-              console.log("controller.106 NOT_SUPPORTED_BY_SYMBOL ", error);
-              throw error;
-            }
+
+            // if(error.includes("Error: Request failed with status code 404")){
+            //   how to handle when a tx is dropped from mempool???
+            // }
+
+            // if (error.message !== ServiceErrors.NOT_SUPPORTED_BY_SYMBOL(chainCurrency).message) {
+            //   console.log("controller.106 NOT_SUPPORTED_BY_SYMBOL ", error);
+            //   // failed tx on stacks chain we get
+            //   // controller.106 NOT_SUPPORTED_BY_SYMBOL  Error: Request failed with status code 404
+            //   throw error;
+            // }
 
             console.log("controller.110 ", reverseSwap.id, status)
             this.pendingSwapInfos.set(reverseSwap.id, {

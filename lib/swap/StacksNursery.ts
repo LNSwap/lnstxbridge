@@ -73,7 +73,7 @@ class StacksNursery extends EventEmitter {
 
     this.listenBlocks();
 
-    this.logger.error("StacksNursery listeners are starting...");
+    this.logger.verbose("StacksNursery listeners are starting...");
     this.listenEtherSwap();
     this.listenERC20Swap();
   }

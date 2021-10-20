@@ -97,8 +97,8 @@ class Boltz {
     }
 
     try {
-      this.logger.error(`boltz.100: ${this.currencies}` + JSON.stringify(this.currencies));
-      this.logger.error("boltz.ts 100, service init with currencies "+ JSON.stringify(this.currencies));
+      // this.logger.error(`boltz.100: ${this.currencies}` + JSON.stringify(this.currencies));
+      // this.logger.error("boltz.ts 100, service init with currencies "+ JSON.stringify(this.currencies));
       this.service = new Service(
         this.logger,
         this.config,

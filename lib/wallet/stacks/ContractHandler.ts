@@ -130,6 +130,7 @@ class ContractHandler {
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
+      fee: new BigNum(100000),
     };
 
     // this.logger.error("stacks contracthandler.84 txOptions: "+ stringify(txOptions));
