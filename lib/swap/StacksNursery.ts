@@ -54,6 +54,9 @@ interface StacksNursery {
 
   on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'tx.sent', reverseSwap: ReverseSwap, transactionHash: string): boolean;
+
+  on(event: 'new.block', listener: (height: number) => void): this;
+  emit(event: 'new.block', height: number): boolean;
 }
 
 class StacksNursery extends EventEmitter {
@@ -470,9 +473,11 @@ class StacksNursery extends EventEmitter {
     });
   }
 
+  // this doesn't exist on stacks so we do it in stacksmanager checkblockheight
   private listenBlocks = () => {
+    // this.stacksManager.somefunc
     this.stacksManager.provider.on('block', async (height) => {
-      // this.logger.error("RskNursery on block: " + height.toString());
+      // this.logger.error("StacksNursery on block: " + height.toString());
       await Promise.all([
         this.checkExpiredSwaps(height),
         this.checkExpiredReverseSwaps(height),

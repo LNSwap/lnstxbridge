@@ -21,7 +21,7 @@ import StacksWalletProvider from '../providers/StacksWalletProvider';
 
 import { deriveRootKeychainFromMnemonic, getAddress, deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID } from '@stacks/transactions';
-import { getAccountInfo, getInfo, setStacksNetwork } from './StacksUtils';
+import { getAccountInfo, getInfo, getStacksNetwork, setBlockHeight, setStacksNetwork } from './StacksUtils';
 // import { StacksMainnet, StacksMocknet, StacksNetwork, StacksTestnet } from '@stacks/network';
 
 type Network = {
@@ -135,7 +135,7 @@ class StacksManager {
 
     const signerAccountInfo = await getAccountInfo(derivedData.address);
     this.logger.verbose("stacksmanager.137 signerAccountInfo "+ JSON.stringify(signerAccountInfo));
-    setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey, derivedData.address, signerAccountInfo.nonce);
+
 
     this.stxswapaddress = this.stacksConfig.stxSwapAddress;
 
@@ -156,6 +156,8 @@ class StacksManager {
     const currentBlock = info.stacks_tip_height;
     this.logger.verbose("StacksManager currentBlock: "+ currentBlock);
     const chainTip = await chainTipRepository.findOrCreateTip('STX', currentBlock);
+
+    setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey, derivedData.address, signerAccountInfo.nonce, currentBlock);
 
     // , this.erc20Swap
     this.contractHandler.init(this.stacksConfig.stxSwapAddress);
@@ -274,12 +276,31 @@ class StacksManager {
   //     throw Errors.UNSUPPORTED_CONTRACT_VERSION(name, contract.address, contractVersion, supportedVersion);
   //   }
   // }
+
+  // public somefunc = async (): Promise<Number> => {
+    
+  //   return 0;
+  // }
+
 }
 
 async function checkblockheight (chainTipRepository, chainTip) {
   const info = await getInfo();
-  console.log("Checking for Stacks block height: " + info.stacks_tip_height)
-  chainTipRepository.updateTip(chainTip, info.stacks_tip_height)
+  console.log("Checking for Stacks block height: " + info.stacks_tip_height);
+  chainTipRepository.updateTip(chainTip, info.stacks_tip_height);
+
+  // trigger checking of expiredswaps on new blocks
+  const currentTip = getStacksNetwork().blockHeight;
+  if(info.stacks_tip_height > currentTip){
+    // new block
+    // check expired swaps
+    // await Promise.all([
+    //   this.checkExpiredSwaps(height),
+    //   this.checkExpiredReverseSwaps(height),
+    // ]);
+    // update currentBlockHeight
+    setBlockHeight(info.stacks_tip_height);
+  }
 }
 
 export default StacksManager;

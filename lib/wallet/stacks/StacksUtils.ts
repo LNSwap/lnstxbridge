@@ -35,6 +35,7 @@ let stxSwapAddress = "STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3";
 let privateKey = '';
 let signerAddress = 'SP13R6D5P5TYE71D81GZQWSD9PGQMQQN54A2YT3BY';
 let nonce = 0;
+let blockHeight = 0;
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -94,7 +95,7 @@ export const getAddressBalance = async (address:string) => {
   
 }
 
-export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string, signerAddress: string, signerNonce: number) => {
+export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string, signerAddress: string, signerNonce: number, currentBlockHeight: number) => {
   // let network:string = "mocknet";
  
   if (network.includes("localhost")) {
@@ -117,12 +118,13 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
   privateKey = derivedPrivateKey;
   signerAddress = signerAddress;
   nonce = signerNonce;
+  blockHeight = currentBlockHeight;
 
-  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'providerEndpoint': network, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce};
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'providerEndpoint': network, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight};
 }
 
 export const getStacksNetwork = () => {
-  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce};
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight};
 }
 
 export const getFee = async () => {
@@ -138,6 +140,10 @@ export const getInfo = async () => {
   const response = await axios.get(url)
   // console.log("stacksutils getInfo", response.data);
   return response.data;
+}
+
+export const setBlockHeight = (currentBlockHeight: number) => {
+  blockHeight = currentBlockHeight;
 }
 
 export const getAccountInfo = async (initAddress: string) => {
