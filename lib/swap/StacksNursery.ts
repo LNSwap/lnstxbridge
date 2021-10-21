@@ -18,7 +18,7 @@ import { getChainCurrency, getHexString, splitPairId, stringify } from '../Utils
 import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
 import { TxBroadcastResult } from '@stacks/transactions';
-import { getTx } from '../wallet/stacks/StacksUtils';
+import { getTx, incrementNonce } from '../wallet/stacks/StacksUtils';
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 
 interface StacksNursery {
@@ -151,6 +151,7 @@ class StacksNursery extends EventEmitter {
           await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
           transaction.txid,
         );
+        incrementNonce();
       }
     // }).catch(async (reason) => {
 
