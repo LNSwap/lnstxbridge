@@ -119,7 +119,7 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
-    this.logger.verbose(`broadcasting with nonce: ` + getStacksNetwork().nonce+1);
+    this.logger.verbose(`broadcasting with nonce: ` + getStacksNetwork().nonce);
     const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.contractAddress,

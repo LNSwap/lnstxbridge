@@ -1439,7 +1439,7 @@ class SwapNursery extends EventEmitter {
 
     // const etherSwapValues = await queryEtherSwapValuesFromLock(ethereumManager.etherSwap, reverseSwap.transactionId!);
     const etherSwapValues = await querySwapValuesFromTx(reverseSwap.transactionId!);
-    const contractTransaction = await stacksManager.contractHandler.refundStx(
+    const contractTransaction:TxBroadcastResult = await stacksManager.contractHandler.refundStx(
       getHexBuffer(reverseSwap.preimageHash),
       etherSwapValues.amount,
       etherSwapValues.claimAddress,
@@ -1450,15 +1450,16 @@ class SwapNursery extends EventEmitter {
       incrementNonce();
     }
 
-    this.logger.info(`Refunded Ether of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.hash}`);
+    this.logger.info(`Refunded Ether of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
     this.emit(
       'refund',
       await this.reverseSwapRepository.setTransactionRefunded(
         reverseSwap,
-        calculateEthereumTransactionFee(contractTransaction),
+        // calculateEthereumTransactionFee(contractTransaction),
+        0,
         Errors.REFUNDED_COINS(reverseSwap.transactionId!).message,
       ),
-      contractTransaction.hash,
+      contractTransaction.txid,
     );
   }
 
