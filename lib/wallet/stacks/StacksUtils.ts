@@ -140,12 +140,21 @@ export const getInfo = async () => {
   return response.data;
 }
 
-export const getAccountInfo = async () => {
-  // const signerAddress 
-  const url = `${coreApiUrl}/v2/info/accounts/${signerAddress}`;
-  const response = await axios.get(url)
-  // console.log("stacksutils getInfo", response.data);
-  return response.data;
+export const getAccountInfo = async (initAddress: string) => {
+  let queryAddress = signerAddress;
+  if(initAddress !== undefined){
+    queryAddress = initAddress;
+  }
+  // console.log(`getAccountInfo ${queryAddress}`);
+  const url = `${coreApiUrl}/v2/accounts/${queryAddress}?proof=0`;
+  try {
+    const response = await axios.get(url)
+    // console.log("stacksutils getInfo", response.data);
+    return response.data;
+  } catch (e) {
+    console.log(`getAccountInfo error: `, e);
+    return {nonce: 0};
+  } 
 }
 
 export const incrementNonce = () => {

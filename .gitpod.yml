@@ -8,13 +8,16 @@ tasks:
       mkdir ~/.boltz
       cp boltz.conf ~/.boltz/boltz.conf
       npm i
+      npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     command: npm run dev
   - init: |
-      npm run docker:regtest
+      docker ps
+      sleep 60
     command: >
       docker exec -it regtest bash
       echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
+    # docker stop regtest &&  docker rm regtest && npm run docker:regtest
   - init: |
       npm i -g shx rimraf 
       npm run stacks:mocknet
@@ -26,6 +29,20 @@ tasks:
       npm run stacks:deploy
     # fund the operator account as well!
     # SIGNER=ST3P4DRFSWGD6S58VQ4QWEHM1JW34XM6WNVYZAH3N npm run stacks:fund:signer
+  - init: |
+        git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
+        export REACT_APP_BOLTZ_API=https://9001-${GITPOD_WORKSPACE_URL:8}
+        export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
+        gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API
+        cd /workspace/lnstxbridge-frontend
+        sed -i 's/HTTPS=true/HTTPS=false/g' .env
+        sed -i 's/PORT=443/PORT=8888/g' .env
+        sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
+        sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9001#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
+        sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
+        sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
+        npm i    
+    command: npm run start
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
@@ -35,4 +52,7 @@ ports:
     visibility: public
   - port: 9001
     onOpen: open-preview
+    visibility: public
+  - port: 8888
+    onOpen: open-browser
     visibility: public

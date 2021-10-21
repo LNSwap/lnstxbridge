@@ -3,7 +3,7 @@ import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Logger from '../../Logger';
 import { getHexString, stringify } from '../../Utils';
-import { getGasPrice, getStacksNetwork, incrementNonce } from './StacksUtils';
+import { getGasPrice, getStacksNetwork } from './StacksUtils';
 import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
@@ -109,7 +109,7 @@ class ContractHandler {
       bufferCV(Buffer.from(tl3,'hex')),
       standardPrincipalCV(claimAddress),
     ];
-    this.logger.verbose("stacks contracthandler.111 functionargs: "+stringify(functionArgs));
+    // this.logger.verbose("stacks contracthandler.111 functionargs: "+stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),
@@ -119,6 +119,7 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
+    this.logger.verbose(`broadcasting with nonce: ` + getStacksNetwork().nonce+1);
     const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.contractAddress,
@@ -126,7 +127,7 @@ class ContractHandler {
       functionName: 'lockStx',
       functionArgs: functionArgs,
       senderKey: stacksNetworkData.privateKey,
-      validateWithAbi: true,
+      // validateWithAbi: true,
       network: stacksNetworkData.stacksNetwork,
       postConditions,
       postConditionMode: PostConditionMode.Allow,
@@ -225,7 +226,7 @@ class ContractHandler {
       postConditionMode: PostConditionMode.Allow,
       postConditions,
       anchorMode: AnchorMode.Any,
-      nonce: stacksNetworkData.nonce,
+      nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks claim Transaction:', JSON.stringify(data));
       //   incrementNonce();

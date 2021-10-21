@@ -1161,6 +1161,11 @@ class SwapNursery extends EventEmitter {
       etherSwapValues.timelock,
     );
 
+    if(contractTransaction.error) {
+      this.logger.error(`swapnursery.1165 claimStx error: ${contractTransaction.error}`);
+    } else {
+      incrementNonce();
+    }
     this.logger.info(`Claimed Stx of Swap ${swap.id} in: ${contractTransaction.txid}`);
     this.logger.error("swapnursery.1139 TODO: setminerfee in swaprepository when stacks tx fee calc is available.")
     // calculateRskTransactionFee(contractTransaction)
