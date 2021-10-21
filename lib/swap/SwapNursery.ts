@@ -50,7 +50,7 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
-import { querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
+import { incrementNonce, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -1345,7 +1345,10 @@ class SwapNursery extends EventEmitter {
           } else {
             await this.refundERC20(reverseSwap, chainSymbol);
           }
-          
+          break;
+
+        case CurrencyType.Stx:
+          await this.refundStx(reverseSwap);
           break;
       }
     } else {
@@ -1413,6 +1416,34 @@ class SwapNursery extends EventEmitter {
       etherSwapValues.claimAddress,
       etherSwapValues.timelock,
     );
+
+    this.logger.info(`Refunded Ether of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.hash}`);
+    this.emit(
+      'refund',
+      await this.reverseSwapRepository.setTransactionRefunded(
+        reverseSwap,
+        calculateEthereumTransactionFee(contractTransaction),
+        Errors.REFUNDED_COINS(reverseSwap.transactionId!).message,
+      ),
+      contractTransaction.hash,
+    );
+  }
+
+  private refundStx = async (reverseSwap: ReverseSwap) => {
+    const stacksManager = this.walletManager.stacksManager!;
+
+    // const etherSwapValues = await queryEtherSwapValuesFromLock(ethereumManager.etherSwap, reverseSwap.transactionId!);
+    const etherSwapValues = await querySwapValuesFromTx(reverseSwap.transactionId!);
+    const contractTransaction = await stacksManager.contractHandler.refundStx(
+      getHexBuffer(reverseSwap.preimageHash),
+      etherSwapValues.amount,
+      etherSwapValues.claimAddress,
+      etherSwapValues.timelock,
+    );
+
+    if(!contractTransaction.error) {
+      incrementNonce();
+    }
 
     this.logger.info(`Refunded Ether of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.hash}`);
     this.emit(
