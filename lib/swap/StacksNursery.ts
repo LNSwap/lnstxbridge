@@ -18,8 +18,18 @@ import { getChainCurrency, getHexString, splitPairId, stringify } from '../Utils
 import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
 import { TxBroadcastResult } from '@stacks/transactions';
-import { getTx, incrementNonce } from '../wallet/stacks/StacksUtils';
+import { getStacksNetwork, getTx, incrementNonce } from '../wallet/stacks/StacksUtils';
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
+import { io } from "socket.io-client";
+import * as stacks from '@stacks/blockchain-api-client';
+
+const socket = io(getStacksNetwork().coreApiUrl, {
+  query: {
+    subscriptions: Array.from(new Set(['block', 'microblock'])).join(','),
+  },
+  transports: [ "websocket" ]
+});
+const sc = new stacks.StacksApiSocketClient(socket);
 
 interface StacksNursery {
   // EtherSwap
@@ -475,19 +485,28 @@ class StacksNursery extends EventEmitter {
 
   // this doesn't exist on stacks so we do it in stacksmanager checkblockheight
   private listenBlocks = () => {
-    // this.stacksManager.somefunc
-    this.stacksManager.provider.on('block', async (height) => {
-      // this.logger.error("StacksNursery on block: " + height.toString());
+    // listen to anchor blocks and check for expired swaps as suggested at
+    // https://github.com/blockstack/stacks-blockchain-api/issues/815#issuecomment-948964765
+    sc.socket.on('block', async (data) => {
+      // console.log(`got new block: `, data);
       await Promise.all([
-        this.checkExpiredSwaps(height),
-        this.checkExpiredReverseSwaps(height),
+        this.checkExpiredSwaps(data.height),
+        this.checkExpiredReverseSwaps(data.height),
       ]);
     });
+
+    // this.stacksManager.provider.on('block', async (height) => {
+    //   // this.logger.error("StacksNursery on block: " + height.toString());
+    //   await Promise.all([
+    //     this.checkExpiredSwaps(height),
+    //     this.checkExpiredReverseSwaps(height),
+    //   ]);
+    // });
   }
 
   private checkExpiredSwaps = async (height: number) => {
     const expirableSwaps = await this.swapRepository.getSwapsExpirable(height);
-    this.logger.error("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
+    this.logger.verbose("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
 
     for (const expirableSwap of expirableSwaps) {
       const { base, quote } = splitPairId(expirableSwap.pair);
@@ -503,13 +522,13 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredReverseSwaps = async (height: number) => {
     const expirableReverseSwaps = await this.reverseSwapRepository.getReverseSwapsExpirable(height);
-    this.logger.error("stacksnursery.417 checkExpiredReverseSwaps " + expirableReverseSwaps)
+    this.logger.verbose("stacksnursery.417 checkExpiredReverseSwaps " + expirableReverseSwaps)
 
     for (const expirableReverseSwap of expirableReverseSwaps) {
       const { base, quote } = splitPairId(expirableReverseSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, expirableReverseSwap.orderSide, true);
 
-      this.logger.error("stacksnursery.393 checkExpiredReverseSwaps, " + height + ", " + expirableReverseSwap.id)
+      this.logger.verbose("stacksnursery.393 checkExpiredReverseSwaps, " + height + ", " + expirableReverseSwap.id)
       const wallet = this.getEthereumWallet(chainCurrency);
 
       if (wallet) {
