@@ -260,7 +260,9 @@ class ContractHandler {
     // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
     amount = amount.div(etherDecimals).div(100)
-    let decimalamount = parseInt(amount.toString(),10) + 1
+    // this +1 causes issues when 49 -> 50
+    // removed  + 1
+    let decimalamount = parseInt(amount.toString(),10)
     this.logger.verbose("contracthandler.263 smaller amount: "+ amount + ", "+ decimalamount)
 
     // Add an optional post condition
