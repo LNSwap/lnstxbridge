@@ -5,8 +5,8 @@ tasks:
       echo 'init script' 
       sudo apt install rsync --assume-yes
       nvm install 14
-      mkdir ~/.boltz
-      cp boltz.conf ~/.boltz/boltz.conf
+      mkdir ~/.lnstx
+      cp boltz.conf ~/.lnstx/boltz.conf
       npm i
       npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
