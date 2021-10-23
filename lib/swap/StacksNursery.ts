@@ -506,53 +506,53 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredSwaps = async (height: number) => {
     const expirableSwaps = await this.swapRepository.getSwapsExpirable(height);
-    this.logger.verbose("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
+    // this.logger.verbose("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
 
     for (const expirableSwap of expirableSwaps) {
       const { base, quote } = splitPairId(expirableSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, expirableSwap.orderSide, false);
 
-      const wallet = this.getEthereumWallet(chainCurrency);
+      const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {
-        this.emit('swap.expired', expirableSwap, wallet.symbol === 'RBTC');
+        this.emit('swap.expired', expirableSwap, wallet.symbol === 'STX');
       }
     }
   }
 
   private checkExpiredReverseSwaps = async (height: number) => {
     const expirableReverseSwaps = await this.reverseSwapRepository.getReverseSwapsExpirable(height);
-    this.logger.verbose("stacksnursery.417 checkExpiredReverseSwaps " + expirableReverseSwaps)
+    // this.logger.verbose("stacksnursery.417 checkExpiredReverseSwaps " + expirableReverseSwaps)
 
     for (const expirableReverseSwap of expirableReverseSwaps) {
       const { base, quote } = splitPairId(expirableReverseSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, expirableReverseSwap.orderSide, true);
 
       this.logger.verbose("stacksnursery.393 checkExpiredReverseSwaps, " + height + ", " + expirableReverseSwap.id)
-      const wallet = this.getEthereumWallet(chainCurrency);
+      const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {
-        this.emit('reverseSwap.expired', expirableReverseSwap, wallet.symbol === 'RBTC');
+        this.emit('reverseSwap.expired', expirableReverseSwap, wallet.symbol === 'STX');
       }
     }
   }
 
   /**
-   * Returns a wallet in case there is one with the symbol and it is an Ethereum one
+   * Returns a wallet in case there is one with the symbol and it is an Stacks one
    */
-  private getEthereumWallet = (symbol: string): Wallet | undefined => {
+  private getStacksWallet = (symbol: string): Wallet | undefined => {
     const wallet = this.walletManager.wallets.get(symbol);
 
     if (!wallet) {
       return;
     }
 
-    if (wallet.type === CurrencyType.Rbtc || wallet.type === CurrencyType.ERC20) {
-      // this.logger.error("getEthereumWallet returning valid wallet");
+    // || wallet.type === CurrencyType.ERC20
+    if (wallet.type === CurrencyType.Stx) {
       return wallet;
     }
 
-    this.logger.error("getEthereumWallet returning empty!!");
+    this.logger.error("getStacksWallet returning empty!!");
     return;
   }
 }
