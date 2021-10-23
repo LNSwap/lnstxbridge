@@ -13,7 +13,7 @@
 `npm run stacks:mocknet`
 * fund a regtest account and deploy latest Clarity contract under contracts/  
 `npm run stacks:fund && npm run stacks:deploy`
-* copy boltz.conf to ~/.boltz/boltz.conf and modify as needed  
+* copy boltz.conf to ~/.lnstx/boltz.conf and modify as needed  
 * start the app  
 `npm run start`
 
