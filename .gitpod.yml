@@ -31,14 +31,14 @@ tasks:
     # SIGNER=ST3P4DRFSWGD6S58VQ4QWEHM1JW34XM6WNVYZAH3N npm run stacks:fund:signer
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
-        export REACT_APP_BOLTZ_API=https://9001-${GITPOD_WORKSPACE_URL:8}
+        export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API
         cd /workspace/lnstxbridge-frontend
         sed -i 's/HTTPS=true/HTTPS=false/g' .env
         sed -i 's/PORT=443/PORT=8888/g' .env
         sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
-        sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9001#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
+        sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9002#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
         sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
         sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
         npm i    
@@ -50,7 +50,7 @@ ports:
   - port: 3999
     onOpen: open-preview
     visibility: public
-  - port: 9001
+  - port: 9002
     onOpen: open-preview
     visibility: public
   - port: 8888

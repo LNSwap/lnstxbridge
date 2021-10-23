@@ -227,7 +227,7 @@ class Config {
 
       api: {
         host: '0.0.0.0',
-        port: 9001,
+        port: 9002,
         sslKey: '/root/lnstxbridge-frontend/privkey.pem',
         sslCert: '/root/lnstxbridge-frontend/fullchain.pem',
         sslEnabled: true,
