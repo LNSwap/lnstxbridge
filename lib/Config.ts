@@ -199,7 +199,7 @@ class Config {
    * The constructor sets the default values
    */
   constructor() {
-    this.dataDir = getServiceDataDir('boltz');
+    this.dataDir = getServiceDataDir('lnstx');
 
     const {
       grpc,
