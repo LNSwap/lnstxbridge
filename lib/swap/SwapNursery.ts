@@ -1333,7 +1333,7 @@ class SwapNursery extends EventEmitter {
     const lightningCurrency = this.currencies.get(lightningSymbol)!;
 
     if (reverseSwap.transactionId) {
-      this.logger.error("swapnursery reverseSwap.transactionId" + chainCurrency.type + ", " + chainSymbol);
+      this.logger.error("swapnursery.1336 reverseSwap.transactionId " + chainCurrency.type + ", " + chainSymbol);
       switch (chainCurrency.type) {
         case CurrencyType.BitcoinLike:
           await this.refundUtxo(reverseSwap, chainSymbol);
@@ -1450,7 +1450,10 @@ class SwapNursery extends EventEmitter {
       incrementNonce();
     }
 
-    this.logger.info(`Refunded Ether of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
+    // this tx contractTransaction may fail in the future - need to handle somehow
+    // for instance it failed because claimstx got in first
+
+    this.logger.info(`Refunded STX of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
     this.emit(
       'refund',
       await this.reverseSwapRepository.setTransactionRefunded(
