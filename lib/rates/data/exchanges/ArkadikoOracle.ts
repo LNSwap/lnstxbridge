@@ -1,4 +1,4 @@
-import { getStacksNetwork } from 'lib/wallet/stacks/StacksUtils';
+// import { getStacksNetwork } from 'lib/wallet/stacks/StacksUtils';
 import Exchange, { makeRequest } from '../Exchange';
 // import { Configuration, SmartContractsApi, TransactionsApi } from '@stacks/blockchain-api-client';
 

@@ -208,30 +208,29 @@ class StacksManager {
     for (const token of this.stacksConfig.tokens) {
       if (token.contractAddress) {
         this.logger.error("stacksmanager.190 TODO: token wallets?! -- pending M4 on the grant application")
-        // if (token.decimals) {
-        //   if (!wallets.has(token.symbol)) {
-        //     // Wrap the address in "utils.getAddress" to make sure it is a checksum one
-        //     this.tokenAddresses.set(token.symbol, utils.getAddress(token.contractAddress));
-        //     // const provider = new ERC20WalletProvider(this.logger, signer, {
-        //     //   symbol: token.symbol,
-        //     //   decimals: token.decimals,
-        //     //   contract: new Contract(token.contractAddress, ContractABIs.ERC20, signer) as any as ERC20,
-        //     // });
-        //     const provider = null;
+        if (token.decimals) {
+          if (!wallets.has(token.symbol)) {
+            // Wrap the address in "utils.getAddress" to make sure it is a checksum one
+            this.tokenAddresses.set(token.symbol, token.contractAddress);
+            // const provider = new ERC20WalletProvider(this.logger, signer, {
+            //   symbol: token.symbol,
+            //   decimals: token.decimals,
+            //   contract: new Contract(token.contractAddress, ContractABIs.ERC20, signer) as any as ERC20,
+            // });
 
-        //     wallets.set(token.symbol, new Wallet(
-        //       this.logger,
-        //       CurrencyType.ERC20,
-        //       provider,
-        //     ));
+            wallets.set(token.symbol, new Wallet(
+              this.logger,
+              CurrencyType.Sip10,
+              new StacksWalletProvider(this.logger, signer, chainId),
+            ));
 
-        //     await this.checkERC20Allowance(provider);
-        //   } else {
-        //     throw Errors.INVALID_ETHEREUM_CONFIGURATION(`duplicate ${token.symbol} token config`);
-        //   }
-        // } else {
-        //   throw Errors.INVALID_ETHEREUM_CONFIGURATION(`missing decimals configuration for token: ${token.symbol}`);
-        // }
+            // await this.checkERC20Allowance(provider);
+          } else {
+            throw Errors.INVALID_ETHEREUM_CONFIGURATION(`duplicate ${token.symbol} token config`);
+          }
+        } else {
+          throw Errors.INVALID_ETHEREUM_CONFIGURATION(`missing decimals configuration for token: ${token.symbol}`);
+        }
       } else {
         if (token.symbol === 'STX') {
           if (!wallets.has('STX')) {
