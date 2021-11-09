@@ -195,6 +195,9 @@ class Config {
   private readonly config: ConfigType;
   private readonly dataDir = Config.defaultDataDir;
 
+  // public static defaultPort = 9002;
+  public static defaultPort = 9003;
+
   /**
    * The constructor sets the default values
    */
@@ -227,7 +230,7 @@ class Config {
 
       api: {
         host: '0.0.0.0',
-        port: 9002,
+        port: Config.defaultPort,
         sslKey: '/root/lnstxbridge-frontend/privkey.pem',
         sslCert: '/root/lnstxbridge-frontend/fullchain.pem',
         sslEnabled: true,
