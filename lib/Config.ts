@@ -103,7 +103,7 @@ type StacksConfig = {
   alchemy: RskProviderServiceConfig;
 
   stxSwapAddress: string;
-  erc20SwapAddress: string;
+  sip10SwapAddress: string;
 
   tokens: TokenConfig[];
 };

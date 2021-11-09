@@ -26,15 +26,20 @@ class ContractHandler {
   private erc20Swap!: ERC20Swap;
   private contractAddress!: string;
   private contractName!: string;
+  private sip10contractAddress!: string;
+  private sip10ontractName!: string;
 
   constructor(
     private logger: Logger,
   ) {}
 
   // etherSwap: EtherSwap, erc20Swap: ERC20Swap
-  public init = (contract:string): void => {
-    this.contractAddress = contract.split(".")[0]
-    this.contractName = contract.split(".")[1]
+  public init = (contract:string, sip10Contract: string): void => {
+    this.contractAddress = contract.split(".")[0];
+    this.contractName = contract.split(".")[1];
+
+    this.sip10contractAddress = sip10Contract.split(".")[0];
+    this.sip10ontractName = sip10Contract.split(".")[1];
     // this.etherSwap = etherSwap;
     // this.erc20Swap = erc20Swap;
   }

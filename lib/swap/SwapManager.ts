@@ -549,9 +549,9 @@ class SwapManager {
       });
 
     } else {
-      // this.logger.error("swapmanager.515 " + sendingCurrency.provider!)
+      this.logger.error("swapmanager.515 " + sendingCurrency.provider!);
       // const blockNumber = await sendingCurrency.provider!.getBlockNumber();
-      const info = await getInfo()  
+      const info = await getInfo();
       const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.onchainTimeoutBlockDelta;
 
@@ -709,17 +709,19 @@ class SwapManager {
 
     let addresstoreturn: string;
     if (type === CurrencyType.Ether) {
-      addresstoreturn = ethereumManager.etherSwap.address
+      addresstoreturn = ethereumManager.etherSwap.address;
     } else if (type === CurrencyType.Rbtc) {
-      addresstoreturn = rskManager.etherSwap.address
+      addresstoreturn = rskManager.etherSwap.address;
     } else if (type === CurrencyType.Stx) {
-      addresstoreturn = stacksManager.stxswapaddress
+      addresstoreturn = stacksManager.stxswapaddress;
+    } else if (type === CurrencyType.Sip10) {
+      addresstoreturn = stacksManager.stxswapaddress;
     } else {
       if (quoteCurrency == "SOV") {
-        this.logger.error("getlockupcontractaddress from rsk")
-        addresstoreturn = rskManager.erc20Swap.address
+        this.logger.error("getlockupcontractaddress from rsk");
+        addresstoreturn = rskManager.erc20Swap.address;
       } else {
-        addresstoreturn = ethereumManager.erc20Swap.address
+        addresstoreturn = ethereumManager.erc20Swap.address;
       }
       
     }

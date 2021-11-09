@@ -42,6 +42,7 @@ class StacksManager {
   // public erc20Swap: ERC20Swap;
 
   public stxswapaddress!: string;
+  public sip10SwapAddress!: string;
   public address!: string;
   public network!: Network;
   public btcAddress!: string;
@@ -60,8 +61,7 @@ class StacksManager {
     private logger: Logger,
     private stacksConfig: StacksConfig,
   ) {
-    if (this.stacksConfig.stxSwapAddress === '') {
-      // || this.stacksConfig.erc20SwapAddress === ''
+    if (this.stacksConfig.stxSwapAddress === '' || this.stacksConfig.sip10SwapAddress === '') {
       throw Errors.MISSING_SWAP_CONTRACTS();
     }
 
@@ -74,7 +74,7 @@ class StacksManager {
     // this.client = await connectWebSocketClient('wss://stacks-node-api.testnet.stacks.co/');
 
     this.logger.debug(`Using Stacks Swap contract: ${this.stacksConfig.stxSwapAddress}`);
-    this.logger.debug(`Using Stacks ERC20 Swap contract: ${this.stacksConfig.erc20SwapAddress}`);
+    this.logger.debug(`Using Stacks sip10 Swap contract: ${this.stacksConfig.sip10SwapAddress}`);
 
     // this.etherSwap = new Contract(
     //   stacksConfig.stxSwapAddress,
@@ -160,9 +160,9 @@ class StacksManager {
     setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey, derivedData.address, signerAccountInfo.nonce, currentBlock);
 
     // , this.erc20Swap
-    this.contractHandler.init(this.stacksConfig.stxSwapAddress);
+    this.contractHandler.init(this.stacksConfig.stxSwapAddress, this.stacksConfig.sip10SwapAddress);
     // this.etherSwap, this.erc20Swap
-    this.contractEventHandler.init(this.stacksConfig.stxSwapAddress);
+    this.contractEventHandler.init(this.stacksConfig.stxSwapAddress, this.stacksConfig.sip10SwapAddress);
 
     this.logger.verbose(`Stacks chain status: ${stringify({
       chainId: chainId,
@@ -184,7 +184,7 @@ class StacksManager {
     // I don't see any way to subscribe to Stacks blocks
     // Using setinterval instead every minute :)
     setInterval(function(){
-      checkblockheight(chainTipRepository, chainTip)
+      checkblockheight(chainTipRepository, chainTip);
     }, 60000);
 
     // and maybe separately subscribe to our contract address to get updates instead of scanning the block for our TX

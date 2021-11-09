@@ -47,6 +47,8 @@ class ContractEventHandler extends EventEmitter {
   // private erc20Swap!: ERC20Swap;
   private contractAddress!: string;
   private contractName!: string;
+  private sip10contractAddress!: string;
+  private sip10contractName!: string;
 
   constructor(
     private logger: Logger,
@@ -55,9 +57,12 @@ class ContractEventHandler extends EventEmitter {
   }
 
   // etherSwap: EtherSwap, erc20Swap: ERC20Swap
-  public init = (contract:string): void => {
-    this.contractAddress = contract.split(".")[0]
-    this.contractName = contract.split(".")[1]
+  public init = (contract:string, sip10contract:string): void => {
+    this.contractAddress = contract.split(".")[0];
+    this.contractName = contract.split(".")[1];
+    this.sip10contractAddress = sip10contract.split(".")[0];
+    this.sip10contractName = sip10contract.split(".")[1];
+
     this.logger.debug("stacks contracteventhandler.init: "+ this.contractAddress + "." + this.contractName + " on " + getStacksNetwork().wsUrl);
 
     // this.etherSwap = etherSwap;

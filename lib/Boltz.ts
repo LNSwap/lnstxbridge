@@ -338,7 +338,7 @@ class Boltz {
     this.config.stacks.tokens.forEach((token) => {
       result.set(token.symbol, {
         symbol: token.symbol,
-        type: token.symbol === 'STX' ? CurrencyType.Stx : CurrencyType.ERC20,
+        type: token.symbol === 'STX' ? CurrencyType.Stx : CurrencyType.Sip10,
         limits: {
           ...token,
         },

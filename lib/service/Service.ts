@@ -950,8 +950,9 @@ class Service {
     const { sending, receiving } = getSendingReceivingCurrency(base, quote, side);
     const sendingCurrency = this.getCurrency(sending);
 
-    // Not the pretties way and also not the right spot to do input validation but
+    // Not the prettiest way and also not the right spot to do input validation but
     // only at this point in time the type of the sending currency is known
+    this.logger.verbose('Service.956 sendingCurrency.type '+ JSON.stringify(sendingCurrency));
     switch (sendingCurrency.type) {
       case CurrencyType.BitcoinLike:
         if (args.claimPublicKey === undefined) {
@@ -977,6 +978,11 @@ class Service {
         }
 
         break;
+
+      case CurrencyType.Sip10:
+        this.logger.verbose('Sip10 swap args ' +  JSON.stringify(args));
+        break;
+
     }
 
     const onchainTimeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, side, true);
