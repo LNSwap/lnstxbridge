@@ -63,7 +63,7 @@ class StacksWalletProvider implements WalletProviderInterface {
     
     // to see the raw serialized tx
     const serializedTx = transaction.serialize().toString('hex');
-    this.logger.debug("stackswalletprovider.64 sendToAddress serializedTx: " + serializedTx)
+    this.logger.debug("stackswalletprovider.64 sendToAddress serializedTx: " + serializedTx);
     
     // broadcasting transaction to the specified network
     const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
@@ -76,8 +76,7 @@ class StacksWalletProvider implements WalletProviderInterface {
 
   // address: string, gasPrice?: number
   public sweepWallet = async (): Promise<SentTransaction> => {
-    
-    this.logger.error("stackswalletprovider.77 TODO: sweepWallet not implemented!")
+    this.logger.error("stackswalletprovider.77 TODO: sweepWallet not implemented!");
 
     return {
       transactionId: "transaction.hash",

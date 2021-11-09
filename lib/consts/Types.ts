@@ -26,6 +26,12 @@ export type Token = {
   decimals: number;
 };
 
+export type Sip10Token = {
+  symbol: string;
+  contract: string;
+  decimals: number;
+};
+
 export type PairConfig = {
   base: string;
   quote: string;

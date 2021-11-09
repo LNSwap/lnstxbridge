@@ -22,6 +22,7 @@ import StacksWalletProvider from '../providers/StacksWalletProvider';
 import { deriveRootKeychainFromMnemonic, getAddress, deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID } from '@stacks/transactions';
 import { getAccountInfo, getInfo, getStacksNetwork, setBlockHeight, setStacksNetwork } from './StacksUtils';
+import SIP10WalletProvider from '../providers/SIP10WalletProvider';
 // import { StacksMainnet, StacksMocknet, StacksNetwork, StacksTestnet } from '@stacks/network';
 
 type Network = {
@@ -115,7 +116,7 @@ class StacksManager {
     // };
 
     // this.stacksClient = this.provider.getClient();
-    this.stacksClient = true
+    this.stacksClient = true;
 
     // this.logger.error('stacksmanager init network, '+ network);
   
@@ -125,10 +126,10 @@ class StacksManager {
     // this.address = await signer.getAddress();
 
     // looks like this is bitcoin address
-    this.btcAddress = await getAddress(signer)
+    this.btcAddress = await getAddress(signer);
 
     
-    const derivedData = await deriveStxAddressChain(chainId)(signer)
+    const derivedData = await deriveStxAddressChain(chainId)(signer);
     this.logger.verbose("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
     this.address = derivedData.address;
     this.privateKey = derivedData.privateKey;
@@ -138,6 +139,7 @@ class StacksManager {
 
 
     this.stxswapaddress = this.stacksConfig.stxSwapAddress;
+    this.sip10SwapAddress = this.stacksConfig.sip10SwapAddress;
 
     // this.etherSwap = this.etherSwap.connect(signer);
     // this.erc20Swap = this.erc20Swap.connect(signer);
@@ -207,7 +209,7 @@ class StacksManager {
 
     for (const token of this.stacksConfig.tokens) {
       if (token.contractAddress) {
-        this.logger.error("stacksmanager.190 TODO: token wallets?! -- pending M4 on the grant application")
+        // this.logger.error("stacksmanager.190 TODO: token wallets?! -- pending M4 on the grant application");
         if (token.decimals) {
           if (!wallets.has(token.symbol)) {
             // Wrap the address in "utils.getAddress" to make sure it is a checksum one
@@ -221,7 +223,11 @@ class StacksManager {
             wallets.set(token.symbol, new Wallet(
               this.logger,
               CurrencyType.Sip10,
-              new StacksWalletProvider(this.logger, signer, chainId),
+              // new StacksWalletProvider(this.logger, signer, chainId),
+              new SIP10WalletProvider(this.logger, signer, this.address, {
+                symbol: token.symbol,
+                decimals: token.decimals,
+                contract: token.contractAddress})
             ));
 
             // await this.checkERC20Allowance(provider);
