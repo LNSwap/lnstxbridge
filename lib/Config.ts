@@ -195,8 +195,8 @@ class Config {
   private readonly config: ConfigType;
   private readonly dataDir = Config.defaultDataDir;
 
-  // public static defaultPort = 9002;
-  public static defaultPort = 9003;
+  public static defaultPort = 9002;
+  // public static defaultPort = 9003;
 
   /**
    * The constructor sets the default values
