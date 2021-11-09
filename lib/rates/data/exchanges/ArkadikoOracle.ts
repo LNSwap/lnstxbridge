@@ -1,20 +1,49 @@
+import { getStacksNetwork } from 'lib/wallet/stacks/StacksUtils';
 import Exchange, { makeRequest } from '../Exchange';
+// import { Configuration, SmartContractsApi, TransactionsApi } from '@stacks/blockchain-api-client';
+
+import {
+  bufferCVFromString,
+  callReadOnlyFunction,
+} from '@stacks/transactions';
+import { StacksMainnet } from '@stacks/network';
+
+const contractAddress = 'SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR';
+const contractName = 'arkadiko-oracle-v1-1';
+const functionName = 'get-price';
+const buffer = bufferCVFromString('USDA');
+const network = new StacksMainnet();
+const senderAddress = 'SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR';
+
+const options = {
+  contractAddress,
+  contractName,
+  functionName,
+  functionArgs: [buffer],
+  network,
+  senderAddress,
+};
 
 class ArkadikoOracle implements Exchange {
-  // curl -X GET "https://api.coingecko.com/api/v3/simple/price?ids=sovryn&vs_currencies=btc" -H "accept: application/json"
+  // https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
   // https://explorer.stacks.co/address/SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.arkadiko-oracle-v1-1?chain=mainnet
   private static readonly API = 'https://api.coingecko.com/api/v3';
 
   public async getPrice(baseAsset: string, quoteAsset: string): Promise<number> {
-    // BTC SOV
-    // console.log("getPrice baseAsset quoteAsset: ", baseAsset, quoteAsset);
+    // BTC USDA
+    console.log("ArkadikoOracle.10 getPrice baseAsset quoteAsset: ", baseAsset, quoteAsset);
     let longerquoteasset = this.longerName(quoteAsset);
-    let lowerbaseasset = baseAsset.toLowerCase();
+    // let lowerbaseasset = baseAsset.toLowerCase();
+    let lowerbaseasset = this.longerName(baseAsset);
     const pair = `${this.longerName(quoteAsset)}&vs_currencies=${baseAsset}`;
-    const response = await makeRequest(`${Coingecko.API}/simple/price?ids=${pair}`);
-    // console.log("response: ", response, response[longerquoteasset]);
+    const response = await makeRequest(`${ArkadikoOracle.API}/simple/price?ids=${pair}`);
+    console.log("response: ", response, response[longerquoteasset]);
     const lastprice = response[longerquoteasset][lowerbaseasset];
-    // console.log("coingecko 1/lastprice: ", 1/lastprice);
+    console.log("ArkadikoOracle.18 1/lastprice: ", 1/lastprice);
+
+    const result = await callReadOnlyFunction(options);
+    console.log(`ArkadikoOracle.45 getPrice: `, result)
+    
     // 1 stx = 3000 sats
     // 1 btc = 33156.498673740054 STX -> this is returned from here which is correct on frontend UI
     return Number(1/lastprice);
@@ -31,6 +60,7 @@ class ArkadikoOracle implements Exchange {
       case 'BTC': return 'bitcoin';
       case 'RBTC': return 'rootstock';
       case 'STX': return 'blockstack';
+      case 'USDA': return 'usd';
 
       default: return asset;
     }    
@@ -40,7 +70,7 @@ class ArkadikoOracle implements Exchange {
   //   const assetUpperCase = asset.toUpperCase();
 
   //   switch (assetUpperCase) {
-  //     case 'BTC': return 'XBT';
+  //     case 'USDA': return 'usd';
   //     default: return assetUpperCase;
   //   }
   // }
