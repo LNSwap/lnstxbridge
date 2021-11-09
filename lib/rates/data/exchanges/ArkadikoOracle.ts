@@ -5,7 +5,7 @@ import Exchange, { makeRequest } from '../Exchange';
 import {
   callReadOnlyFunction,
   stringAsciiCV,
-  cvToJSON,
+  // cvToJSON,
 } from '@stacks/transactions';
 import { StacksMainnet } from '@stacks/network';
 

@@ -233,7 +233,7 @@ class Config {
         port: Config.defaultPort,
         sslKey: '/root/lnstxbridge-frontend/privkey.pem',
         sslCert: '/root/lnstxbridge-frontend/fullchain.pem',
-        sslEnabled: true,
+        sslEnabled: false,
       },
 
       grpc: {
