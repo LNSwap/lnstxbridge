@@ -99,6 +99,25 @@ class ContractEventHandler extends EventEmitter {
         }
       }
 
+      // same rescan for sip10token contract
+      const sip10contract = this.sip10contractAddress + '.' + this.sip10contractName;
+      const sip10stacksBlockResults = await getStacksContractTransactions(sip10contract,1,undefined,index);
+      // this.logger.error(`ceh.82 stacksBlockResults ` + JSON.stringify(stacksBlockResults));
+
+      for (let k = 0; k < sip10stacksBlockResults.length; k++) {
+        const tx = stacksBlockResults[k];
+        if(tx.tx_status === "success" && tx.tx_type === "contract_call"){
+          this.logger.error(`ceh.110 contractcall during rescan ${index} ` + JSON.stringify(stacksBlockResults));
+          // go get the event? - no need checkTx already emits required events!
+          this.checkTx(tx.tx_id);
+
+          // let func_args = tx.contract_call.function_args; // array of inputs
+          // let events = (await getTx(tx.tx_id)).events;
+          // this.logger.debug("got events: "+ events + ", " + func_args);
+          // // TODO: parse events and emit stuff!!!
+        }
+      }
+
     }
 
 
@@ -292,6 +311,10 @@ class ContractEventHandler extends EventEmitter {
         if(element.event_type=="stx_asset" && element.asset.asset_event_type=="transfer") {
           txamount = element.asset.amount
           console.log("stx transfer amount is ", element.asset.amount, txamount);
+        }
+        if(element.event_type=="ft_asset" && element.asset.asset_event_type=="transfer") {
+          txamount = element.asset.amount
+          console.log("sip10 token transfer amount is ", element.asset.amount, txamount);
         }
     });
 

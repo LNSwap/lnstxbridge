@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import Logger from '../../Logger';
 import { Sip10Token } from '../../consts/Types';
-import { getGasPrice } from '../ethereum/EthereumUtils';
+// import { getGasPrice } from '../ethereum/EthereumUtils';
 import WalletProviderInterface, { SentTransaction, WalletBalance } from './WalletProviderInterface';
 import { BIP32Interface } from 'bip32';
 
@@ -18,8 +18,9 @@ class SIP10WalletProvider implements WalletProviderInterface {
 
   constructor(private logger: Logger, private signer: BIP32Interface, private signerAddress: string, private token: Sip10Token) {
     this.symbol = token.symbol;
+    // this.logger.silly('sip10walletprovider signer ' + this.signer.publicKey);
 
-    this.logger.info(`Initialized ${this.symbol} SIP10 wallet with contract: ${token.contract}`);
+    this.logger.info(`Initialized ${this.symbol} SIP10 wallet with contract: ${token.contract} and ${this.signer.publicKey}`);
     // .address
   }
 
@@ -72,7 +73,7 @@ class SIP10WalletProvider implements WalletProviderInterface {
     // const transaction = await this.token.contract.transfer(address, actualAmount, {
     //   gasPrice: await getGasPrice(this.signer.provider!, gasPrice),
     // });
-    this.logger.error('sip10walletprovider sendToAddress not implemented');
+    this.logger.error(`sip10walletprovider sendToAddress not implemented ${address} ${amount} ${gasPrice}`);
     return {
       transactionId: 'transaction.hash',
     };
@@ -84,14 +85,14 @@ class SIP10WalletProvider implements WalletProviderInterface {
     //   gasPrice: await getGasPrice(this.signer.provider!, gasPrice),
     // });
 
-    this.logger.error('sip10walletprovider sweepWallet not implemented');
+    this.logger.error(`sip10walletprovider sweepWallet not implemented ${address} ${gasPrice}`);
     return {
       transactionId: 'transaction.hash',
     };
   }
 
   public getAllowance = async (spender: string): Promise<BigNumber> => {
-    this.logger.error('sip10walletprovider getAllowance not implemented');
+    this.logger.error(`sip10walletprovider getAllowance not implemented ${spender}`);
     // this.logger.verbose("sip10 getAllowance " + spender);
     // return this.token.contract.allowance(await this.signer.getAddress(), spender);
     return BigNumber.from(1000000);
@@ -99,7 +100,7 @@ class SIP10WalletProvider implements WalletProviderInterface {
 
   public approve = async (spender: string, amount: BigNumber): Promise<SentTransaction> => {
     // const transaction = await this.token.contract.approve(spender, amount);
-    this.logger.error('sip10walletprovider approve not implemented');
+    this.logger.error(`sip10walletprovider approve not implemented ${spender} ${amount}`);
 
     return {
       transactionId: 'transaction.hash',

@@ -363,6 +363,7 @@ class ContractHandler {
     );
   }
 
+  // lockStx (preimageHash (buff 32)) (amount (buff 16)) (tokenAddress (buff 42)) (claimAddress (buff 42)) (timelock (buff 16)) (claimPrincipal principal) (tokenPrincipal <ft-trait>)
   public lockupToken = async (
     preimageHash: Buffer,
     amount: BigNumber,
@@ -462,6 +463,7 @@ class ContractHandler {
     // });
   }
 
+  // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
   public claimToken = async (
     preimage: Buffer,
     amount: BigNumber,
@@ -561,6 +563,7 @@ class ContractHandler {
     // });
   }
 
+  // (refundStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
   public refundToken = async (
     preimageHash: Buffer,
     amount: BigNumber,

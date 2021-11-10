@@ -361,7 +361,7 @@ class Config {
 
         tokens: [],
       },
-      
+
       rsk: {
         providerEndpoint: '',
 
@@ -395,10 +395,10 @@ class Config {
         },
 
         stxSwapAddress: '',
-        erc20SwapAddress: '',
+        sip10SwapAddress: '',
 
         tokens: [],
-      },      
+      },
 
     };
   }
