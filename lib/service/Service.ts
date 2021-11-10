@@ -487,7 +487,8 @@ class Service {
       } else if (currency.provider) {
         const gasPrice = await getGasPrice(currency.provider);
         return gasPrice.div(gweiDecimals).toNumber();
-      } else if (currency.stacksClient) {
+      // } else if (currency.stacksClient || currency.symbol === 'USDA' || currency.symbol === 'STX') {
+      } else if (currency.stacksClient === undefined) {
         // STACKS I do it manually differently.
         let fee = await getFee();
         // this.logger.error("service.485 got fee: " + fee + ", gweiDecimals " + gweiDecimals)

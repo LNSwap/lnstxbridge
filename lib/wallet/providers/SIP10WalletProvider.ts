@@ -29,6 +29,16 @@ class SIP10WalletProvider implements WalletProviderInterface {
     // .address
   }
 
+  public getTokenContractAddress = (): string => {
+    return this.token.contract.split('.')[0];
+    // .address
+  }
+
+  public getTokenContractName = (): string => {
+    return this.token.contract.split('.')[1];
+    // .address
+  }
+
   public getAddress = (): Promise<string> => {
     // return this.signer.getAddress();
     // return <Promise>"this.signer.";
