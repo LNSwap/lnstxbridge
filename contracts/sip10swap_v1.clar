@@ -17,7 +17,7 @@
 ;; @notice The amount locked is the sip10 sent in the transaction and the refund address is the sender of the transaction
 ;; @param preimageHash Preimage hash of the swap
 ;; @param timelock Block height after which the locked sip10 can be refunded
-(define-public (lockStx (preimageHash (buff 32)) (amount (buff 16)) (tokenAddress (buff 42)) (claimAddress (buff 42)) (timelock (buff 16)) (claimPrincipal principal) (tokenPrincipal <ft-trait>))
+(define-public (lockToken (preimageHash (buff 32)) (amount (buff 16)) (tokenAddress (buff 42)) (claimAddress (buff 42)) (timelock (buff 16)) (claimPrincipal principal) (tokenPrincipal <ft-trait>))
   (let (
     (calculatedHash (hashValuesbuf preimageHash amount timelock))
     (txamount (buff-to-uint-le amount))
@@ -38,7 +38,7 @@
 ;; @param preimage Preimage of the swap
 ;; @param amount Amount locked in the contract for the swap in msip10
 ;; @param timelock Block height after which the locked sip10 can be refunded
-(define-public (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
+(define-public (claimToken (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
   (let (
     (claimer tx-sender)
     (calculatedHash (hashValuesbuf (sha256 preimage) amount timelock))
@@ -50,7 +50,7 @@
     (asserts! (is-eq claimer (get claimPrincipal swap)) (err u1002))
     (asserts! (is-eq (contract-of tokenPrincipal) (get tokenPrincipal swap)) (err u1004))
     (map-delete swaps {hash: calculatedHash})
-    (unwrap-panic (contract-call? tokenPrincipal transfer (buff-to-uint-le amount) (as-contract tx-sender) claimer none))
+    (unwrap-panic (as-contract (contract-call? tokenPrincipal transfer (buff-to-uint-le amount) tx-sender claimer none)))
     (print "claim")
     (print calculatedHash)
     (ok u1008)
@@ -63,7 +63,7 @@
 ;; @param preimageHash Preimage hash of the swap
 ;; @param amount Amount locked in the contract for the swap in msip10
 ;; @param timelock Block height after which the locked sip10 can be refunded
-(define-public (refundStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
+(define-public (refundToken (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
   (let (
     (claimer tx-sender)
     (calculatedHash (hashValuesbuf preimageHash amount timelock))
@@ -75,7 +75,7 @@
     (asserts! (is-eq claimer (get initiator swap)) (err u1002))
     (asserts! (is-eq (contract-of tokenPrincipal) (get tokenPrincipal swap)) (err u1004))
     (map-delete swaps {hash: calculatedHash})
-    (unwrap-panic (contract-call? tokenPrincipal transfer (buff-to-uint-le amount) (as-contract tx-sender) claimer none))
+    (unwrap-panic (as-contract (contract-call? tokenPrincipal transfer (buff-to-uint-le amount) tx-sender claimer none)))
     (print "refund")
     (print calculatedHash)
     (ok u1008)

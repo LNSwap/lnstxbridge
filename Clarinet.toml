@@ -1,6 +1,18 @@
 [project]
 name = "lnstxbridge"
 
-[contracts.stxswap]
-path = "contracts/stxswap_v7.clar"
+[contracts.sip-010-trait]
+path = "contracts/sip-010-trait.clar"
 depends_on = []
+
+[contracts.stxswap]
+path = "contracts/stxswap_v8.clar"
+depends_on = []
+
+[contracts.sip10swap]
+path = "contracts/sip10swap_v1.clar"
+depends_on = []
+
+[contracts.usda-token]
+path = "contracts/usda-token.clar"
+depends_on = ["sip-010-trait"]

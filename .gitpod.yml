@@ -43,6 +43,8 @@ tasks:
         sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
         npm i    
     command: npm run start
+  - init: brew install clarinet
+    command: clarinet test
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
