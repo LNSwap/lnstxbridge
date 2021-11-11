@@ -377,7 +377,7 @@ class ContractHandler {
 
     amount = amount.div(etherDecimals).div(100);
     let decimalamount = parseInt(amount.toString(),10) + 1;
-    this.logger.verbose("contracthandler.380 smaller amount: "+ amount + ", "+ decimalamount);
+    this.logger.verbose("contracthandler.380 smaller amount: "+ amount + ", "+ decimalamount + ', ' + JSON.stringify(token) + ', ' + this.sip10contractAddress);
 
 
     // Add an optional post condition
@@ -400,7 +400,7 @@ class ContractHandler {
       )
     ];
 
-    console.log("contracthandler.85: ",this.contractAddress, this.contractName, postConditionCode, postConditionAmount)
+    console.log("contracthandler.403: ",this.contractAddress, this.contractName, postConditionCode, postConditionAmount)
 
     
     let swapamount = decimalamount.toString(16).split(".")[0] + "";
@@ -410,8 +410,8 @@ class ContractHandler {
     let tl3 = tl2 // dont slice it?!
     // .slice(2);
 
-    console.log("contracthandler.94: amounts",decimalamount,swapamount,paddedamount)
-    console.log("contracthandler.95: timelocks ",timeLock,tl1, tl2, tl3)
+    console.log("contracthandler.413: amounts",decimalamount,swapamount,paddedamount)
+    console.log("contracthandler.414: timelocks ",timeLock,tl1, tl2, tl3)
 
     // lockStx (preimageHash (buff 32)) (amount (buff 16)) (tokenAddress (buff 42)) (claimAddress (buff 42)) (timelock (buff 16)) (claimPrincipal principal) (tokenPrincipal <ft-trait>)
   const functionArgs = [
@@ -433,12 +433,12 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
-    this.logger.verbose(`broadcasting with nonce: ` + getStacksNetwork().nonce);
+    this.logger.verbose(`ch.436 broadcasting with nonce: ` + getStacksNetwork().nonce);
     const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.sip10contractAddress,
       contractName: this.sip10contractName,
-      functionName: 'lockStx',
+      functionName: 'lockToken',
       functionArgs: functionArgs,
       senderKey: stacksNetworkData.privateKey,
       // validateWithAbi: true,
@@ -534,7 +534,7 @@ class ContractHandler {
     const txOptions = {
       contractAddress: this.sip10contractAddress,
       contractName: this.sip10contractName,
-      functionName: 'claimStx',
+      functionName: 'claimToken',
       functionArgs: functionArgs,
       senderKey: stacksNetworkData.privateKey,
       validateWithAbi: true,
@@ -635,7 +635,7 @@ class ContractHandler {
       const txOptions = {
         contractAddress: this.sip10contractAddress,
         contractName: this.sip10contractName,
-        functionName: 'refundStx',
+        functionName: 'refundToken',
         functionArgs: functionArgs,
         senderKey: stacksNetworkData.privateKey,
         validateWithAbi: true,

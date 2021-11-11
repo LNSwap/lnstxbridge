@@ -220,11 +220,12 @@ class StacksManager {
             //   contract: new Contract(token.contractAddress, ContractABIs.ERC20, signer) as any as ERC20,
             // });
 
+            // this.logger.verbose('stacksmanager.223 setting token wallet: '+ token.contractAddress);
             wallets.set(token.symbol, new Wallet(
               this.logger,
               CurrencyType.Sip10,
               // new StacksWalletProvider(this.logger, signer, chainId),
-              new SIP10WalletProvider(this.logger, signer, this.address, {
+              new SIP10WalletProvider(this.logger, signer, chainId, this.address, {
                 symbol: token.symbol,
                 decimals: token.decimals,
                 contract: token.contractAddress})

@@ -215,13 +215,13 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
       });
-    } else if (receivingCurrency.type === CurrencyType.Stx) {
+    } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
 
       // this.logger.error("swapmanager.218 " + receivingCurrency.provider!);
       // const blockNumber = await receivingCurrency.provider!.getBlockNumber();
 
-      const info = await getInfo()  
+      const info = await getInfo();
       const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
 
@@ -251,6 +251,7 @@ class SwapManager {
     } else {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
 
+      // undefined!
       this.logger.info("swapmanager.237 " + receivingCurrency.provider!);
       const blockNumber = await receivingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
@@ -715,7 +716,7 @@ class SwapManager {
     } else if (type === CurrencyType.Stx) {
       addresstoreturn = stacksManager.stxswapaddress;
     } else if (type === CurrencyType.Sip10) {
-      addresstoreturn = stacksManager.stxswapaddress;
+      addresstoreturn = stacksManager.sip10SwapAddress;
     } else {
       if (quoteCurrency == "SOV") {
         this.logger.error("getlockupcontractaddress from rsk");

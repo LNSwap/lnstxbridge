@@ -7,16 +7,18 @@ import { BIP32Interface } from 'bip32';
 
 import {
   callReadOnlyFunction,
+  ChainID,
   cvToJSON,
   standardPrincipalCV,
   // cvToJSON,
 } from '@stacks/transactions';
 import { getStacksNetwork } from '../stacks/StacksUtils';
+import { deriveStxAddressChain } from '@stacks/keychain';
 
 class SIP10WalletProvider implements WalletProviderInterface {
   public readonly symbol: string;
 
-  constructor(private logger: Logger, private signer: BIP32Interface, private signerAddress: string, private token: Sip10Token) {
+  constructor(private logger: Logger, private signer: BIP32Interface, private chainId: ChainID, private signerAddress: string, private token: Sip10Token) {
     this.symbol = token.symbol;
     // this.logger.silly('sip10walletprovider signer ' + this.signer.publicKey);
 
@@ -39,10 +41,11 @@ class SIP10WalletProvider implements WalletProviderInterface {
     // .address
   }
 
-  public getAddress = (): Promise<string> => {
+  public getAddress = async (): Promise<string> => {
     // return this.signer.getAddress();
     // return <Promise>"this.signer.";
-    return new Promise<string>((resolve) => {resolve('getAddress');});
+    // return new Promise<string>((resolve) => {resolve('getAddress');});
+    return await deriveStxAddressChain(this.chainId)(this.signer).address;
   }
 
   public getBalance = async (): Promise<WalletBalance> => {

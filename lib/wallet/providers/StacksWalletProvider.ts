@@ -6,7 +6,7 @@ import WalletProviderInterface, { SentTransaction, WalletBalance } from './Walle
 import { BIP32Interface } from 'bip32';
 import { deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID, AnchorMode, makeSTXTokenTransfer, broadcastTransaction } from '@stacks/transactions';
-import { getAddressBalance, getStacksNetwork } from '../stacks/StacksUtils'
+import { getAddressBalance, getStacksNetwork } from '../stacks/StacksUtils';
 // import { StacksTestnet, StacksMainnet } from '@stacks/network';
 
 // let networkconf:string = "testnet";
@@ -30,7 +30,7 @@ class StacksWalletProvider implements WalletProviderInterface {
   public getAddress = async (): Promise<string> => {
     // return this.signer.getAddress();
     // return await getAddress(this.signer)
-    return await deriveStxAddressChain(this.chainId)(this.signer).address
+    return await deriveStxAddressChain(this.chainId)(this.signer).address;
   }
 
   public getBalance = async (): Promise<WalletBalance> => {

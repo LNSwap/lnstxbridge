@@ -289,6 +289,7 @@ class SwapNursery extends EventEmitter {
         const { lndClient } = this.currencies.get(lightningSymbol)!;
 
         const wallet = this.walletManager.wallets.get(chainSymbol)!;
+        this.logger.verbose('swapnursery.291 invoice.paid wallet ' + JSON.stringify(wallet));
 
           switch (chainCurrency.type) {
           case CurrencyType.BitcoinLike:
@@ -997,6 +998,7 @@ class SwapNursery extends EventEmitter {
       // let contractTransaction: TxBroadcastResult;
 
       const walletProvider = wallet.walletProvider as SIP10WalletProvider;
+      this.logger.verbose('swapnursery.1001 walletProvider ' + JSON.stringify(walletProvider));
 
       // if (reverseSwap.minerFeeOnchainAmount) {
       //   oldcontractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
