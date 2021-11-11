@@ -7,6 +7,7 @@ tasks:
       nvm install 14
       mkdir ~/.lnstx
       cp boltz.conf ~/.lnstx/boltz.conf
+      echo "bronze large spike canoe youth crucial seminar awkward allow frozen client math" > ~/.lnstx/seed.dat
       npm i
       npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
@@ -25,10 +26,10 @@ tasks:
     command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer
+      SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP npm run stacks:fund:signer
       sleep 10
       npm run stacks:deploy
-    # fund the operator account as well!
-    # SIGNER=ST3P4DRFSWGD6S58VQ4QWEHM1JW34XM6WNVYZAH3N npm run stacks:fund:signer
+    # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
         export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
