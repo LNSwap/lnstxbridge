@@ -355,7 +355,7 @@ class Controller {
     }
 
     this.logger.verbose(`Created new Swap with id: ${response.id}`);
-    this.logger.silly(`Swap ${response.id}: ${stringify(response)}`);
+    this.logger.verbose(`Swap ${response.id}: ${stringify(response)}`);
 
     this.createdResponse(res, response);
   }

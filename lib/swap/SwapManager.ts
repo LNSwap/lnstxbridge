@@ -37,6 +37,7 @@ import {
   stringify,
 } from '../Utils';
 import { getInfo } from '../wallet/stacks/StacksUtils';
+import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
 
 type ChannelCreationInfo = {
   auto: boolean,
@@ -162,6 +163,9 @@ class SwapManager {
     // Specified when either Ether or ERC20 tokens or swapped to Lightning
     // So that the user can specify the claim address (Boltz) in the lockup transaction to the contract
     claimAddress?: string,
+
+    // // only for sip10 swaps
+    // tokenAddress?: string,
   }> => {
     // this.logger.error("swapmanager.166 getCurrencies " + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
@@ -182,6 +186,8 @@ class SwapManager {
     let redeemScript: Buffer | undefined;
 
     let claimAddress: string | undefined;
+
+    // let tokenAddress: string | undefined;
 
     if (receivingCurrency.type === CurrencyType.BitcoinLike) {
       const { blocks } = await receivingCurrency.chainClient!.getBlockchainInfo();
@@ -228,7 +234,15 @@ class SwapManager {
       // this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
       claimAddress = await receivingCurrency.wallet.getAddress();
       // claimAddress = await receivingCurrency.wallet.
-      this.logger.info("swapmanager.228 " + stringify({
+
+      let tokenAddressHolder = Buffer.from('', 'utf8');
+      if(receivingCurrency.type === CurrencyType.Sip10) {
+        const tokenWallet = receivingCurrency.wallet.walletProvider as SIP10WalletProvider;
+        tokenAddressHolder = Buffer.from(tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName(), 'utf8');
+        redeemScript = tokenAddressHolder;
+      }
+
+      this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,
         pair,
         timeoutBlockHeight,
@@ -236,6 +250,7 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
+        tokenAddress: getHexString(tokenAddressHolder),
       }));
 
       await this.swapRepository.addSwap({
@@ -247,6 +262,8 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
+        redeemScript: getHexString(tokenAddressHolder),
+        // tokenAddress: tokenAddress,
       });
     } else {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -281,13 +298,24 @@ class SwapManager {
       });
     }
 
+    this.logger.verbose('swapmanager.300 createswap returning: ' + JSON.stringify({
+      id,
+      address,
+      claimAddress,
+      timeoutBlockHeight,
+      // redeemScript,
+      redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
+      // tokenAddress: tokenAddress ? tokenAddress : undefined,
+    }));
+
     return {
       id,
       address,
       claimAddress,
       timeoutBlockHeight,
-
+      // redeemScript,
       redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
+      // tokenAddress: tokenAddress ? tokenAddress : undefined,
     };
   }
 
