@@ -154,7 +154,7 @@ class StacksNursery extends EventEmitter {
 
   public listenStacksContractTransaction = async (reverseSwap: ReverseSwap, transaction: TxBroadcastResult): Promise<void> => {
     // transaction.wait(1).then(async () => {
-      this.logger.error("stacksnursery.120 listenStacksContractTransaction tx: "+ JSON.stringify(transaction))
+      this.logger.error("stacksnursery.120 listenStacksContractTransaction tx: "+ JSON.stringify(transaction));
       if(transaction.error) {
         this.emit(
           'lockup.failedToSend',
@@ -407,6 +407,83 @@ class StacksNursery extends EventEmitter {
       });
 
       if (!swap) {
+        this.logger.error("StacksNursery.410 swap not found! " + transactionHash);
+
+        // check if this is our own lockup that user needs to claim from GUI so just set tx to confirmed and exit
+        let reverseSwap = await this.reverseSwapRepository.getReverseSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(erc20SwapValues.preimageHash),
+          },
+          status: {
+            [Op.or]: [
+              SwapUpdateEvent.TransactionMempool,
+            ],
+          },
+        });
+
+        if(reverseSwap){
+          this.logger.error("StacksNursery.425 reverseswap sip10 self lockup found " + reverseSwap.transactionId!);
+          try {
+
+            // exact same thing as in mempoolreverseswap
+            // const transaction = await getTx(reverseSwap.transactionId!)
+            // this.logger.debug(`stacksnursery.217 Reverse Swap TX ${reverseSwap.id}: ${reverseSwap.transactionId}`);
+            // this.logger.debug(`stacksnursery.218 tx: ` + stringify(reverseSwap));
+            // this.checkStacksTransaction(reverseSwap, transaction);
+
+            const transaction: Transaction = await getTx(reverseSwap!.transactionId!);
+            this.logger.debug(`Found pending sip10 lockup transaction of Reverse Swap ${reverseSwap.id}: ${reverseSwap.transactionId}, ${transaction.tx_id}`);
+            // this.logger.debug(`stacksnursery.223 tx: ` + stringify(reverseSwap));
+            await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed);
+
+            // this.stacksManager.contractEventHandler.emit('swap.update', reverseSwap.id, {
+            //   status: SwapUpdateEvent.TransactionConfirmed,
+            //   transaction: {
+            //     id: transaction.tx_id,
+            //     // hex: transaction.block_hash,
+            //   },
+            // });
+
+            // this.emit('swap.update', reverseSwap.id, {
+            //   status: SwapUpdateEvent.TransactionConfirmed,
+            //   transaction: {
+            //     // id: transaction,
+            //     id: transaction.tx_id,
+            //     hex: transaction.block_hash,
+            //   },
+            // });
+
+            this.emit('tx.sent', reverseSwap, transaction.tx_id);
+            // {
+            //   status: SwapUpdateEvent.TransactionConfirmed,
+            //   transaction: {
+            //     id: transaction.tx_id,
+            //     // hex: transaction.block_hash,
+            //   },
+            // });
+
+            // this.emit(
+            //   'lockup.confirmed',
+            //   await this.reverseSwapRepository.setReverseSwapStatus(reverseswap, SwapUpdateEvent.TransactionConfirmed),
+            //   transaction.tx_id,
+            // );
+            // this.logger.debug(`stacksNursery.244 after swap.update ${SwapUpdateEvent.TransactionConfirmed}`);
+            // let reverseSwap2 = await this.reverseSwapRepository.getReverseSwap({
+            //   preimageHash: {
+            //     [Op.eq]: getHexString(etherSwapValues.preimageHash),
+            //   },
+            //   // status: {
+            //   //   [Op.or]: [
+            //   //     SwapUpdateEvent.TransactionMempool,
+            //   //   ],
+            //   // },
+            // });
+            // this.logger.debug(`stacksnursery.250 after setReverseSwapStatus: ` + stringify(reverseSwap2));
+          } catch (error) {
+            this.logger.error(`stacksnursery.483 error ${error}`);
+          }
+        }
+
         return;
       }
 

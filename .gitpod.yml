@@ -54,7 +54,7 @@ ports:
     onOpen: open-preview
     visibility: public
   - port: 9002
-    onOpen: open-preview
+    onOpen: ignore
     visibility: public
   - port: 8888
     onOpen: open-browser

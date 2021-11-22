@@ -326,7 +326,7 @@ class ContractEventHandler extends EventEmitter {
       let claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr
       let refundAddress = txData.contract_call.function_args.filter(a=>a.name=="refundAddress")[0].repr
       let timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr
-      console.log("lockFound fetched from contract call: ", preimageHash,amount,claimAddress,refundAddress,timelock);
+      console.log("checkTx lockFound fetched from contract call: ", preimageHash,amount,claimAddress,refundAddress,timelock);
 
       // got all the data now check if we have the swap
       this.emit(
@@ -520,7 +520,7 @@ class ContractEventHandler extends EventEmitter {
       const timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr;
       const tokenPrincipal = txData.contract_call.function_args.filter(a=>a.name=="tokenPrincipal")[0].repr;
       const claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=="claimPrincipal")[0].repr;
-      console.log("lockFound fetched from contract call: ", preimageHash,amount,claimAddress,tokenAddress,timelock);
+      console.log("checkTokenTx lockFound fetched from contract call: ", preimageHash,amount,claimAddress,tokenAddress,timelock);
 
       // got all the data now check if we have the swap
       this.emit(

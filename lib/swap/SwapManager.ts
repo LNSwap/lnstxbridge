@@ -578,7 +578,7 @@ class SwapManager {
       });
 
     } else {
-      this.logger.error("swapmanager.515 " + sendingCurrency.provider!);
+      // this.logger.error("swapmanager.515 " + sendingCurrency.provider!);
       // const blockNumber = await sendingCurrency.provider!.getBlockNumber();
       const info = await getInfo();
       const blockNumber = info.stacks_tip_height;
@@ -591,6 +591,14 @@ class SwapManager {
       refundAddress = refundAddress.toLowerCase();
 
       this.logger.verbose("prepared reverse swap data: " + blockNumber + ", " + lockupAddress + ", " + refundAddress);
+
+      let tokenAddressHolder = Buffer.from('', 'utf8');
+      if(sendingCurrency.type === CurrencyType.Sip10) {
+        const tokenWallet = sendingCurrency.wallet.walletProvider as SIP10WalletProvider;
+        tokenAddressHolder = Buffer.from(tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName(), 'utf8');
+        this.logger.debug('sm.599 setting redeemscript ' + sendingCurrency.type + ', ' + tokenAddressHolder);
+        redeemScript = tokenAddressHolder;
+      }
 
       await this.reverseSwapRepository.addReverseSwap({
         id,
