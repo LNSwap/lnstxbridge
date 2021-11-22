@@ -1,7 +1,9 @@
 # LN - STX Bridge
-## Submarine Swaps between STX on Stacks <-> Bitcoin on Lightning Network
+## Submarine Swaps between STX (and USDA) on Stacks <-> Bitcoin on Lightning Network
 
-* This app enables functionality as described in https://github.com/stacksgov/Stacks-Grants/issues/172
+* This app enables functionality as described in https://github.com/stacksgov/Stacks-Grants/issues/172 and https://github.com/stacksgov/Stacks-Grants/issues/204
+
+* Running on https://lnswap.org
 
 ## install
 * clone the repo, install requirements and compile  

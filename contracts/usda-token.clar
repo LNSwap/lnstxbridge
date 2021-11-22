@@ -11,9 +11,9 @@
 (define-constant ERR-NOT-AUTHORIZED u401)
 
 ;; Mint initial token
-(ft-mint? usda u100000 contract-creator)
-(ft-mint? usda u100000 'ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF)
-(ft-mint? usda u100000 'ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP)
+(ft-mint? usda u1000000000 contract-creator)
+(ft-mint? usda u1000000000 'ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF)
+(ft-mint? usda u1000000000 'ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP)
 
 ;; ---------------------------------------------------------
 ;; SIP-10 Functions
@@ -60,6 +60,6 @@
 (define-public (gift-tokens (recipient principal))
   (begin
     (asserts! (is-eq tx-sender recipient) (err u0))
-    (ft-mint? usda u1 recipient)
+    (ft-mint? usda u1000000000 recipient)
   )
 )
