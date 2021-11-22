@@ -19,6 +19,7 @@ class TimeoutDeltaProvider {
     ['LTC', 2.5],
     ['ETH', 0.25],
     ['STX', 10],
+    ['USDA', 10],
   ]);
 
   private timeoutDeltas = new Map<string, PairTimeoutBlockDeltas>();
@@ -106,10 +107,10 @@ class TimeoutDeltaProvider {
   }
 
   /**
-   * If the block time for the symbol is not hardcoded, it is assumed that the symbol belongs to an ERC20 token
+   * If the block time for the symbol is not hardcoded, it is assumed that the symbol belongs to an SIP10 token
    */
   private static getBlockTime = (symbol: string): number => {
-    return TimeoutDeltaProvider.blockTimes.get(symbol) || TimeoutDeltaProvider.blockTimes.get('ETH')!;
+    return TimeoutDeltaProvider.blockTimes.get(symbol) || TimeoutDeltaProvider.blockTimes.get('STX')!;
   }
 }
 

@@ -81,8 +81,8 @@ class ContractEventHandler extends EventEmitter {
     // since Stacks do not have queryfilters/swap contract types etc.
     // fetch each block since last chaintip and search for any lockup/claim/refund event signatures in a loop
 
-    const contract = this.contractAddress + "." + this.contractName;
-    const stacksInfo = await getInfo()
+    const contract = this.contractAddress + '.' + this.contractName;
+    const stacksInfo = await getInfo();
     const currentTip = stacksInfo.stacks_tip_height;
 
     for (let index = startHeight; index < currentTip; index++) {
@@ -92,8 +92,8 @@ class ContractEventHandler extends EventEmitter {
 
       for (let k = 0; k < stacksBlockResults.length; k++) {
         const tx = stacksBlockResults[k];
-        if(tx.tx_status === "success" && tx.tx_type === "contract_call"){
-          this.logger.error(`ceh.86 contractcall during rescan ${index} ` + JSON.stringify(stacksBlockResults));
+        if(tx.tx_status && tx.tx_status === 'success' && tx.tx_type === 'contract_call'){
+          this.logger.verbose(`ceh.86 contractcall during rescan ${index} ` + JSON.stringify(stacksBlockResults));
           // go get the event? - no need checkTx already emits required events!
           this.checkTx(tx.tx_id);
 
@@ -101,6 +101,8 @@ class ContractEventHandler extends EventEmitter {
           // let events = (await getTx(tx.tx_id)).events;
           // this.logger.debug("got events: "+ events + ", " + func_args);
           // // TODO: parse events and emit stuff!!!
+        } else {
+          this.logger.debug('no tx.tx_status ' + JSON.stringify(tx));
         }
       }
 
@@ -110,16 +112,18 @@ class ContractEventHandler extends EventEmitter {
       // this.logger.error(`ceh.82 stacksBlockResults ` + JSON.stringify(stacksBlockResults));
 
       for (let k = 0; k < sip10stacksBlockResults.length; k++) {
-        const tx = stacksBlockResults[k];
-        if(tx.tx_status === "success" && tx.tx_type === "contract_call"){
-          this.logger.error(`ceh.110 contractcall during rescan ${index} ` + JSON.stringify(stacksBlockResults));
+        const tx = sip10stacksBlockResults[k];
+        if(tx.tx_status && tx.tx_status === 'success' && tx.tx_type === 'contract_call'){
+          this.logger.error(`ceh.110 contractcall during rescan ${index} ` + JSON.stringify(sip10stacksBlockResults));
           // go get the event? - no need checkTx already emits required events!
-          this.checkTx(tx.tx_id);
+          this.checkTokenTx(tx.tx_id);
 
           // let func_args = tx.contract_call.function_args; // array of inputs
           // let events = (await getTx(tx.tx_id)).events;
           // this.logger.debug("got events: "+ events + ", " + func_args);
           // // TODO: parse events and emit stuff!!!
+        } else {
+          this.logger.debug('no tx.tx_status ' + JSON.stringify(tx));
         }
       }
 
