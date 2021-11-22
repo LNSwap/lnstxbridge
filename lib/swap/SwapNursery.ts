@@ -699,6 +699,18 @@ class SwapNursery extends EventEmitter {
       });
     });
 
+    stacksNursery.on('sip10.lockup', async (swap, transactionHash, erc20SwapValues) => {
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        this.emit('transaction', swap, transactionHash, true, false);
+
+        if (swap.invoice) {
+          await this.claimSip10(contractHandler, swap, erc20SwapValues);
+        } else {
+          await this.setSwapRate(swap);
+        }
+      });
+    });
+
     // stacksNursery.on('erc20.lockup', async (swap, transactionHash, erc20SwapValues) => {
     //   await this.lock.acquire(SwapNursery.swapLock, async () => {
     //     this.emit('transaction', swap, transactionHash, true, false);
@@ -1228,6 +1240,43 @@ class SwapNursery extends EventEmitter {
     }
     this.logger.info(`Claimed Stx of Swap ${swap.id} in: ${contractTransaction.txid}`);
     this.logger.error("swapnursery.1139 TODO: setminerfee in swaprepository when stacks tx fee calc is available.")
+    // calculateRskTransactionFee(contractTransaction)
+    this.emit('claim', await this.swapRepository.setMinerFee(swap, 1), channelCreation || undefined);
+  }
+
+  private claimSip10 = async (contractHandler: StacksContractHandler, swap: Swap, erc20SwapValues: ERC20SwapValues, outgoingChannelId?: string) => {
+    this.logger.error('swapnursery.1240 claimSip10 triggered');
+    const channelCreation = await this.channelCreationRepository.getChannelCreation({
+      swapId: {
+        [Op.eq]: swap.id,
+      },
+    });
+    const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    if (!preimage) {
+      return;
+    }
+
+    const { base, quote } = splitPairId(swap.pair);
+    const chainCurrency = getChainCurrency(base, quote, swap.orderSide, false);
+
+    const wallet = this.walletManager.wallets.get(chainCurrency)!;
+
+    const contractTransaction = await contractHandler.claimToken(
+      wallet.walletProvider as SIP10WalletProvider,
+      preimage,
+      erc20SwapValues.amount,
+      erc20SwapValues.refundAddress,
+      erc20SwapValues.timelock,
+    );
+
+    if(contractTransaction.error) {
+      this.logger.error(`swapnursery.1274 claimSip10 error: ${contractTransaction.error}`);
+    } else {
+      incrementNonce();
+    }
+    this.logger.info(`Claimed sip10 of Swap ${swap.id} in: ${contractTransaction.txid}`);
+    this.logger.error("swapnursery.1279 TODO: setminerfee in swaprepository when stacks tx fee calc is available.")
     // calculateRskTransactionFee(contractTransaction)
     this.emit('claim', await this.swapRepository.setMinerFee(swap, 1), channelCreation || undefined);
   }

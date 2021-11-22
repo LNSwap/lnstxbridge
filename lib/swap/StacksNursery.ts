@@ -15,13 +15,14 @@ import { CurrencyType, SwapUpdateEvent } from '../consts/Enums';
 // import RskManager from '../wallet/rsk/RskManager';
 import { ERC20SwapValues, EtherSwapValues } from '../consts/Types';
 import { getChainCurrency, getHexString, splitPairId, stringify } from '../Utils';
-import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
+// import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
 import { TxBroadcastResult } from '@stacks/transactions';
 import { getStacksNetwork, getTx, incrementNonce } from '../wallet/stacks/StacksUtils';
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 import { io } from "socket.io-client";
 import * as stacks from '@stacks/blockchain-api-client';
+import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
 
 const socket = io(getStacksNetwork().coreApiUrl, {
   query: {
@@ -39,6 +40,10 @@ interface StacksNursery {
   // ERC20Swap
   on(event: 'erc20.lockup', listener: (swap: Swap, transactionHash: string, erc20SwapValues: ERC20SwapValues) => void): this;
   emit(event: 'erc20.lockup', swap: Swap, transactionHash: string, erc20SwapValues: ERC20SwapValues): boolean;
+
+  // SIP10 contract events
+  on(event: 'sip10.lockup', listener: (swap: Swap, transactionHash: string, erc20SwapValues: ERC20SwapValues, claimPrincipal: string, tokenPrincipal: string) => void): this;
+  emit(event: 'sip10.lockup', swap: Swap, transactionHash: string, erc20SwapValues: ERC20SwapValues, claimPrincipal: string, tokenPrincipal: string): boolean;
 
   // Events used for both contracts
   on(event: 'swap.expired', listener: (swap: Swap, isEtherSwap: boolean) => void): this;
@@ -302,8 +307,8 @@ class StacksNursery extends EventEmitter {
 
       // 0x000000000000000000000000001e708f
       // *100 + 100 because stx is 10^6 while boltz is 10^8
-      let swapamount = (parseInt(etherSwapValues.amount + "",16) * 100) + 100
-      this.logger.verbose("stacksnursery.150 etherSwapValues.amount, swapamount, transactionHash " + etherSwapValues.amount + ", " + swapamount + ", " + transactionHash)
+      const swapamount = (parseInt(etherSwapValues.amount + '',16) * 100) + 100;
+      this.logger.verbose('stacksnursery.150 etherSwapValues.amount, swapamount, transactionHash ' + etherSwapValues.amount + ', ' + swapamount + ', ' + transactionHash);
       swap = await this.swapRepository.setLockupTransaction(
         swap,
         transactionHash,
@@ -334,7 +339,7 @@ class StacksNursery extends EventEmitter {
         );
         return;
       }
-      
+
       if (swap.expectedAmount) {
         const expectedAmount = BigNumber.from(swap.expectedAmount).mul(etherDecimals);
 
@@ -382,10 +387,13 @@ class StacksNursery extends EventEmitter {
   }
 
   private listenERC20Swap = () => {
-    this.stacksManager.contractEventHandler.on('erc20.lockup', async (
+    this.stacksManager.contractEventHandler.on('sip10.lockup', async (
       transactionHash,
       erc20SwapValues,
+      claimPrincipal,
+      tokenPrincipal,
     ) => {
+      this.logger.debug('stacksnursery.389 sip10.lockup ' + JSON.stringify(erc20SwapValues));
       let swap = await this.swapRepository.getSwap({
         preimageHash: {
           [Op.eq]: getHexString(erc20SwapValues.preimageHash),
@@ -404,43 +412,57 @@ class StacksNursery extends EventEmitter {
 
       const { base, quote } = splitPairId(swap.pair);
       const chainCurrency = getChainCurrency(base, quote, swap.orderSide, false);
+      this.logger.debug('sip10swap chainCurrency ' + chainCurrency);
 
-      const wallet = this.walletManager.wallets.get(chainCurrency);
-
-      if (wallet === undefined || wallet.type !== CurrencyType.ERC20) {
+      if (chainCurrency !== 'USDA') {
         return;
       }
 
-      const erc20Wallet = wallet.walletProvider as ERC20WalletProvider;
+      const wallet = this.walletManager.wallets.get(chainCurrency);
+      this.logger.debug(`sn.422 ${wallet}`);
+      if (wallet === undefined || wallet.type !== CurrencyType.Sip10) {
+        return;
+      }
+      const sip10Wallet = wallet.walletProvider as SIP10WalletProvider;
+      this.logger.debug(`sn.427 ${sip10Wallet}`);
 
-      this.logger.debug(`Found lockup in ERC20Swap contract for Swap ${swap.id}: ${transactionHash}`);
+      this.logger.debug(`Found lockup in SIP10Swap contract for Swap ${swap.id}: ${transactionHash}`);
+
+      const swapamount = (parseInt(erc20SwapValues.amount + '',16) * 100) + 100;
+      const normalizedAmount = sip10Wallet.normalizeTokenAmount(erc20SwapValues.amount+'');
+      this.logger.verbose('stacksnursery.422 sip10swapvalues.amount, swapamount, normalizedAmount, transactionHash ' + erc20SwapValues.amount + ', ' + swapamount + ', ' + normalizedAmount + ', ' + transactionHash);
 
       swap = await this.swapRepository.setLockupTransaction(
         swap,
         transactionHash,
-        erc20Wallet.normalizeTokenAmount(erc20SwapValues.amount),
+        // swapamount,
+        sip10Wallet.normalizeTokenAmount(erc20SwapValues.amount+''),
         true,
       );
 
-      if (erc20SwapValues.claimAddress !== this.stacksManager.address) {
+      // skip because these are dummy for stacks - should I be checking the claimprincipal? -done
+      this.logger.debug('stacksnursery.437 '+ claimPrincipal + ', ' + this.stacksManager.address);
+      if (claimPrincipal !== this.stacksManager.address) {
         this.emit(
           'lockup.failed',
           swap,
-          Errors.INVALID_CLAIM_ADDRESS(erc20SwapValues.claimAddress, this.stacksManager.address).message,
+          Errors.INVALID_CLAIM_ADDRESS(claimPrincipal, this.stacksManager.address).message,
         );
         return;
       }
 
-      if (erc20SwapValues.tokenAddress !== erc20Wallet.getTokenAddress()) {
+      this.logger.debug('stacksnursery.449 '+ tokenPrincipal + ', ' + sip10Wallet.getTokenAddress());
+      if (tokenPrincipal !== sip10Wallet.getTokenAddress()) {
         this.emit(
           'lockup.failed',
           swap,
-          Errors.INVALID_TOKEN_LOCKED(erc20SwapValues.tokenAddress, this.stacksManager.address).message,
+          Errors.INVALID_TOKEN_LOCKED(tokenPrincipal, sip10Wallet.getTokenAddress()).message,
         );
         return;
       }
 
-      if (erc20SwapValues.timelock !== swap.timeoutBlockHeight) {
+      const inttimelock = parseInt(erc20SwapValues.timelock + '',16);
+      if (inttimelock !== swap.timeoutBlockHeight) {
         this.emit(
           'lockup.failed',
           swap,
@@ -450,17 +472,36 @@ class StacksNursery extends EventEmitter {
       }
 
       if (swap.expectedAmount) {
-        if (erc20Wallet.formatTokenAmount(swap.expectedAmount).gt(erc20SwapValues.amount)) {
+        const expectedAmount = BigNumber.from(swap.expectedAmount).mul(etherDecimals);
+
+        // 1995138440000000000,
+        const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
+        this.logger.verbose('swap.expectedAmount, expectedAmount , erc20SwapValues.amount' +swap.expectedAmount+ ', ' + expectedAmount + ', ' + erc20SwapValues.amount);
+        // etherSwapValues.amount
+        if (expectedAmount.gt(bigswapamount)) {
           this.emit(
             'lockup.failed',
             swap,
-            Errors.INSUFFICIENT_AMOUNT(erc20Wallet.normalizeTokenAmount(erc20SwapValues.amount), swap.expectedAmount).message,
+            Errors.INSUFFICIENT_AMOUNT(swapamount, swap.expectedAmount).message,
           );
           return;
         }
       }
 
-      this.emit('erc20.lockup', swap, transactionHash, erc20SwapValues);
+      // if (swap.expectedAmount) {
+      //   // if (erc20Wallet.formatTokenAmount(swap.expectedAmount).gt(erc20SwapValues.amount)) {
+      //   if(swap.expectedAmount > swapamount) {
+      //     this.emit(
+      //       'lockup.failed',
+      //       swap,
+      //       Errors.INSUFFICIENT_AMOUNT(sip10Wallet.normalizeTokenAmount(erc20SwapValues.amount+''), swap.expectedAmount).message,
+      //     );
+      //     return;
+      //   }
+      // }
+
+      // swap
+      this.emit('sip10.lockup', swap, transactionHash, erc20SwapValues, claimPrincipal, tokenPrincipal);
     });
 
     this.stacksManager.contractEventHandler.on('erc20.claim', async (transactionHash, preimageHash, preimage) => {

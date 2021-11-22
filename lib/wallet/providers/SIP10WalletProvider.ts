@@ -142,18 +142,22 @@ class SIP10WalletProvider implements WalletProviderInterface {
   /**
    * Normalizes the token balance to 10 ** -8 decimals
    */
-  public normalizeTokenAmount = (amount: BigNumber): number => {
-    if (this.token.decimals === 8) {
-      return amount.toNumber();
-    } else {
-      const exponent = BigNumber.from(10).pow(BigNumber.from(Math.abs(this.token.decimals - 8)));
+  // public normalizeTokenAmount = (amount: BigNumber): number => {
+  //   if (this.token.decimals === 8) {
+  //     return amount.toNumber();
+  //   } else {
+  //     const exponent = BigNumber.from(10).pow(BigNumber.from(Math.abs(this.token.decimals - 8)));
 
-      if (this.token.decimals > 8) {
-        return amount.div(exponent).toNumber();
-      } else {
-        return amount.mul(exponent).toNumber();
-      }
-    }
+  //     if (this.token.decimals > 8) {
+  //       return amount.div(exponent).toNumber();
+  //     } else {
+  //       return amount.mul(exponent).toNumber();
+  //     }
+  //   }
+  // }
+
+  public normalizeTokenAmount = (amount: string): number => {
+    return (parseInt(amount + '',16) * (10 ** (8 - this.token.decimals))) + 100;
   }
 }
 

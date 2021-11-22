@@ -540,7 +540,7 @@ class ContractHandler {
       validateWithAbi: true,
       network: stacksNetworkData.stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
-      postConditions,
+      // postConditions,
       anchorMode: AnchorMode.Any,
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {

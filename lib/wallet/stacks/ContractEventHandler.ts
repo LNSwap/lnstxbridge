@@ -35,6 +35,10 @@ interface ContractEventHandler {
   on(event: 'erc20.lockup', listener: (transactionHash: string, erc20SwapValues: ERC20SwapValues) => void): this;
   emit(event: 'erc20.lockup', transactionHash: string, erc20SwapValues: ERC20SwapValues): boolean;
 
+  // SIP10 contract events
+  on(event: 'sip10.lockup', listener: (transactionHash: string, erc20SwapValues: ERC20SwapValues, claimPrincipal: string, tokenPrincipal: string) => void): this;
+  emit(event: 'sip10.lockup', transactionHash: string, erc20SwapValues: ERC20SwapValues, claimPrincipal: string, tokenPrincipal: string): boolean;
+
   on(event: 'erc20.claim', listener: (transactionHash: string, preimageHash: Buffer, preimage: Buffer) => void): this;
   emit(event: 'erc20.claim', transactionHash: string, preimageHash: Buffer, preimage: Buffer): boolean;
 
@@ -487,19 +491,20 @@ class ContractEventHandler extends EventEmitter {
           console.log("found REFUND!");
           refundFound = true;
         }
-        if(element.contract_log 
-          && !element.contract_log.value.repr.includes("lock") 
-          && !element.contract_log.value.repr.includes("claim")
-          && !element.contract_log.value.repr.includes("refund")){
-          console.log("found HASH! ", element.contract_log.value.repr);
-          // this is not preimagehash for some reason?!
-          // hashvalue = element.contract_log.value.repr;
-        }
+        // if(element.contract_log 
+        //   && !element.contract_log.value.repr.includes("lock") 
+        //   && !element.contract_log.value.repr.includes("claim")
+        //   && !element.contract_log.value.repr.includes("refund")){
+        //   console.log("found HASH! ", element.contract_log.value.repr);
+        //   // this is not preimagehash for some reason?!
+        //   // hashvalue = element.contract_log.value.repr;
+        // }
+
         // if(element.event_type=="stx_asset" && element.asset.asset_event_type=="transfer") {
         //   txamount = element.asset.amount
         //   console.log("stx transfer amount is ", element.asset.amount, txamount);
         // }
-        if(element.event_type=="ft_transfer_event" && element.asset.asset_event_type=="transfer") {
+        if(element.event_type=="fungible_token_asset" && element.asset.asset_event_type=="transfer") {
           txamount = element.asset.amount;
           console.log("sip10 token transfer amount is ", element.asset.amount, txamount);
         }
@@ -508,25 +513,30 @@ class ContractEventHandler extends EventEmitter {
     console.log("contracteventhandler.508 txData.contract_call.function_args: ", txData.contract_call.function_args);
     if(lockFound){
       // get data from contract call
-      let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr;
-      let amount = txData.contract_call.function_args.filter(a=>a.name=="amount")[0].repr;
-      let claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr;
-      let refundAddress = txData.contract_call.function_args.filter(a=>a.name=="refundAddress")[0].repr;
-      let timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr;
-      // const tokenPrincipal = txData.contract_call.function_args.filter(a=>a.name=="tokenPrincipal")[0].repr;
-      console.log("lockFound fetched from contract call: ", preimageHash,amount,claimAddress,refundAddress,timelock);
+      const preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr;
+      const amount = txData.contract_call.function_args.filter(a=>a.name=="amount")[0].repr;
+      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr;
+      const tokenAddress = txData.contract_call.function_args.filter(a=>a.name=="tokenAddress")[0].repr;
+      const timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr;
+      const tokenPrincipal = txData.contract_call.function_args.filter(a=>a.name=="tokenPrincipal")[0].repr;
+      const claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=="claimPrincipal")[0].repr;
+      console.log("lockFound fetched from contract call: ", preimageHash,amount,claimAddress,tokenAddress,timelock);
 
       // got all the data now check if we have the swap
       this.emit(
-        'eth.lockup',
+        // 'eth.lockup',
+        'sip10.lockup',
         txid,
         {
           amount,
-          claimAddress,
-          refundAddress,
+          tokenAddress,
+          claimAddress, //dummy
+          refundAddress: claimAddress,  //dummy
           preimageHash: parseBuffer(preimageHash),
           timelock: timelock,
         },
+        claimPrincipal,
+        tokenPrincipal,
       );
     }
 
