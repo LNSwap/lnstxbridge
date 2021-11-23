@@ -50,7 +50,7 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
-import { incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
+import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
 import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
 
 interface SwapNursery {
@@ -673,7 +673,7 @@ class SwapNursery extends EventEmitter {
 
     // Swap events
     stacksNursery.on('swap.expired', async (swap) => {
-      this.logger.error("rskNursery swap.expired ");
+      this.logger.error("stacksNursery swap.expired ");
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         await this.expireSwap(swap);
       });
@@ -1215,6 +1215,18 @@ class SwapNursery extends EventEmitter {
 
   private claimStx = async (contractHandler: StacksContractHandler, swap: Swap, etherSwapValues: EtherSwapValues, outgoingChannelId?: string) => {
     this.logger.error(`swapnursery.1040 claimStx triggered`);
+    // add additional check to see if swap expired before paying the invoice
+    // happens when app is restarted on mocknet
+    const queriedSwap = await this.swapRepository.getSwap({
+      id: {
+        [Op.eq]: swap.id,
+      },
+    });
+    let latestBlockHeight = (await getInfo()).stacks_tip_height;
+    if (queriedSwap!.timeoutBlockHeight <= latestBlockHeight) {
+      return;
+    }
+    
     const channelCreation = await this.channelCreationRepository.getChannelCreation({
       swapId: {
         [Op.eq]: swap.id,
@@ -1246,6 +1258,19 @@ class SwapNursery extends EventEmitter {
 
   private claimSip10 = async (contractHandler: StacksContractHandler, swap: Swap, erc20SwapValues: ERC20SwapValues, outgoingChannelId?: string) => {
     this.logger.error('swapnursery.1240 claimSip10 triggered');
+    
+    // add additional check to see if swap expired before paying the invoice
+    // happens when app is restarted on mocknet
+    const queriedSwap = await this.swapRepository.getSwap({
+      id: {
+        [Op.eq]: swap.id,
+      },
+    });
+    let latestBlockHeight = (await getInfo()).stacks_tip_height;
+    if (queriedSwap!.timeoutBlockHeight <= latestBlockHeight) {
+      return;
+    }
+    
     const channelCreation = await this.channelCreationRepository.getChannelCreation({
       swapId: {
         [Op.eq]: swap.id,
