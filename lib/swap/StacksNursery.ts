@@ -666,7 +666,7 @@ class StacksNursery extends EventEmitter {
     }
 
     // || wallet.type === CurrencyType.ERC20
-    if (wallet.type === CurrencyType.Stx) {
+    if (wallet.type === CurrencyType.Stx || wallet.type === CurrencyType.Sip10) {
       return wallet;
     }
 

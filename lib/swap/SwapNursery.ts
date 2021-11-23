@@ -50,7 +50,7 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
-import { incrementNonce, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
+import { incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
 import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
 
 interface SwapNursery {
@@ -1464,6 +1464,10 @@ class SwapNursery extends EventEmitter {
         case CurrencyType.Stx:
           await this.refundStx(reverseSwap);
           break;
+
+        case CurrencyType.Sip10:
+          await this.refundSip10(reverseSwap, chainSymbol);
+          break;
       }
     } else {
       this.logger.error("swapnursery emitting htlc timeout");
@@ -1563,6 +1567,40 @@ class SwapNursery extends EventEmitter {
     // for instance it failed because claimstx got in first
 
     this.logger.info(`Refunded STX of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
+    this.emit(
+      'refund',
+      await this.reverseSwapRepository.setTransactionRefunded(
+        reverseSwap,
+        // calculateEthereumTransactionFee(contractTransaction),
+        0,
+        Errors.REFUNDED_COINS(reverseSwap.transactionId!).message,
+      ),
+      contractTransaction.txid,
+    );
+  }
+
+  private refundSip10 = async (reverseSwap: ReverseSwap, chainSymbol: string) => {
+    const stacksManager = this.walletManager.stacksManager!;
+    const walletProvider = this.walletManager.wallets.get(chainSymbol)!.walletProvider as SIP10WalletProvider;
+
+    // const etherSwapValues = await queryEtherSwapValuesFromLock(ethereumManager.etherSwap, reverseSwap.transactionId!);
+    const etherSwapValues = await querySip10SwapValuesFromTx(reverseSwap.transactionId!);
+    const contractTransaction:TxBroadcastResult = await stacksManager.contractHandler.refundToken(
+      walletProvider,
+      getHexBuffer(reverseSwap.preimageHash),
+      etherSwapValues.amount,
+      etherSwapValues.claimAddress,
+      etherSwapValues.timelock,
+    );
+
+    if(!contractTransaction.error) {
+      incrementNonce();
+    }
+
+    // this tx contractTransaction may fail in the future - need to handle somehow
+    // for instance it failed because claimstx got in first
+
+    this.logger.info(`Refunded Sip10 of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
     this.emit(
       'refund',
       await this.reverseSwapRepository.setTransactionRefunded(

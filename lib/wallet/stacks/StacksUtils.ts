@@ -19,7 +19,7 @@ import { bufferCV,
   makeContractCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
-import { EtherSwapValues } from 'lib/consts/Types';
+import { EtherSwapValues, Sip10SwapValues } from 'lib/consts/Types';
 
 const BigNum = require('bn.js');
 
@@ -213,6 +213,34 @@ export const querySwapValuesFromTx = async (txid:string): Promise<EtherSwapValue
     refundAddress: refundAddress,
     timelock: timelock,
     preimageHash: parseBuffer(preimageHash),
+  };
+}
+
+export const querySip10SwapValuesFromTx = async (txid:string): Promise<Sip10SwapValues> => {
+  const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
+  const response = await axios.get(url)
+  const txData = response.data;
+
+  // console.log('sip10valuesfromtx: ', txData.contract_call.function_args);
+
+  let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
+  let amount = txData.contract_call.function_args.filter(a=>a.name=="amount")[0].repr
+  amount = BigNumber.from(amount).mul(etherDecimals).mul(100);
+  let claimAddress = txData.contract_call.function_args.filter(a=>a.name=="claimAddress")[0].repr
+  // let refundAddress = txData.contract_call.function_args.filter(a=>a.name=="refundAddress")[0].repr
+  let timelock = txData.contract_call.function_args.filter(a=>a.name=="timelock")[0].repr
+  let claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=="claimPrincipal")[0].repr
+  let tokenPrincipal = txData.contract_call.function_args.filter(a=>a.name=="tokenPrincipal")[0].repr
+  timelock = parseInt(timelock.toString(10));
+  console.log("querySip10SwapValuesFromTx fetched from Tx: ", preimageHash,amount,claimAddress,timelock, claimPrincipal, tokenPrincipal);
+
+  return {
+    amount: amount,
+    claimAddress: claimAddress,
+    timelock: timelock,
+    preimageHash: parseBuffer(preimageHash),
+    claimPrincipal,
+    tokenPrincipal,
   };
 }
 

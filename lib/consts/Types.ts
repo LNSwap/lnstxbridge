@@ -10,6 +10,15 @@ export type EtherSwapValues = {
   timelock: number;
 };
 
+export type Sip10SwapValues = {
+  preimageHash: Buffer;
+  amount: BigNumber;
+  claimAddress: string;
+  timelock: number;
+  claimPrincipal: string;
+  tokenPrincipal: string;
+};
+
 export type ERC20SwapValues = EtherSwapValues & {
   tokenAddress: string;
 };
