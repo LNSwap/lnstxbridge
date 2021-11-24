@@ -6,12 +6,13 @@ import BuilderComponents from '../../BuilderComponents';
 // import { connectEthereum, getContracts } from '../StacksUtils';
 // import { queryERC20SwapValues, queryEtherSwapValues } from '../../../wallet/rsk/ContractUtils';
 
-// broadcastTransaction, TxBroadcastResult,
-import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, makeContractCall, makeContractSTXPostCondition } from '@stacks/transactions';
+// , TxBroadcastResult,
+import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, broadcastTransaction, makeContractCall, makeContractSTXPostCondition } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 import { getHexString } from '../../../Utils';
 // import { Constants } from '../StacksUtils';
-import axios from 'axios';
+// import axios from 'axios';
+
 const BigNum = require('bn.js');
 
 export const command = 'refund <preimageHash> [token]';
@@ -156,58 +157,30 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // this.logger.error("stacks contracthandler.84 txOptions: "+ stringify(txOptions));
 
   const transaction = await makeContractCall(txOptions);
-  const serializedTx = transaction.serialize().toString('hex');
-  console.log('transaction: ', transaction, serializedTx);
-  // return broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
+  // console.log('transaction: ', transaction);
+  const tx = await broadcastTransaction(transaction, network);
+  console.log('broadcasted tx: ', tx);
 
-  let fee = await getFeev2(serializedTx);
-  console.log('got fee: ', fee);
+  // const serializedTx = transaction.serialize().toString('hex');
+  // console.log('serializedTx: ', serializedTx);
+  // let fee = await getFeev2(serializedTx);
+  // console.log('got fee: ', fee);
 
-
-  // const signer = connectEthereum(argv.provider, argv.signer);
-  // const { etherSwap, erc20Swap } = getContracts(signer);
-
-  // const preimageHash = getHexBuffer(argv.preimageHash);
-
-  // let transaction: ContractTransaction;
-
-  // if (argv.token) {
-  //   const erc20SwapValues = await queryERC20SwapValues(erc20Swap, preimageHash);
-  //   transaction = await erc20Swap.refund(
-  //     preimageHash,
-  //     erc20SwapValues.amount,
-  //     erc20SwapValues.tokenAddress,
-  //     erc20SwapValues.claimAddress,
-  //     erc20SwapValues.timelock,
-  //   );
-  // } else {
-  //   const etherSwapValues = await queryEtherSwapValues(etherSwap, preimageHash);
-  //   transaction = await etherSwap.refund(
-  //     preimageHash,
-  //     etherSwapValues.amount,
-  //     etherSwapValues.claimAddress,
-  //     etherSwapValues.timelock,
-  //   );
-  // }
-
-  // await transaction.wait(1);
-
-  // console.log(`Refunded ${argv.token ? 'ERC20 token' : 'Rbtc'} in: ${transaction.hash}`);
 };
 
-const getFeev2 = async (transaction_payload: string) => {
-  let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
-  try {
-    // console.log("stacksutils.95 getFee ", coreApiUrl);
-    let reqobj = {
-      transaction_payload
-    };
-    const url = `${coreApiUrl}/v2/fees/transaction`;
-    const response = await axios.post(url, reqobj);
-    console.log("stacksutils getFeev2", response.data);
-    return response.data.estimations[0].fee;
-  } catch (e: any) {
-    console.log('error ', e);
-    return "error: " + e;
-  }
-}
+// const getFeev2 = async (transaction_payload: string) => {
+//   let coreApiUrl = 'https://stacks-node-api.mainnet.stacks.co';
+//   try {
+//     // console.log("stacksutils.95 getFee ", coreApiUrl);
+//     let reqobj = {
+//       transaction_payload
+//     };
+//     const url = `${coreApiUrl}/v2/fees/transaction`;
+//     const response = await axios.post(url, reqobj);
+//     console.log("stacksutils getFeev2", response.data);
+//     return response.data.estimations[0].fee;
+//   } catch (e: any) {
+//     console.log('error ', e);
+//     return "error: " + e;
+//   }
+// }
