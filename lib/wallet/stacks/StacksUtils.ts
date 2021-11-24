@@ -180,6 +180,28 @@ export const getAccountInfo = async (initAddress: string) => {
   } 
 }
 
+export const getAccountNonce = async (initAddress?: string) => {
+  let queryAddress = signerAddress;
+  if(initAddress !== undefined){
+    queryAddress = initAddress;
+  }
+  // console.log(`getAccountInfo ${queryAddress}`);
+  // https://stacks-node-api.mainnet.stacks.co/extended/v1/address/{principal}/nonces
+  const url = `${coreApiUrl}/extended/v1/address/${queryAddress}/nonces`;
+  try {
+    const response = await axios.get(url)
+    console.log("stacksutils getAccountNonce", response.data);
+    if (response.data.possible_next_nonce > nonce) {
+      console.log('updating nonce: ', response.data.possible_next_nonce);
+      nonce = response.data.possible_next_nonce;
+    }
+    return response.data;
+  } catch (e) {
+    console.log(`getAccountNonce error: `, e);
+    return {possible_next_nonce: 0};
+  } 
+}
+
 export const incrementNonce = () => {
   nonce = nonce + 1;
 }

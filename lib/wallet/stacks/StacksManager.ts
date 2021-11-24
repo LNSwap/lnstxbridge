@@ -21,7 +21,7 @@ import StacksWalletProvider from '../providers/StacksWalletProvider';
 
 import { deriveRootKeychainFromMnemonic, getAddress, deriveStxAddressChain } from '@stacks/keychain';
 import { ChainID } from '@stacks/transactions';
-import { getAccountInfo, getInfo, getStacksNetwork, setBlockHeight, setStacksNetwork } from './StacksUtils';
+import { getAccountInfo, getAccountNonce, getInfo, getStacksNetwork, setBlockHeight, setStacksNetwork } from './StacksUtils';
 import SIP10WalletProvider from '../providers/SIP10WalletProvider';
 // import { StacksMainnet, StacksMocknet, StacksNetwork, StacksTestnet } from '@stacks/network';
 
@@ -307,6 +307,10 @@ async function checkblockheight (chainTipRepository, chainTip) {
     // update currentBlockHeight
     setBlockHeight(info.stacks_tip_height);
   }
+
+  // check if nonce is higher and sync it.
+  await getAccountNonce();
+
 }
 
 export default StacksManager;
