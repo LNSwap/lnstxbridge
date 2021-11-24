@@ -154,7 +154,9 @@ class StacksNursery extends EventEmitter {
 
   public listenStacksContractTransaction = async (reverseSwap: ReverseSwap, transaction: TxBroadcastResult): Promise<void> => {
     // transaction.wait(1).then(async () => {
-      this.logger.error("stacksnursery.120 listenStacksContractTransaction tx: "+ JSON.stringify(transaction));
+    try {
+      this.logger.error("stacksnursery.120 listenStacksContractTransaction tx: "+ transaction);
+      this.logger.error("stacksnursery.120 listenStacksContractTransaction jsontx: " + JSON.stringify(transaction));
       if(transaction.error) {
         this.emit(
           'lockup.failedToSend',
@@ -171,6 +173,10 @@ class StacksNursery extends EventEmitter {
         );
         incrementNonce();
       }
+    } catch (error) {
+      this.logger.error("stacksnursery.120 listenStacksContractTransaction error: "+ error);
+    }
+
     // }).catch(async (reason) => {
 
     // });

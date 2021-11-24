@@ -90,7 +90,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   const postConditionCode = FungibleConditionCode.LessEqual;
   // new BigNum(1000000);
   // this.logger.error("contracthandler.71")
-  const postConditionAmount = new BigNum(decimalamount*1.1);
+  const postConditionAmount = new BigNum(decimalamount*1.1*100);
   // const postConditions = [
   //   makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
   // ];
