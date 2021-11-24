@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 import { getHexBuffer } from '../../../Utils';
 import { etherDecimals } from '../../../consts/Consts';
 import BuilderComponents from '../../BuilderComponents';
-import { getBoltzAddress } from '../StacksUtils';
+// import { getBoltzAddress } from '../StacksUtils';
 
 import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult, makeContractSTXPostCondition } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
@@ -20,8 +20,10 @@ if(networkconf=="mainnet"){
   network = new StacksMocknet()
 }
 
-const contractAddress = Constants.stxSwapAddress.split(".")[0]
-const contractName = Constants.stxSwapAddress.split(".")[1]
+let contractAddress = Constants.stxSwapAddress.split(".")[0]
+let contractName = Constants.stxSwapAddress.split(".")[1]
+
+let privkey:string;
 
 export const command = 'lock <preimageHash> <amount> <timelock> [token]';
 
@@ -48,9 +50,24 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // const signer = connectEthereum(argv.provider, argv.signer);
   // const { etherSwap } = getContracts(signer);
 
-
   let allargs = process.argv.slice(2);
-  console.log("stx claim: ", allargs);
+  // [ 'lock', 'asd', 'qwe', 'zxc' ]
+  console.log("stx lock: ", allargs);
+
+  // USAGE
+  // ./bin/boltz-stacks lock preimagehash amount refundAddress claimAddress timelock mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 privkey
+  
+  const selectednetwork = allargs[6]
+  if(selectednetwork=="mainnet"){
+    network = new StacksMainnet();
+  } else if(selectednetwork=="mocknet") {
+    network = new StacksMocknet()
+  }
+
+  contractAddress = allargs[7].split('.')[0];
+  contractName = allargs[7].split('.')[1];
+  privkey = allargs[8];
+
   // const signer = connectEthereum(argv.provider, argv.signer);
   // const { etherSwap, erc20Swap } = getContracts(signer);
 
@@ -66,13 +83,13 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // const preimageHash = getHexBuffer(argv.preimageHash);
   // const amount = BigNumber.from(argv.amount).mul(etherDecimals);
 
-  const boltzAddress = await getBoltzAddress();
-  console.log("boltzAddress: ", boltzAddress);
+  // const boltzAddress = await getBoltzAddress();
+  // console.log("boltzAddress: ", boltzAddress);
 
-  if (boltzAddress === undefined) {
-    console.log('Could not lock coins because the address of LNStacks.Swap could not be queried');
-    return;
-  }
+  // if (boltzAddress === undefined) {
+  //   console.log('Could not lock coins because the address of LNSwap.org could not be queried');
+  //   return;
+  // }
 
   let transaction: TxBroadcastResult;
 
@@ -88,7 +105,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   //     argv.timelock,
   //   );
   // } else {
-    console.log("rsk etherSwap.lock to claimAddress: ", boltzAddress);
+    // console.log("rsk etherSwap.lock to claimAddress: ", boltzAddress);
 
     transaction = await lockupStx(preimageHash, amount, refundAddress, timelock);
 
@@ -177,7 +194,7 @@ const lockupStx = async (
     contractName: contractName,
     functionName: 'lockStx',
     functionArgs: functionArgs,
-    senderKey: 'f4ab2357a4d008b4d54f3d26e8e72eef72957da2bb8f51445176d733f65a7ea501',
+    senderKey: privkey,
     validateWithAbi: true,
     network,
     postConditions,

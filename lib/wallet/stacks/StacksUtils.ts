@@ -135,6 +135,23 @@ export const getFee = async () => {
   return BigNumber.from(response.data).mul(gweiDecimals);
   // return response.data;
 }
+
+export const getFeev2 = async (transaction_payload: string) => {
+  
+  try {
+    // console.log("stacksutils.95 getFee ", coreApiUrl);
+    let reqobj = {
+      transaction_payload
+    };
+    const url = `${coreApiUrl}/v2/fees/transaction`;
+    const response = await axios.post(url, reqobj);
+    console.log("stacksutils getFeev2", response.data);
+    return response.data.estimations[0].fee;
+  } catch (e: any) {
+    return "error: " + e.reason;
+  }
+}
+
 export const getInfo = async () => {
   const url = `${coreApiUrl}/v2/info`;
   const response = await axios.get(url)
