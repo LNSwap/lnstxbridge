@@ -1182,6 +1182,8 @@ class Service {
 
     const { limits } = this.getPair(pairId);
 
+    // check if amount is greater than what's available in account
+
     if (limits) {
       // modified minimum limit to 1/2 so we don't run into issues with test amounts
       if (Math.floor(amount) > limits.maximal) throw Errors.EXCEED_MAXIMAL_AMOUNT(amount, limits.maximal);

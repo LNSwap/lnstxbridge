@@ -259,8 +259,10 @@ class RateProvider {
 
       // not fixed - so far it makes sense
       // this.logger.error("TODO: fix STX max/min limits");
+      const maximalLimit = Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10;
+      this.logger.debug('rateprovider.263 maximalLimit '+ maximalLimit);
       return {
-        maximal: Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10,
+        maximal: maximalLimit,
         // minimal: Math.ceil(minimalLimit), // no idea why this comes out 332115576
         minimal: Math.ceil(quoteLimits.minimal) * 10000,
 

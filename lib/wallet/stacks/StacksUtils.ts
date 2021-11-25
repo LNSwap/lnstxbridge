@@ -36,6 +36,7 @@ let privateKey = '';
 let signerAddress = 'SP13R6D5P5TYE71D81GZQWSD9PGQMQQN54A2YT3BY';
 let nonce = 0;
 let blockHeight = 0;
+let tokens;
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -95,6 +96,40 @@ export const getAddressBalance = async (address:string) => {
   
 }
 
+export const getAddressAllBalances = async (address:string) => {
+  console.log("started getAddressAllBalances ", coreApiUrl);
+  const url = `${coreApiUrl}/extended/v1/address/${address}/balances`;
+  const response = await axios.get(url)
+  console.log("getAddressAllBalances ", response.data);
+  console.log("getAddressAllBalances tokens", tokens);
+  const respobj = {STX: response.data.stx.balance, USDA: response.data.fungible_tokens["SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token::usda"].balance};
+  return respobj;
+
+  // {
+  //   "stx": {
+  //     "balance": "118709701",
+  //     "total_sent": "340166824",
+  //     "total_received": "461761138",
+  //     "total_fees_sent": "2884613",
+  //     "total_miner_rewards_received": "0",
+  //     "lock_tx_id": "",
+  //     "locked": "0",
+  //     "lock_height": 0,
+  //     "burnchain_lock_height": 0,
+  //     "burnchain_unlock_height": 0
+  //   },
+  //   "fungible_tokens": {
+  //     "SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token::usda": {
+  //       "balance": "22199244",
+  //       "total_sent": "1998954",
+  //       "total_received": "24198198"
+  //     }
+  //   },
+  //   "non_fungible_tokens": {}
+  // }
+  
+}
+
 export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string, signerAddress: string, signerNonce: number, currentBlockHeight: number) => {
   // let network:string = "mocknet";
  
@@ -119,6 +154,7 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
   signerAddress = signerAddress;
   nonce = signerNonce;
   blockHeight = currentBlockHeight;
+  tokens = stacksConfig.tokens;
 
   return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'providerEndpoint': network, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight};
 }
