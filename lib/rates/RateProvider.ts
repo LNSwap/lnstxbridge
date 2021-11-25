@@ -7,6 +7,7 @@ import { Currency } from '../wallet/WalletManager';
 import FeeProvider, { MinerFees } from './FeeProvider';
 import { BaseFeeType, CurrencyType } from '../consts/Enums';
 import { getPairId, hashString, mapToObject, minutesToMilliseconds, splitPairId, stringify } from '../Utils';
+import { getAddressAllBalances } from '../wallet/stacks/StacksUtils';
 
 type CurrencyLimits = {
   minimal: number;
@@ -85,7 +86,7 @@ class RateProvider {
 
     await this.updateMinerFees();
 
-    pairs.forEach((pair) => {
+    pairs.forEach(async (pair) => {
       const id = getPairId(pair);
       this.configPairs.add(id);
 
@@ -96,7 +97,7 @@ class RateProvider {
         this.pairs.set(id, {
           hash: '',
           rate: pair.rate,
-          limits: this.getLimits(id, pair.base, pair.quote, pair.rate),
+          limits: await this.getLimits(id, pair.base, pair.quote, pair.rate),
           fees: {
             percentage: this.percentageFees.get(id)!,
             minerFees: {
@@ -179,7 +180,7 @@ class RateProvider {
       // If the rate returned is "undefined" or "NaN" that means that all requests to the APIs of the exchanges
       // failed and that the pairs and limits don't have to be updated
       if (rate && !isNaN(rate)) {
-        const limits = this.getLimits(pairId, base, quote, rate);
+        const limits = await this.getLimits(pairId, base, quote, rate);
         // this.logger.error("rateprovider.183 " + pairId + ", " + stringify(limits))
         // BTC/STX, {
         //   "maximal": 429496700,
@@ -235,7 +236,7 @@ class RateProvider {
   // In this case, EUR is the base currency and USD is the quote currency (counter currency). 
   // This means that 1 euro can be exchanged for 1.25 U.S. dollars. Another way of looking at this is that it will cost you $125 to buy 100 euros.
 
-  private getLimits = (pair: string, base: string, quote: string, rate: number) => {
+  private getLimits = async (pair: string, base: string, quote: string, rate: number) => {
     const baseLimits = this.limits.get(base);
     const quoteLimits = this.limits.get(quote);
     // this.logger.error("rateprovider.233 baseLimits, quoteLimits " + base+":"+ stringify(baseLimits) + ", " +quote+":"+ stringify(quoteLimits) + "," +rate)
@@ -259,8 +260,13 @@ class RateProvider {
 
       // not fixed - so far it makes sense
       // this.logger.error("TODO: fix STX max/min limits");
-      const maximalLimit = Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10;
-      this.logger.debug('rateprovider.263 maximalLimit '+ maximalLimit);
+      let maximalLimit = Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10;
+      // this.logger.debug('rateprovider.263 pair maximalLimit '+ pair + ', ' + maximalLimit);
+
+      const signerBalances = await getAddressAllBalances();
+      // this.logger.debug('rateprovider.267 signerBalances '+ JSON.stringify(signerBalances) + ', ' + signerBalances[quote]);
+      
+      maximalLimit = Math.floor(Math.min(maximalLimit, signerBalances[quote] * 100))
       return {
         maximal: maximalLimit,
         // minimal: Math.ceil(minimalLimit), // no idea why this comes out 332115576

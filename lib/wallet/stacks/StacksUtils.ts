@@ -96,14 +96,33 @@ export const getAddressBalance = async (address:string) => {
   
 }
 
-export const getAddressAllBalances = async (address:string) => {
-  console.log("started getAddressAllBalances ", coreApiUrl);
-  const url = `${coreApiUrl}/extended/v1/address/${address}/balances`;
+export const getAddressAllBalances = async (initAddress?:string) => {
+  let queryAddress = signerAddress;
+  if(initAddress !== undefined){
+    queryAddress = initAddress;
+  }
+  const url = `${coreApiUrl}/extended/v1/address/${queryAddress}/balances`;
+  // console.log("started getAddressAllBalances ", url);
   const response = await axios.get(url)
-  console.log("getAddressAllBalances ", response.data);
-  console.log("getAddressAllBalances tokens", tokens);
-  const respobj = {STX: response.data.stx.balance, USDA: response.data.fungible_tokens["SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token::usda"].balance};
+  // console.log("getAddressAllBalances ", response.data, response.data.stx);
+  // console.log("getAddressAllBalances tokens", tokens);
+  const usdaContractAddress = tokens.find((item) => item.symbol === 'USDA').contractAddress;
+  let respobj = {STX: response.data.stx.balance};
+  if (JSON.stringify(response.data.fungible_tokens).length > 2) {
+    respobj["USDA"] = response.data.fungible_tokens[usdaContractAddress+'::usda'].balance;
+  }
   return respobj;
+
+  // tokens: [
+  //   { symbol: 'STX', maxSwapAmount: 1294967000, minSwapAmount: 10000 },
+  //   {
+  //     symbol: 'USDA',
+  //     maxSwapAmount: 1294967000,
+  //     minSwapAmount: 10000,
+  //     contractAddress: 'ST30VXWG00R13WK8RDXBSTHXNWGNKCAQTRYEMA9FK.usda-token',
+  //     decimals: 6
+  //   }
+  // ]
 
   // {
   //   "stx": {
@@ -130,7 +149,7 @@ export const getAddressAllBalances = async (address:string) => {
   
 }
 
-export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string, signerAddress: string, signerNonce: number, currentBlockHeight: number) => {
+export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, derivedPrivateKey: string, derivedSignerAddress: string, signerNonce: number, currentBlockHeight: number) => {
   // let network:string = "mocknet";
  
   if (network.includes("localhost")) {
@@ -151,7 +170,7 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
 
   stxSwapAddress = stacksConfig.stxSwapAddress;
   privateKey = derivedPrivateKey;
-  signerAddress = signerAddress;
+  signerAddress = derivedSignerAddress;
   nonce = signerNonce;
   blockHeight = currentBlockHeight;
   tokens = stacksConfig.tokens;
