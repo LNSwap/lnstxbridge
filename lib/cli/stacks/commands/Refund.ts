@@ -10,6 +10,7 @@ import BuilderComponents from '../../BuilderComponents';
 import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, broadcastTransaction, makeContractCall, makeContractSTXPostCondition } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 import { getHexString } from '../../../Utils';
+import { getAccountNonce } from '../../../wallet/stacks/StacksUtils';
 // import { Constants } from '../StacksUtils';
 // import axios from 'axios';
 
@@ -135,6 +136,8 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // ];
 
   // const stacksNetworkData = getStacksNetwork();
+  const accountNonce = await getAccountNonce();
+  console.log('got accountNonce ', accountNonce);
   const txOptions = {
     contractAddress: contractAddress,
     contractName: contractName,
@@ -147,7 +150,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     postConditionMode: PostConditionMode.Allow,
     anchorMode: AnchorMode.Any,
     // fee: new BigNum(100000),
-    // nonce: new BigNum(stacksNetworkData.nonce),
+    nonce: accountNonce.possible_next_nonce,
     // onFinish: data => {
     //   console.log('Stacks refund Transaction:', JSON.stringify(data));
     //   incrementNonce();
