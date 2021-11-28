@@ -39,11 +39,12 @@ if(networkconf=="mainnet"){
 let contractAddress:string;
 let contractName:string;
 let privkey:string;
+let customfee:number;
 
 export const handler = async (argv: Arguments<any>): Promise<void> => {
 
   // USAGE - straight from lockstx function args
-  // ./bin/boltz-stacks refund preimagehash amount refundAddress claimAddress timelock mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 privkey
+  // ./bin/boltz-stacks refund preimagehash amount refundAddress claimAddress timelock mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 privkey <customfee in microstx>
   
   let allargs = process.argv.slice(2);
   // [ 'lock', 'asd', 'qwe', 'zxc' ]
@@ -59,6 +60,10 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   contractAddress = allargs[7].split('.')[0];
   contractName = allargs[7].split('.')[1];
   privkey = allargs[8];
+  customfee = 130000;
+  if (allargs[9]) {
+    customfee = parseInt(allargs[9]);
+  }
 
   const origpreimageHash = allargs[1].split('x')[1];
   const preimageHash = getHexBuffer(allargs[1]);
@@ -149,7 +154,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     postConditions,
     postConditionMode: PostConditionMode.Allow,
     anchorMode: AnchorMode.Any,
-    // fee: new BigNum(100000),
+    fee: new BigNum(customfee),
     nonce: accountNonce.possible_next_nonce,
     // onFinish: data => {
     //   console.log('Stacks refund Transaction:', JSON.stringify(data));
