@@ -1466,7 +1466,8 @@ class SwapNursery extends EventEmitter {
     const chainCurrency = this.currencies.get(chainSymbol)!;
     const lightningCurrency = this.currencies.get(lightningSymbol)!;
 
-    if (reverseSwap.transactionId) {
+    // added to avoid refunding lock txns stuck in mempool - stacks issue
+    if (reverseSwap.transactionId && queriedReverseSwap!.status !== SwapUpdateEvent.TransactionMempool) {
       this.logger.error("swapnursery.1336 reverseSwap.transactionId " + chainCurrency.type + ", " + chainSymbol);
       switch (chainCurrency.type) {
         case CurrencyType.BitcoinLike:
