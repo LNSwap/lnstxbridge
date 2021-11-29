@@ -455,7 +455,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
   // to see the raw serialized tx
   const serializedTx = transaction.serialize();
   // .toString('hex');
-  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+  // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
 
   // resolves to number of microstacks per byte!!!
   const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
@@ -463,7 +463,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
   // I think we need to serialize and get the length in bytes and multiply with base fee rate.
   const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
 
-  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+  // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
   return Number(totalfee);
 }
 
@@ -520,7 +520,7 @@ export const calculateStxLockFee = async (contract:string, preimageHash: string)
   // to see the raw serialized tx
   const serializedTx = transaction.serialize();
   // .toString('hex');
-  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+  // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
 
   // resolves to number of microstacks per byte!!!
   const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
@@ -528,7 +528,7 @@ export const calculateStxLockFee = async (contract:string, preimageHash: string)
   // I think we need to serialize and get the length in bytes and multiply with base fee rate.
   const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
 
-  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+  // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
   return Number(totalfee);
 }
 
@@ -583,7 +583,7 @@ export const calculateStxClaimFee = async (contract:string, preimage: string, am
   // to see the raw serialized tx
   const serializedTx = transaction.serialize();
   // .toString('hex');
-  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+  // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
 
   // resolves to number of microstacks per byte!!!
   const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
@@ -591,7 +591,7 @@ export const calculateStxClaimFee = async (contract:string, preimage: string, am
   // I think we need to serialize and get the length in bytes and multiply with base fee rate.
   const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
 
-  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+  // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
   return Number(totalfee);
 }
 
