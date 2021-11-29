@@ -45,6 +45,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 
   // USAGE - straight from lockstx function args
   // ./bin/boltz-stacks refund preimagehash amount refundAddress claimAddress timelock mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 privkey <customfee in microstx>
+  // ./bin/boltz-stacks refund 0xc6213f3f2635186d9fa4fd00173eac5f2d71aacabf07f0a178de9961d4020331 0x00000000000000000000000003937005 0x01 0x01 0x00000000000000000000000000009485 mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 "xxxx"
   
   let allargs = process.argv.slice(2);
   // [ 'lock', 'asd', 'qwe', 'zxc' ]
