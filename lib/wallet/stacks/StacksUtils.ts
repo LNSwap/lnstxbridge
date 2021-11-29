@@ -187,6 +187,9 @@ export const getFee = async () => {
   const url = `${coreApiUrl}/v2/fees/transfer`;
   const response = await axios.get(url)
   // console.log("stacksutils  getFee", response.data);
+  
+  // const STX_TRANSFER_TX_SIZE_BYTES = 180;
+  // const fee = new BigNumber(feeRate.data).multipliedBy(STX_TRANSFER_TX_SIZE_BYTES);
   return BigNumber.from(response.data).mul(gweiDecimals);
   // return response.data;
 }
@@ -442,9 +445,20 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
 
   const transaction = await makeContractCall(txOptions);
   // console.log("stacksutil.209 transaction: ", transaction)
+
+  // to see the raw serialized tx
+  const serializedTx = transaction.serialize();
+  // .toString('hex');
+  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+
+  // resolves to number of microstacks per byte!!!
   const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
-  // console.log("estimatedFee: ", estimateFee);
-  return Number(estimateFee);
+  
+  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+  return Number(totalfee);
 }
 
 export const calculateStxLockFee = async (contract:string, preimageHash: string) => {
@@ -496,9 +510,20 @@ export const calculateStxLockFee = async (contract:string, preimageHash: string)
 
   const transaction = await makeContractCall(txOptions);
   // console.log("stacksutil.209 transaction: ", transaction)
+
+  // to see the raw serialized tx
+  const serializedTx = transaction.serialize();
+  // .toString('hex');
+  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+
+  // resolves to number of microstacks per byte!!!
   const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
-  // console.log("estimatedFee: ", estimateFee);
-  return Number(estimateFee);
+  
+  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+  return Number(totalfee);
 }
 
 export const calculateStxClaimFee = async (contract:string, preimage: string, amount: string, timelock: string) => {
@@ -548,9 +573,20 @@ export const calculateStxClaimFee = async (contract:string, preimage: string, am
 
   const transaction = await makeContractCall(txOptions);
   // console.log("stacksutil.209 transaction: ", transaction)
+
+  // to see the raw serialized tx
+  const serializedTx = transaction.serialize();
+  // .toString('hex');
+  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+
+  // resolves to number of microstacks per byte!!!
   const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
-  // console.log("estimatedFee: ", estimateFee);
-  return Number(estimateFee);
+  
+  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+  return Number(totalfee);
 }
 
 // window is not defined?! -- I think we can use cross-fetch but meh no need.

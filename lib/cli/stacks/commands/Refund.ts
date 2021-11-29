@@ -7,7 +7,7 @@ import BuilderComponents from '../../BuilderComponents';
 // import { queryERC20SwapValues, queryEtherSwapValues } from '../../../wallet/rsk/ContractUtils';
 
 // , TxBroadcastResult,
-import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, broadcastTransaction, makeContractCall, makeContractSTXPostCondition } from '@stacks/transactions';
+import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, broadcastTransaction, makeContractCall, makeContractSTXPostCondition, estimateContractFunctionCall } from '@stacks/transactions';
 import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 import { getHexString } from '../../../Utils';
 import { getAccountNonce } from '../../../wallet/stacks/StacksUtils';
@@ -60,7 +60,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   contractAddress = allargs[7].split('.')[0];
   contractName = allargs[7].split('.')[1];
   privkey = allargs[8];
-  customfee = 130000;
+  customfee = 90000;
   if (allargs[9]) {
     customfee = parseInt(allargs[9]);
   }
@@ -166,6 +166,20 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 
   const transaction = await makeContractCall(txOptions);
   // console.log('transaction: ', transaction);
+
+  // to see the raw serialized tx
+  const serializedTx = transaction.serialize();
+  // .toString('hex');
+  console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+
+  // resolves to number of microstacks per byte!!!
+  const estimateFee = await estimateContractFunctionCall(transaction, network);
+  
+  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+  console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+
   const tx = await broadcastTransaction(transaction, network);
   console.log('broadcasted tx: ', tx);
 
