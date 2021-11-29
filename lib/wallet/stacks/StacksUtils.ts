@@ -253,6 +253,12 @@ export const getAccountNonce = async (initAddress?: string) => {
       console.log('getAccountNonce updating nonce: ', response.data.possible_next_nonce);
       nonce = response.data.possible_next_nonce;
     }
+    if(response.data.detected_missing_nonces.length > 0) {
+      // set nonce to min of missing nonces
+      const min = Math.min(...response.data.detected_missing_nonces);
+      console.log(`found missing nonces setting to min `, min);
+      nonce = min;
+    }
     return response.data;
   } catch (e) {
     console.log(`getAccountNonce error: `, e);
