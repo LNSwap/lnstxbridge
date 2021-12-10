@@ -170,12 +170,14 @@ class SwapManager {
     // this.logger.error("swapmanager.166 getCurrencies " + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
 
-    if (!sendingCurrency.lndClient) {
+    // for btc -> stx submarine sell
+    if (!sendingCurrency.lndClient && !sendingCurrency.stacksClient) {
       throw Errors.NO_LND_CLIENT(sendingCurrency.symbol);
     }
 
     const id = generateId();
 
+    // Creating new Swap from BTC to STX
     this.logger.verbose(`Creating new Swap from ${receivingCurrency.symbol} to ${sendingCurrency.symbol}: ${id}`);
 
     const pair = getPairId({ base: args.baseCurrency, quote: args.quoteCurrency });
