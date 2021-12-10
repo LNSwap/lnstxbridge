@@ -149,6 +149,12 @@ class SwapManager {
 
     // Only required for UTXO based chains
     refundPublicKey?: Buffer,
+
+    // for onchainswaps
+    bip21?: string,
+    expectedAmount?: number,
+    acceptZeroConf?: boolean,
+    claimAddress?: string,
   }): Promise<{
     id: string,
     timeoutBlockHeight: number,
@@ -212,6 +218,20 @@ class SwapManager {
 
       receivingCurrency.chainClient!.addOutputFilter(outputScript);
 
+      this.logger.info('swapmanager.220 createswap data: ' + stringify({
+        id,
+        pair,
+        timeoutBlockHeight,
+
+        keyIndex: index,
+        orderSide: args.orderSide,
+        lockupAddress: address,
+        status: SwapUpdateEvent.SwapCreated,
+        preimageHash: getHexString(args.preimageHash),
+        redeemScript: getHexString(redeemScript),
+        claimAddress: args.claimAddress,
+      }));
+
       await this.swapRepository.addSwap({
         id,
         pair,
@@ -223,6 +243,7 @@ class SwapManager {
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
+        claimAddress: args.claimAddress,
       });
     } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -254,6 +275,7 @@ class SwapManager {
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
         tokenAddress: getHexString(tokenAddressHolder),
+        claimAddress: args.claimAddress,
       }));
 
       await this.swapRepository.addSwap({
@@ -266,6 +288,7 @@ class SwapManager {
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(tokenAddressHolder),
+        claimAddress: args.claimAddress,
         // tokenAddress: tokenAddress,
       });
     } else {
@@ -287,6 +310,7 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
+        claimAddress: args.claimAddress,
       });
     }
 

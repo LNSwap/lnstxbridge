@@ -58,6 +58,12 @@ interface StacksNursery {
   on(event: 'lockup.failedToSend', listener: (reverseSwap: ReverseSwap, reason: string) => void): this;
   emit(event: 'lockup.failedToSend', reverseSwap: ReverseSwap, reason: string): boolean;
 
+  on(event: 'lockup.failedToSend', listener: (swap: Swap, reason: string) => void): this;
+  emit(event: 'lockup.failedToSend', swap: Swap, reason: string): boolean;
+
+  on(event: 'lockup.confirmed', listener: (swap: Swap, transactionHash: string) => void): this;
+  emit(event: 'lockup.confirmed', swap: Swap, transactionHash: string): boolean;
+
   on(event: 'lockup.confirmed', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'lockup.confirmed', reverseSwap: ReverseSwap, transactionHash: string): boolean;
 
@@ -175,6 +181,36 @@ class StacksNursery extends EventEmitter {
       }
     } catch (error) {
       this.logger.error("stacksnursery.120 listenStacksContractTransaction error: "+ error);
+    }
+
+    // }).catch(async (reason) => {
+
+    // });
+  }
+
+  public listenStacksContractTransactionSwap = async (reverseSwap: Swap, transaction: TxBroadcastResult): Promise<void> => {
+    // transaction.wait(1).then(async () => {
+    try {
+      this.logger.error("stacksnursery.120 listenStacksContractTransactionSwap tx: "+ transaction);
+      this.logger.error("stacksnursery.120 listenStacksContractTransactionSwap jsontx: " + JSON.stringify(transaction));
+      if(transaction.error) {
+        this.emit(
+          'lockup.failedToSend',
+          await this.swapRepository.setSwapStatus(reverseSwap, SwapUpdateEvent.TransactionFailed),
+          transaction.error,
+        );
+      } else {
+        // TODO: this causes transaction.confirmed immediately - need to add another state mempool here
+        // no this is lockup.confirmed not transaction.confirmed
+        this.emit(
+          'lockup.confirmed',
+          await this.swapRepository.setSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
+          transaction.txid,
+        );
+        incrementNonce();
+      }
+    } catch (error) {
+      this.logger.error("stacksnursery.120 listenStacksContractTransactionSwap error: "+ error);
     }
 
     // }).catch(async (reason) => {
@@ -676,7 +712,8 @@ class StacksNursery extends EventEmitter {
       return wallet;
     }
 
-    this.logger.error("getStacksWallet returning empty!!");
+    // TODO: This is thrown alot!!!
+    // this.logger.error("getStacksWallet returning empty!!");
     return;
   }
 }

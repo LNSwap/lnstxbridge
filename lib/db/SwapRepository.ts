@@ -53,6 +53,15 @@ class SwapRepository {
     });
   }
 
+  // invoice: string, expectedAmount: number, fee: number, 
+  public setAcceptZeroConf = (swap: Swap, acceptZeroConf: boolean): Promise<Swap> => {
+    return swap.update({
+      acceptZeroConf,
+      // expectedAmount,
+      // status: SwapUpdateEvent.InvoiceSet,
+    });
+  }
+
   public setLockupTransaction = (
     swap: Swap,
     lockupTransactionId: string,

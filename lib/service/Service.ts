@@ -614,6 +614,9 @@ class Service {
 
     // Only required for UTXO based chains
     refundPublicKey?: Buffer,
+
+    requestedAmount?: number,
+    claimAddress?: string,
   }): Promise<{
     id: string,
     address: string,
@@ -624,6 +627,11 @@ class Service {
 
     // Is undefined when Bitcoin or Litecoin is swapped to Lightning
     claimAddress?: string,
+
+    // // for onchain swaps
+    bip21?: string,
+    expectedAmount?: number,
+    acceptZeroConf?: boolean,
   }> => {
     const swap = await this.swapManager.swapRepository.getSwap({
       preimageHash: {
@@ -673,11 +681,47 @@ class Service {
       channel: args.channel,
       preimageHash: args.preimageHash,
       refundPublicKey: args.refundPublicKey,
+      claimAddress: args.claimAddress,
+      // bip21,
+      // expectedAmount,
+      // acceptZeroConf,
     });
+
+    let acceptZeroConf = true;
+    let bip21 = '';
+    let expectedAmount = 0;
+    if (args.requestedAmount) {
+      const response = await this.getManualRates(id, args.requestedAmount);
+      console.log('service.688 getManualRates response ', args.requestedAmount, response);
+      expectedAmount = response.onchainAmount || 0;
+      // acceptZeroConf = true;
+      bip21 = encodeBip21(
+        base,
+        address,
+        expectedAmount,
+        'onchain swap',
+        // getSwapMemo(quote, false),
+      ) || '';
+
+      acceptZeroConf = this.rateProvider.acceptZeroConf(base, expectedAmount);
+      const swap = await this.swapManager.swapRepository.getSwap({
+        id: {
+          [Op.eq]: id,
+        },
+      });
+      if (swap)
+        await this.swapManager.swapRepository.setAcceptZeroConf(swap, acceptZeroConf);
+
+      console.log('updated swap acceptZeroConf', base, expectedAmount, acceptZeroConf);
+
+    }
 
     this.eventHandler.emitSwapCreation(id);
 
     return {
+      bip21,
+      expectedAmount,
+      acceptZeroConf,
       id,
       address,
       redeemScript,
@@ -721,8 +765,94 @@ class Service {
 
     this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
 
+    console.log('service.733 getswaprates: ', {
+      onchainAmount: swap.onchainAmount,
+      submarineSwap: {
+        invoiceAmount,
+      }});
+
     return {
       onchainAmount: swap.onchainAmount,
+      submarineSwap: {
+        invoiceAmount,
+      },
+    };
+  }
+
+  /**
+   * Sets the rate for a Swap that doesn't have an invoice yet
+   */
+    private setSwapRate = async (swap: Swap) => {
+    if (!swap.rate) {
+      const rate = getRate(
+        this.rateProvider.pairs.get(swap.pair)!.rate,
+        swap.orderSide,
+        false
+      );
+
+      await this.setRate(swap, rate);
+    }
+  }
+  public setRate = (swap: Swap, rate: number): Promise<Swap> => {
+    return swap.update({
+      rate,
+    });
+  }
+
+  /**
+   * Gets/Sets the rates for an Atomic Swap that user requested
+   */
+   public getManualRates = async (id: string, requestedAmount: number): Promise<{
+    requestedAmount?: number,
+    onchainAmount?: number,
+    submarineSwap: {
+      invoiceAmount: number,
+    },
+  }> => {
+    const swap = await this.swapManager.swapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    if (!swap) {
+      throw Errors.SWAP_NOT_FOUND(id);
+    }
+
+    await this.setSwapRate(swap);
+    // if (!swap.onchainAmount) {
+    //   throw Errors.SWAP_NO_LOCKUP();
+    // }
+
+    const { base, quote } = splitPairId(swap.pair);
+    const onchainCurrency = getChainCurrency(base, quote, swap.orderSide, false);
+    console.log('swap.rate ', swap.rate, swap.orderSide, base, quote);
+
+    const rate = getRate(swap.rate!, swap.orderSide, true);
+    console.log('rate ', rate);
+
+    const percentageFee = this.rateProvider.feeProvider.getPercentageFee(swap.pair);
+    const baseFee = this.rateProvider.feeProvider.getBaseFee(onchainCurrency, BaseFeeType.NormalClaim);
+    console.log('781 ', onchainCurrency, percentageFee, baseFee);
+
+    // requested amount in mstx
+    const onchainAmount = ((requestedAmount/1000000) * rate) * 100000000;
+    console.log('810: ', requestedAmount, onchainAmount, swap.orderSide);
+
+    const invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+    console.log('784 ', requestedAmount, onchainAmount, invoiceAmount);
+
+    this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
+
+    console.log('service.785 getManualRates: ', {
+      onchainAmount: swap.onchainAmount,
+      submarineSwap: {
+        invoiceAmount,
+      }});
+
+    return {
+      requestedAmount,
+      onchainAmount,
       submarineSwap: {
         invoiceAmount,
       },
@@ -1200,9 +1330,19 @@ class Service {
     if (orderSide === OrderSide.BUY) {
       rate = 1 / rate;
     }
-
+    console.log('calculateInvoiceAmount: ', onchainAmount, baseFee, rate, percentageFee);
     return Math.floor(
       ((onchainAmount - baseFee) * rate) / (1 + percentageFee),
+    );
+  }
+
+  private calculateOnchainAmount = (orderSide: number, rate: number, onchainAmount: number, baseFee: number, percentageFee: number) => {
+    if (orderSide === OrderSide.BUY) {
+      rate = 1 / rate;
+    }
+    console.log('calculateInvoiceAmount: ', onchainAmount, baseFee, rate, percentageFee);
+    return Math.floor(
+      (onchainAmount - baseFee) / (1 + percentageFee),
     );
   }
 

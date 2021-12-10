@@ -72,6 +72,7 @@ class EventHandler extends EventEmitter {
     this.nursery.on('transaction', (swap, transaction, confirmed, isReverse) => {
       this.logger.verbose("eventhandler.72 on transaction: " + stringify(swap) + ", " + transaction + ", " + confirmed + " , " + isReverse);
       if (!isReverse) {
+        // triggers for onchain stx -> btc swap
         this.logger.verbose("eventhandler.74 on transaction: ");
         this.emit('swap.update', swap.id, {
           status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,

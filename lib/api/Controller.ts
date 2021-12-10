@@ -308,6 +308,8 @@ class Controller {
       refundPublicKey,
       preimageHash,
       channel,
+      requestedAmount,
+      claimAddress,
     } = this.validateRequest(req.body, [
       { name: 'pairId', type: 'string' },
       { name: 'pairHash', type: 'string', optional: true },
@@ -316,6 +318,8 @@ class Controller {
       { name: 'refundPublicKey', type: 'string', hex: true, optional: true },
       { name: 'preimageHash', type: 'string', hex: true, optional: true },
       { name: 'channel', type: 'object', optional: true },
+      { name: 'requestedAmount', type: 'string', optional: true },
+      { name: 'claimAddress', type: 'string', optional: true },
     ]);
 
     if (channel !== undefined) {
@@ -351,6 +355,8 @@ class Controller {
         refundPublicKey,
         preimageHash,
         channel,
+        requestedAmount,
+        claimAddress,
       });
     }
 
