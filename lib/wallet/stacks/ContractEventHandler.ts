@@ -101,9 +101,10 @@ class ContractEventHandler extends EventEmitter {
           // let events = (await getTx(tx.tx_id)).events;
           // this.logger.debug("got events: "+ events + ", " + func_args);
           // // TODO: parse events and emit stuff!!!
-        } else {
-          this.logger.debug('no tx.tx_status ' + JSON.stringify(tx));
         }
+        //  else {
+        //   this.logger.debug('no tx.tx_status ' + JSON.stringify(tx));
+        // }
       }
 
       // same rescan for sip10token contract
@@ -122,9 +123,10 @@ class ContractEventHandler extends EventEmitter {
           // let events = (await getTx(tx.tx_id)).events;
           // this.logger.debug("got events: "+ events + ", " + func_args);
           // // TODO: parse events and emit stuff!!!
-        } else {
-          this.logger.debug('no tx.tx_status ' + JSON.stringify(tx));
         }
+        //  else {
+        //   this.logger.debug('no tx.tx_status ' + JSON.stringify(tx));
+        // }
       }
 
     }

@@ -194,6 +194,7 @@ class SwapManager {
       timeoutBlockHeight = blocks + args.timeoutBlockDelta;
 
       const { keys, index } = receivingCurrency.wallet.getNewKeys();
+      console.log('receiving currency BitcoinLike ', keys, index);
 
       redeemScript = swapScript(
         args.preimageHash,

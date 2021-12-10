@@ -250,27 +250,36 @@ class RateProvider {
       const minimalLimitQuoteTransactionFee = this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim) * 4;
       const minimalLimitBaseTransactionFee = this.feeProvider.getBaseFee(base, BaseFeeType.NormalClaim) * rate * 4;
       // rateprovider.235 basefee, quote, base, rate:                      1,   
-      // this.logger.error("rateprovider.235 basefee, quote, base, rate: "+ this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim) 
+      // this.logger.error("rateprovider.235 basefee, quote, base, rate: "+ this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim));
       //                  340,                                            rate: 33222.591362126244
         // + "," + this.feeProvider.getBaseFee(base, BaseFeeType.NormalClaim) + ", rate: " +rate);
 
       minimalLimit = Math.max(minimalLimit, minimalLimitBaseTransactionFee, minimalLimitQuoteTransactionFee);
       // rateprovider.237 minimallimit:                   332115576.2205247,         45167718.36599137,                          4
       // this.logger.error("rateprovider.237 minimallimit: "+ minimalLimit + ", "+ minimalLimitBaseTransactionFee  + ", "+ minimalLimitQuoteTransactionFee);
+      minimalLimit = Math.ceil(quoteLimits.minimal) * 10000;
 
       // not fixed - so far it makes sense
       // this.logger.error("TODO: fix STX max/min limits");
       let maximalLimit = Math.floor(Math.min(quoteLimits.maximal, baseLimits.maximal * rate)) * 10;
-      // this.logger.debug('rateprovider.263 pair maximalLimit '+ pair + ', ' + maximalLimit);
+      // this.logger.error('rateprovider.263 pair maximalLimit '+ pair + ', ' + maximalLimit);
 
       const signerBalances = await getAddressAllBalances();
-      // this.logger.debug('rateprovider.267 signerBalances '+ JSON.stringify(signerBalances) + ', ' + signerBalances[quote]);
-      
-      maximalLimit = Math.floor(Math.min(maximalLimit, signerBalances[quote] * 100))
+      // this.logger.error('rateprovider.267 signerBalances '+ JSON.stringify(signerBalances) + ', ' + signerBalances[quote]);
+
+      maximalLimit = Math.floor(Math.min(maximalLimit, signerBalances[quote] * 100));
+
+      // btc limits
+      if (base === 'STX' && quote === 'BTC') {
+        maximalLimit = 12949670;
+        minimalLimit = 10000;
+      }
+
+      this.logger.error('RATEPROVIDER base, quote, minimal, maximal: ' + base + ', ' + quote + ', ' + minimalLimit + ', ' + maximalLimit);
       return {
         maximal: maximalLimit,
         // minimal: Math.ceil(minimalLimit), // no idea why this comes out 332115576
-        minimal: Math.ceil(quoteLimits.minimal) * 10000,
+        minimal: minimalLimit,
 
         maximalZeroConf: {
           baseAsset: baseLimits.maximalZeroConf,
