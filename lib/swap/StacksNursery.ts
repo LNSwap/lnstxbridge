@@ -64,6 +64,9 @@ interface StacksNursery {
   on(event: 'lockup.confirmed', listener: (swap: Swap, transactionHash: string) => void): this;
   emit(event: 'lockup.confirmed', swap: Swap, transactionHash: string): boolean;
 
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transactionHash: string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transactionHash: string): boolean;
+
   on(event: 'lockup.confirmed', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'lockup.confirmed', reverseSwap: ReverseSwap, transactionHash: string): boolean;
 
@@ -359,13 +362,15 @@ class StacksNursery extends EventEmitter {
           console.log('atomic onchain swap found, they locked and we locked ', swap.id);
           // start listening to claim - which we already are.
           // need to set astransactionconfirmed so UI can show claim
-          
-          this.emit('swap.update', swap.id, {
-            status: SwapUpdateEvent.ASTransactionConfirmed,
-            transaction: {
-              id: transactionHash,
-            },
-          });
+          // await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed);
+          // const check = await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionFailed);
+          // await this.swapRepository.setASTransactionConfirmed(swap, true);
+          this.emit(
+            'astransaction.confirmed',
+            await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionConfirmed),
+            transactionHash,
+          );
+          console.log('emit astransaction.confirmed');
         }
 
         return;

@@ -5,7 +5,8 @@ import DataAggregator from './data/DataAggregator';
 import { BaseFeeType, OrderSide } from '../consts/Enums';
 import { etherDecimals, gweiDecimals } from '../consts/Consts';
 import { getChainCurrency, getPairId, mapToObject, splitPairId, stringify } from '../Utils';
-import { calculateStacksTxFee, calculateStxLockFee, getStacksNetwork } from '../wallet/stacks/StacksUtils';
+import { calculateStacksTxFee, getStacksNetwork } from '../wallet/stacks/StacksUtils';
+// calculateStxLockFee
 
 type ReverseMinerFees = {
   lockup: number;
@@ -178,19 +179,19 @@ class FeeProvider {
 
       case 'USDA':
       case 'STX': {
-        const relativeFee = feeMap.get(chainCurrency)!;
+        // const relativeFee = feeMap.get(chainCurrency)!;
         const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx');
         const lockupCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'lockStx');
 
-        const dynLockCost = await calculateStxLockFee(getStacksNetwork().stxSwapAddress,'8c0640c4d4f0d5923d441037b2ea7406eb62869db5a085105492ad93eb72773f');
+        // const dynLockCost = await calculateStxLockFee(getStacksNetwork().stxSwapAddress,'8c0640c4d4f0d5923d441037b2ea7406eb62869db5a085105492ad93eb72773f');
         // const dynClaimCost = await calculateStxClaimFee(getStacksNetwork().stxSwapAddress,'qqwe');
-        this.logger.debug(`feeprovider.186 dynLockCost: ${dynLockCost}`);
+        // this.logger.debug(`feeprovider.186 dynLockCost: ${dynLockCost}`);
         
         // const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
         // claimcost is wrong for STX but that should be OK.
         // this.logger.error("feeprovider.181 TODO: NO CLAIM/LOCK FEE estimation yet!! -relativeFee, stxclaimCost " + relativeFee + ", " +claimCost)
         // DONE!
-        this.logger.debug(`feeprovider.181 relativeFee, stxclaimCost, lockupCost: ${relativeFee}, ${claimCost}, ${lockupCost}`);
+        // this.logger.debug(`feeprovider.181 relativeFee, stxclaimCost, lockupCost: ${relativeFee}, ${claimCost}, ${lockupCost}`);
 
         this.minerFees.set(chainCurrency, {
           // normal: relativeFee,

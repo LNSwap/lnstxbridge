@@ -110,6 +110,8 @@ interface SwapNursery {
   on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'tx.sent', reverseSwap: ReverseSwap): boolean;
 
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction | string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction | string): boolean;
 }
 
 class SwapNursery extends EventEmitter {
@@ -773,12 +775,12 @@ class SwapNursery extends EventEmitter {
       });
     });
 
-    // stacksNursery.on('aslockup.confirmed', async (swap, transactionHash) => {
-    //   this.logger.error("listenstacksNursery aslockup.confirmed: " + transactionHash);
-    //   await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
-    //     this.emit('transaction', swap, transactionHash, true, true);
-    //   });
-    // });
+    stacksNursery.on('astransaction.confirmed', async (swap, transactionHash) => {
+      this.logger.error('listenstacksNursery astransaction.confirmed: ' + transactionHash);
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        this.emit('transaction', swap, transactionHash, true, true);
+      });
+    });
 
     stacksNursery.on('claim', async (reverseSwap, preimage) => {
       this.logger.error("listenstacksNursery on claim!");
@@ -1115,7 +1117,7 @@ class SwapNursery extends EventEmitter {
       this.stacksNursery!.listenStacksContractTransaction(reverseSwap, contractTransaction);
       this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Token for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
-      this.logger.error("swapnursery.1023 TODO: add stacks tx fee calculation to setLockupTransaction")
+      this.logger.error('swapnursery.1023 TODO: add stacks tx fee calculation to setLockupTransaction');
       this.emit(
         'coins.sent',
         await this.reverseSwapRepository.setLockupTransaction(

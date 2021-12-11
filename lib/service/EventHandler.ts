@@ -90,15 +90,28 @@ class EventHandler extends EventEmitter {
             },
           });
         } else if (confirmed && swap.status == "transaction.confirmed") {
-          // for stacks tx.sent event from stacksnursery -> swapnursery -> here
-          this.logger.verbose(`eventhandler.95 on transaction: ${transaction}`);
-          this.emit('swap.update', swap.id, {
-            status: SwapUpdateEvent.TransactionConfirmed,
-            transaction: {
-              id: transaction.toString(),
-              // hex: transaction.toHex(),
-            },
-          });
+          if (swap.claimAddress) {
+            // for atomic swap this gets triggered for AStransaction.confirmed
+            this.logger.verbose(`eventhandler.95 on transaction: ${transaction}`);
+            this.emit('swap.update', swap.id, {
+              status: SwapUpdateEvent.ASTransactionConfirmed,
+              transaction: {
+                id: transaction.toString(),
+                // hex: transaction.toHex(),
+              },
+            });
+          } else {
+            // for stacks tx.sent event from stacksnursery -> swapnursery -> here
+            this.logger.verbose(`eventhandler.105 on transaction: ${transaction}`);
+            this.emit('swap.update', swap.id, {
+              status: SwapUpdateEvent.TransactionConfirmed,
+              transaction: {
+                id: transaction.toString(),
+                // hex: transaction.toHex(),
+              },
+            });
+          }
+
        } else {
          this.logger.verbose("eventhandler.104 transaction NOT confirmed yet");
        }
@@ -207,6 +220,7 @@ class EventHandler extends EventEmitter {
         this.logger.verbose("eventhandler.178 on coins.sent: ");
         // check if this was AStransaction
         if (reverseSwap.claimAddress) {
+          console.log('eh.210 ');
           this.emit('swap.update', reverseSwap.id, {
             status: SwapUpdateEvent.ASTransactionMempool,
             transaction: {
@@ -225,6 +239,12 @@ class EventHandler extends EventEmitter {
       }
     });
 
+    this.nursery.on('astransaction.confirmed', (swap) => {
+      this.logger.verbose('eventhandler.230 on astransaction.confirmed: ' + stringify(swap));
+      this.emit('swap.update', swap.id, {
+        status: SwapUpdateEvent.ASTransactionConfirmed,
+      });
+    });
     this.nursery.on('coins.failedToSend', (reverseSwap) => {
       this.handleFailedReverseSwap(reverseSwap, SwapUpdateEvent.TransactionFailed, reverseSwap.failureReason!);
     });
