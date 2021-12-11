@@ -63,6 +63,8 @@ class Migration {
         // Add the missing columns to make querying via the model possible
         await this.sequelize.query('ALTER TABLE swaps ADD failureReason VARCHAR(255)');
         await this.sequelize.query('ALTER TABLE swaps ADD lockupTransactionVout VARCHAR(255)');
+        await this.sequelize.query('ALTER TABLE swaps ADD claimAddress VARCHAR(255)');
+        await this.sequelize.query('ALTER TABLE swaps ADD contractAddress VARCHAR(255)');
 
         const allSwaps = await Swap.findAll();
         const allChannelCreations = await ChannelCreation.findAll();

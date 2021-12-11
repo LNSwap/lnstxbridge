@@ -632,6 +632,7 @@ class Service {
     bip21?: string,
     expectedAmount?: number,
     acceptZeroConf?: boolean,
+    contractAddress?: string,
   }> => {
     const swap = await this.swapManager.swapRepository.getSwap({
       preimageHash: {
@@ -690,6 +691,7 @@ class Service {
     let acceptZeroConf = true;
     let bip21 = '';
     let expectedAmount = 0;
+    let contractAddress = '';
     if (args.requestedAmount) {
       const response = await this.getManualRates(id, args.requestedAmount);
       console.log('service.688 getManualRates response ', args.requestedAmount, response);
@@ -714,6 +716,7 @@ class Service {
 
       console.log('updated swap acceptZeroConf', base, expectedAmount, acceptZeroConf);
 
+      contractAddress = swap?.contractAddress || '';
     }
 
     this.eventHandler.emitSwapCreation(id);
@@ -727,6 +730,7 @@ class Service {
       redeemScript,
       claimAddress,
       timeoutBlockHeight,
+      contractAddress,
     };
   }
 

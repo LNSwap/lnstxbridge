@@ -1050,32 +1050,39 @@ class SwapNursery extends EventEmitter {
       //     reverseSwap.timeoutBlockHeight,
       //   );
       // } else {
-        contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
-          getHexBuffer(reverseSwap.preimageHash),
-          BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
-          // reverseSwap.claimAddress!,
-          reverseSwap.claimAddress!,
-          reverseSwap.timeoutBlockHeight,
-        );
+        if (reverseSwap.onchainAmount && reverseSwap.rate) {
+          const requestedAmount = Math.floor(reverseSwap.onchainAmount * 1/reverseSwap.rate);
+          console.log('lockupstxswap FOR ', reverseSwap.onchainAmount, requestedAmount);
+          contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
+            getHexBuffer(reverseSwap.preimageHash),
+            BigNumber.from(requestedAmount).mul(etherDecimals),
+            // reverseSwap.claimAddress!,
+            reverseSwap.claimAddress!,
+            reverseSwap.timeoutBlockHeight,
+          );
+          // listenContractTransaction
+          this.stacksNursery!.listenStacksContractTransactionSwap(reverseSwap, contractTransaction);
+          this.logger.verbose(`lockupStxSwap up ${requestedAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
+
+          this.logger.error('swapnursery.943 lockupStxSwap TODO: add stacks tx fee calculation to setLockupTransaction');
+          this.emit(
+            'coins.sent',
+            await this.swapRepository.setLockupTransaction(
+              reverseSwap,
+              contractTransaction.txid,
+              // reverseSwap.onchainAmount,
+              requestedAmount,
+              false,
+              // calculateEthereumTransactionFee(contractTransaction),
+              // 1
+            ),
+            contractTransaction.txid,
+          );
+        }
+
       // }
 
-      // listenContractTransaction
-      this.stacksNursery!.listenStacksContractTransactionSwap(reverseSwap, contractTransaction);
-      this.logger.verbose(`lockupStxSwap up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
-      this.logger.error("swapnursery.943 lockupStxSwap TODO: add stacks tx fee calculation to setLockupTransaction")
-      this.emit(
-        'coins.sent',
-        await this.swapRepository.setLockupTransaction(
-          reverseSwap,
-          contractTransaction.txid,
-          reverseSwap.onchainAmount || 0,
-          false,
-          // calculateEthereumTransactionFee(contractTransaction),
-          // 1
-        ),
-        contractTransaction.txid,
-      );
     } catch (error) {
       // lndClient
       console.log('no lndclient needed here ', lndClient);

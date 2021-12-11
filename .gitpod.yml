@@ -11,7 +11,7 @@ tasks:
       npm i
       npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
-      git stash
+    # git stash
     command: |
       npm run dev
   - init: |
@@ -21,6 +21,9 @@ tasks:
       alias lnclibtc2='docker exec -it regtest lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc2/tls.cert --macaroonpath=/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon'
       alias lnclibtc1='docker exec -it regtest lncli --rpcserver=127.0.0.1:10009 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'
       alias btccli='docker exec -it regtest /usr/bin/bitcon-cli '
+      lnclibtc2 newaddress p2wkh
+      bitcoin-cli send '{"bcrt1q93rsj05zw3pvf8pa4gpjaypy5x5mqws49as43t":10}'
+      bitcoin-cli -regtest -generate 1
     # docker exec -it regtest bash
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
@@ -46,10 +49,10 @@ tasks:
         sed -i 's/PORT=443/PORT=8888/g' .env
         sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
         sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9002#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
-        sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
-        sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
-        git stash
         npm i    
+      # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
+      # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
+      # git stash
     command: npm run start
   - init: brew install clarinet
     command: clarinet test

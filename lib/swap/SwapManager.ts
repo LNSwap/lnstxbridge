@@ -218,6 +218,10 @@ class SwapManager {
 
       receivingCurrency.chainClient!.addOutputFilter(outputScript);
 
+      console.log('sm.221 ', sendingCurrency.type, args.quoteCurrency);
+      const contractAddress = this.getLockupContractAddress(sendingCurrency.type, args.quoteCurrency);
+
+      // atomic swap user:btc -> stx
       this.logger.info('swapmanager.220 createswap data: ' + stringify({
         id,
         pair,
@@ -226,6 +230,7 @@ class SwapManager {
         keyIndex: index,
         orderSide: args.orderSide,
         lockupAddress: address,
+        contractAddress,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
@@ -244,6 +249,7 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
         claimAddress: args.claimAddress,
+        contractAddress,
       });
     } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -787,7 +793,6 @@ class SwapManager {
       } else {
         addresstoreturn = ethereumManager.erc20Swap.address;
       }
-      
     }
 
     return addresstoreturn;

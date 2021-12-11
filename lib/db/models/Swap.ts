@@ -31,6 +31,7 @@ type SwapType = {
 
   claimAddress?: string;
   // tokenAddress?: string;
+  contractAddress?: string;
 };
 
 class Swap extends Model implements SwapType {
@@ -66,6 +67,7 @@ class Swap extends Model implements SwapType {
 
   public claimAddress?: string;
   // public tokenAddress?: string;
+  public contractAddress?: string;
 
   public static load = (sequelize: Sequelize): void => {
     Swap.init({
@@ -90,6 +92,7 @@ class Swap extends Model implements SwapType {
       lockupTransactionId: { type: new DataTypes.STRING(255), allowNull: true },
       lockupTransactionVout: { type: new DataTypes.INTEGER(), allowNull: true },
       claimAddress: { type: new DataTypes.STRING(255), allowNull: true },
+      contractAddress: { type: new DataTypes.STRING(255), allowNull: true },
     }, {
       sequelize,
       tableName: 'swaps',
