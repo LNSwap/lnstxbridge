@@ -269,9 +269,10 @@ class RateProvider {
 
       maximalLimit = Math.floor(Math.min(maximalLimit, signerBalances[quote] * 100));
 
+      // TODO: Fix this before production to optimize it!!!
       // btc limits
       if ((base === 'STX' && quote === 'BTC') || (base === 'BTC' && quote === 'STX' || base === quote) ) {
-        maximalLimit = 12949670;
+        maximalLimit = 12949670000000;
         minimalLimit = 10000;
       }
 

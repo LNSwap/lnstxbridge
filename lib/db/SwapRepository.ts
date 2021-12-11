@@ -62,6 +62,7 @@ class SwapRepository {
     });
   }
 
+  // TODO: probably bad idea changing this?
   public setLockupTransaction = (
     swap: Swap,
     lockupTransactionId: string,
@@ -73,7 +74,7 @@ class SwapRepository {
       onchainAmount,
       lockupTransactionId,
       lockupTransactionVout,
-      status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
+      status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
     });
   }
 

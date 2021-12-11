@@ -13,7 +13,7 @@ import ReverseSwapRepository from '../db/ReverseSwapRepository';
 import { CurrencyType, SwapUpdateEvent } from '../consts/Enums';
 // import EthereumManager from '../wallet/ethereum/EthereumManager';
 // import RskManager from '../wallet/rsk/RskManager';
-import { ERC20SwapValues, EtherSwapValues } from '../consts/Types';
+import { ERC20SwapValues, EtherSwapValues, SwapUpdate } from '../consts/Types';
 import { getChainCurrency, getHexString, splitPairId, stringify } from '../Utils';
 // import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
@@ -70,8 +70,8 @@ interface StacksNursery {
   on(event: 'claim', listener: (reverseSwap: ReverseSwap, preimage: Buffer) => void): this;
   emit(event: 'claim', reverseSwap: ReverseSwap, preimage: Buffer): boolean;
 
-  // on(event: 'swap.update', listener: (id: string, message: SwapUpdate) => void): this;
-  // emit(event: 'swap.update', id: string, message: SwapUpdate): boolean;
+  on(event: 'swap.update', listener: (id: string, message: SwapUpdate) => void): this;
+  emit(event: 'swap.update', id: string, message: SwapUpdate): boolean;
 
   on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'tx.sent', reverseSwap: ReverseSwap, transactionHash: string): boolean;
@@ -272,6 +272,8 @@ class StacksNursery extends EventEmitter {
             ],
           },
         });
+
+        this.logger.error("StacksNursery.276 checking reverseswap " + transactionHash);
         if(reverseSwap){
           this.logger.error("StacksNursery.209 reverseswap self lockup found " + reverseSwap.transactionId!);
           try {
@@ -333,6 +335,37 @@ class StacksNursery extends EventEmitter {
           } catch (error) {
             this.logger.error(`stacksnursery.215 error ${error}`);
           }
+        }
+
+        this.logger.error("StacksNursery.276 checking swap " + transactionHash);
+        // this.logger.error("StacksNursery.276 checking swap 1" + stringify(etherSwapValues));
+
+        // onchain atomic swap
+        let swap = await this.swapRepository.getSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(etherSwapValues.preimageHash),
+          },
+          status: {
+            [Op.or]: [
+              SwapUpdateEvent.ASTransactionMempool,
+              SwapUpdateEvent.ASTransactionConfirmed,
+            ],
+          },
+        });
+
+        // console.log('checking for atomic swap: ', getHexString(etherSwapValues.preimageHash), swap);
+
+        if (swap) {
+          console.log('atomic onchain swap found, they locked and we locked ', swap.id);
+          // start listening to claim - which we already are.
+          // need to set astransactionconfirmed so UI can show claim
+          
+          this.emit('swap.update', swap.id, {
+            status: SwapUpdateEvent.ASTransactionConfirmed,
+            transaction: {
+              id: transactionHash,
+            },
+          });
         }
 
         return;

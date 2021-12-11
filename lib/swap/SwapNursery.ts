@@ -273,7 +273,7 @@ class SwapNursery extends EventEmitter {
           // we lock to the other chain!
           const wallet = this.walletManager.wallets.get(chainSymbol)!;
           const otherlock = await this.lockupStxSwap(wallet, swap, undefined);
-          console.log('swapnursery.269 otherlock ', otherlock);
+          console.log('swapnursery.269 end of utxo swap.lockup ', otherlock);
         } else {
           console.log('swapnursery.259 swap.lockup no invoice ', swap.id);
           await this.setSwapRate(swap);
@@ -767,11 +767,18 @@ class SwapNursery extends EventEmitter {
     });
 
     stacksNursery.on('lockup.confirmed', async (reverseSwap, transactionHash) => {
-      this.logger.error("listenstacksNursery lockup.confirmed: " + transactionHash);
+      this.logger.error("listenstacksNursery lockup.confirmed event sent but tx not confirmed!: " + transactionHash);
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.emit('transaction', reverseSwap, transactionHash, true, true);
       });
     });
+
+    // stacksNursery.on('aslockup.confirmed', async (swap, transactionHash) => {
+    //   this.logger.error("listenstacksNursery aslockup.confirmed: " + transactionHash);
+    //   await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
+    //     this.emit('transaction', swap, transactionHash, true, true);
+    //   });
+    // });
 
     stacksNursery.on('claim', async (reverseSwap, preimage) => {
       this.logger.error("listenstacksNursery on claim!");
@@ -1031,7 +1038,7 @@ class SwapNursery extends EventEmitter {
       // let oldcontractTransaction: ContractTransaction;
       let contractTransaction: TxBroadcastResult;
 
-      console.log('sn.1034 ', reverseSwap);
+      // console.log('sn.1034 ', reverseSwap);
       // if (reverseSwap.minerFeeOnchainAmount) {
       //   oldcontractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
       //     getHexBuffer(reverseSwap.preimageHash),
@@ -1052,9 +1059,9 @@ class SwapNursery extends EventEmitter {
 
       // listenContractTransaction
       this.stacksNursery!.listenStacksContractTransactionSwap(reverseSwap, contractTransaction);
-      this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
+      this.logger.verbose(`lockupStxSwap up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
-      this.logger.error("swapnursery.943 TODO: add stacks tx fee calculation to setLockupTransaction")
+      this.logger.error("swapnursery.943 lockupStxSwap TODO: add stacks tx fee calculation to setLockupTransaction")
       this.emit(
         'coins.sent',
         await this.swapRepository.setLockupTransaction(

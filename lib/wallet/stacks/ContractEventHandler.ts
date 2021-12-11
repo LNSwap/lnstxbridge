@@ -362,7 +362,7 @@ class ContractEventHandler extends EventEmitter {
 
       // got all the data now check if we have the swap
       // getHexBuffer -> good, parseBuffer -> butcher .slice(2)
-      this.emit('eth.claim', txid,  getHexBuffer(hashvalue), parseBuffer(preimage));     
+      this.emit('eth.claim', txid,  getHexBuffer(hashvalue), parseBuffer(preimage));
     }
 
     if(refundFound) {
