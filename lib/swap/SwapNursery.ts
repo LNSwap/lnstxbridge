@@ -1232,6 +1232,7 @@ class SwapNursery extends EventEmitter {
     );
   }
 
+  // atomic swap
   private asClaimUtxo = async (
     chainClient: ChainClient,
     wallet: Wallet,
@@ -1252,13 +1253,28 @@ class SwapNursery extends EventEmitter {
     }
 
     const destinationAddress = await wallet.getAddress();
+    console.log('asclaimutxo destinationAddress ', destinationAddress);
 
     // Compatibility mode with database schema version 0 in which this column didn't exist
     if (swap.lockupTransactionVout === undefined) {
       swap.lockupTransactionVout = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!.vout;
+    } else {
+      const test = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!.vout;
+      console.log('vout is there but just confirming ', swap.lockupTransactionVout, test);
     }
 
     const output = transaction.outs[swap.lockupTransactionVout!];
+
+    console.log('constructing claimutxo: ',  {
+      preimage,
+      vout: swap.lockupTransactionVout!,
+      value: output.value,
+      script: output.script,
+      type: this.swapOutputType,
+      txHash: transaction.getHash(),
+      keys: wallet.getKeysByIndex(swap.keyIndex!),
+      redeemScript: getHexBuffer(swap.redeemScript!),
+    });
 
     const claimTransaction = await constructClaimTransaction(
       [
@@ -1277,6 +1293,8 @@ class SwapNursery extends EventEmitter {
       await chainClient.estimateFee(),
       true,
     );
+
+    console.log('asclaim claimtx ', claimTransaction);
     const claimTransactionFee = await calculateUtxoTransactionFee(chainClient, claimTransaction);
 
     await chainClient.sendRawTransaction(claimTransaction.toHex());
