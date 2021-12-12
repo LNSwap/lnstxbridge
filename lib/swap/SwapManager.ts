@@ -37,7 +37,8 @@ import {
   stringify,
 } from '../Utils';
 import { getInfo } from '../wallet/stacks/StacksUtils';
-import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
+import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
+import ChainTipRepository from '../db/ChainTipRepository';
 
 type ChannelCreationInfo = {
   auto: boolean,
@@ -155,6 +156,7 @@ class SwapManager {
     expectedAmount?: number,
     acceptZeroConf?: boolean,
     claimAddress?: string,
+    requestedAmount?: number,
   }): Promise<{
     id: string,
     timeoutBlockHeight: number,
@@ -172,6 +174,8 @@ class SwapManager {
 
     // // only for sip10 swaps
     // tokenAddress?: string,
+
+    asTimeoutBlockHeight?: number,
   }> => {
     // this.logger.error("swapmanager.166 getCurrencies " + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
@@ -195,11 +199,19 @@ class SwapManager {
 
     let claimAddress: string | undefined;
 
+    let asTimeoutBlockHeight: number;
+    asTimeoutBlockHeight = 0;
     // let tokenAddress: string | undefined;
 
     if (receivingCurrency.type === CurrencyType.BitcoinLike) {
       const { blocks } = await receivingCurrency.chainClient!.getBlockchainInfo();
       timeoutBlockHeight = blocks + args.timeoutBlockDelta;
+
+      const chainTipRepository = new ChainTipRepository();
+      const otherChainTip = await chainTipRepository.findOrCreateTip(sendingCurrency.symbol, 0);
+      asTimeoutBlockHeight = otherChainTip.height + args.timeoutBlockDelta;
+      console.log('chainTipRepository ', sendingCurrency.symbol, otherChainTip, asTimeoutBlockHeight);
+      // it works because stx blocktime = btc blocktime
 
       const { keys, index } = receivingCurrency.wallet.getNewKeys();
       console.log('receiving currency BitcoinLike ', keys, index);
@@ -235,6 +247,8 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
         claimAddress: args.claimAddress,
+        requestedAmount: args.requestedAmount,
+        asTimeoutBlockHeight,
       }));
 
       await this.swapRepository.addSwap({
@@ -250,6 +264,8 @@ class SwapManager {
         redeemScript: getHexString(redeemScript),
         claimAddress: args.claimAddress,
         contractAddress,
+        asRequestedAmount: args.requestedAmount,
+        asTimeoutBlockHeight,
       });
     } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -349,6 +365,7 @@ class SwapManager {
       // redeemScript,
       redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
       // tokenAddress: tokenAddress ? tokenAddress : undefined,
+      asTimeoutBlockHeight,
     };
   }
 

@@ -112,6 +112,9 @@ interface SwapNursery {
 
   on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction | string) => void): this;
   emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction | string): boolean;
+
+  on(event: 'as.claimed', listener: (swap: Swap, transaction: Transaction | string, preimage: Buffer) => void): this;
+  emit(event: 'as.claimed', swap: Swap, transaction: Transaction | string, preimage: Buffer): boolean;
 }
 
 class SwapNursery extends EventEmitter {
@@ -186,7 +189,7 @@ class SwapNursery extends EventEmitter {
         this.swapRepository,
         this.reverseSwapRepository,
       );
-    }    
+    }
 
     if (this.walletManager.stacksManager) {
       this.stacksNursery = new StacksNursery(
@@ -195,7 +198,7 @@ class SwapNursery extends EventEmitter {
         this.swapRepository,
         this.reverseSwapRepository,
       );
-    } 
+    }
 
     this.channelNursery = new ChannelNursery(
       this.logger,
@@ -797,6 +800,29 @@ class SwapNursery extends EventEmitter {
       });
     });
 
+    // atomic swap claim event
+    stacksNursery.on('as.claimed', async (swap, transactionHash, preimage2) => {
+      //trim 0x from preimage
+      const preimage = getHexString(preimage2).slice(2);
+      // const transactionHash = transactionHash2.slice(2);
+      this.logger.error(`swapnursery.802 as.claimed ${swap} ${transactionHash} ${preimage}`);
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        // this.emit('transaction', reverseSwap, transactionHash, true, true);
+        const chainSymbol = swap.pair.split('/')[0];
+        console.log('TODO: dynamic chainSymbol ', chainSymbol);
+        const { chainClient } = this.currencies.get(chainSymbol)!;
+        const wallet = this.walletManager.wallets.get(chainSymbol)!;
+
+        if (chainClient) {
+          const rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
+          const tx = Transaction.fromHex(rawTx.hex);
+          console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
+          await this.asClaimUtxo(chainClient!, wallet, swap, tx, getHexBuffer(preimage));
+        }
+
+      });
+    });
+
     await stacksNursery.init();
   }
 
@@ -1050,15 +1076,23 @@ class SwapNursery extends EventEmitter {
       //     reverseSwap.timeoutBlockHeight,
       //   );
       // } else {
-        if (reverseSwap.onchainAmount && reverseSwap.rate) {
-          const requestedAmount = Math.floor(reverseSwap.onchainAmount * 1/reverseSwap.rate);
-          console.log('lockupstxswap FOR ', reverseSwap.onchainAmount, requestedAmount);
+        if (reverseSwap.asRequestedAmount && reverseSwap.asTimeoutBlockHeight && reverseSwap.onchainAmount && reverseSwap.rate) {
+          // nope - it has to be = requestedAmount BUT
+          // TODO: check to make sure it's within acceptable range!!!
+          const requestedAmount = reverseSwap.asRequestedAmount * 100;
+          const calcrequestedAmount = Math.floor(reverseSwap.onchainAmount * 1/reverseSwap.rate);
+
+          // need to map reverseSwap.timeoutBlockHeigh too
+          // added asTimeoutBlockHeight to the swap
+
+          // lockupstxswap FOR  8224 200048649 2000547
+          console.log('lockupstxswap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
           contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
             getHexBuffer(reverseSwap.preimageHash),
             BigNumber.from(requestedAmount).mul(etherDecimals),
             // reverseSwap.claimAddress!,
             reverseSwap.claimAddress!,
-            reverseSwap.timeoutBlockHeight,
+            reverseSwap.asTimeoutBlockHeight,
           );
           // listenContractTransaction
           this.stacksNursery!.listenStacksContractTransactionSwap(reverseSwap, contractTransaction);
@@ -1067,12 +1101,13 @@ class SwapNursery extends EventEmitter {
           this.logger.error('swapnursery.943 lockupStxSwap TODO: add stacks tx fee calculation to setLockupTransaction');
           this.emit(
             'coins.sent',
-            await this.swapRepository.setLockupTransaction(
+            await this.swapRepository.setASTransactionConfirmed(
               reverseSwap,
+              false,
               contractTransaction.txid,
               // reverseSwap.onchainAmount,
-              requestedAmount,
-              false,
+              // requestedAmount,
+              // false,
               // calculateEthereumTransactionFee(contractTransaction),
               // 1
             ),
@@ -1189,6 +1224,64 @@ class SwapNursery extends EventEmitter {
     await chainClient.sendRawTransaction(claimTransaction.toHex());
 
     this.logger.info(`Claimed ${wallet.symbol} of Swap ${swap.id} in: ${claimTransaction.getId()}`);
+
+    this.emit(
+      'claim',
+      await this.swapRepository.setMinerFee(swap, claimTransactionFee),
+      channelCreation || undefined,
+    );
+  }
+
+  private asClaimUtxo = async (
+    chainClient: ChainClient,
+    wallet: Wallet,
+    swap: Swap,
+    transaction: Transaction,
+    preimage: Buffer,
+    // outgoingChannelId?: string,
+  ) => {
+    const channelCreation = await this.channelCreationRepository.getChannelCreation({
+      swapId: {
+        [Op.eq]: swap.id,
+      },
+    });
+    // const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    if (!preimage) {
+      return;
+    }
+
+    const destinationAddress = await wallet.getAddress();
+
+    // Compatibility mode with database schema version 0 in which this column didn't exist
+    if (swap.lockupTransactionVout === undefined) {
+      swap.lockupTransactionVout = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!.vout;
+    }
+
+    const output = transaction.outs[swap.lockupTransactionVout!];
+
+    const claimTransaction = await constructClaimTransaction(
+      [
+        {
+          preimage,
+          vout: swap.lockupTransactionVout!,
+          value: output.value,
+          script: output.script,
+          type: this.swapOutputType,
+          txHash: transaction.getHash(),
+          keys: wallet.getKeysByIndex(swap.keyIndex!),
+          redeemScript: getHexBuffer(swap.redeemScript!),
+        }
+      ],
+      wallet.decodeAddress(destinationAddress),
+      await chainClient.estimateFee(),
+      true,
+    );
+    const claimTransactionFee = await calculateUtxoTransactionFee(chainClient, claimTransaction);
+
+    await chainClient.sendRawTransaction(claimTransaction.toHex());
+
+    this.logger.info(`asClaimUtxo'ed ${wallet.symbol} of Swap ${swap.id} in: ${claimTransaction.getId()}`);
 
     this.emit(
       'claim',

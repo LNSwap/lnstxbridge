@@ -21,9 +21,10 @@ tasks:
       alias lnclibtc2='docker exec -it regtest lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc2/tls.cert --macaroonpath=/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon'
       alias lnclibtc1='docker exec -it regtest lncli --rpcserver=127.0.0.1:10009 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'
       alias btccli='docker exec -it regtest /usr/bin/bitcon-cli '
-      lnclibtc2 newaddress p2wkh
-      bitcoin-cli send '{"bcrt1q93rsj05zw3pvf8pa4gpjaypy5x5mqws49as43t":10}'
-      bitcoin-cli -regtest -generate 1
+      echo 'lnclibtc2 newaddress p2wkh'
+      echo "bitcoin-cli send '{\"bcrt1q93rsj05zw3pvf8pa4gpjaypy5x5mqws49as43t\":10}'"
+      echo 'bitcoin-cli -regtest -generate 1'
+      echp 'bitcoin-cli gettxout a15863a0b1bbce4d35bbf6d4933564d52720b7c364665cc627c82679bfe29455 0 '
     # docker exec -it regtest bash
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest

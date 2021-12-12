@@ -65,6 +65,9 @@ class Migration {
         await this.sequelize.query('ALTER TABLE swaps ADD lockupTransactionVout VARCHAR(255)');
         await this.sequelize.query('ALTER TABLE swaps ADD claimAddress VARCHAR(255)');
         await this.sequelize.query('ALTER TABLE swaps ADD contractAddress VARCHAR(255)');
+        await this.sequelize.query('ALTER TABLE swaps ADD asLockupTransaction VARCHAR(255)');
+        await this.sequelize.query('ALTER TABLE swaps ADD asRequestedAmount INTEGER');
+        await this.sequelize.query('ALTER TABLE swaps ADD asTimeoutBlockHeight INTEGER');
 
         const allSwaps = await Swap.findAll();
         const allChannelCreations = await ChannelCreation.findAll();

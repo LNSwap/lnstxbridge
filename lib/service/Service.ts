@@ -633,6 +633,7 @@ class Service {
     expectedAmount?: number,
     acceptZeroConf?: boolean,
     contractAddress?: string,
+    asTimeoutBlockHeight?: number,
   }> => {
     const swap = await this.swapManager.swapRepository.getSwap({
       preimageHash: {
@@ -673,6 +674,7 @@ class Service {
       redeemScript,
       claimAddress,
       timeoutBlockHeight,
+      asTimeoutBlockHeight,
     } = await this.swapManager.createSwap({
       orderSide,
       timeoutBlockDelta,
@@ -683,6 +685,8 @@ class Service {
       preimageHash: args.preimageHash,
       refundPublicKey: args.refundPublicKey,
       claimAddress: args.claimAddress,
+
+      requestedAmount: args.requestedAmount,
       // bip21,
       // expectedAmount,
       // acceptZeroConf,
@@ -731,6 +735,7 @@ class Service {
       claimAddress,
       timeoutBlockHeight,
       contractAddress,
+      asTimeoutBlockHeight,
     };
   }
 

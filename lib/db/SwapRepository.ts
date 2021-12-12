@@ -62,7 +62,7 @@ class SwapRepository {
     });
   }
 
-  // TODO: probably bad idea changing this?
+  // TODO: probably bad idea changing this? - reverted
   public setLockupTransaction = (
     swap: Swap,
     lockupTransactionId: string,
@@ -70,24 +70,26 @@ class SwapRepository {
     confirmed: boolean,
     lockupTransactionVout?: number,
   ): Promise<Swap> => {
-    console.log('setLockupTransaction ', swap.id, confirmed);
+    console.log('setLockupTransaction ', swap.id, lockupTransactionId, confirmed);
     return swap.update({
       onchainAmount,
       lockupTransactionId,
       lockupTransactionVout,
-      status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
+      // status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
+      status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
     });
   }
 
   public setASTransactionConfirmed = (
     swap: Swap,
-    // lockupTransactionId: string,
     // onchainAmount: number,
     confirmed: boolean,
     // lockupTransactionVout?: number,
+    lockupTransactionId?: string,
   ): Promise<Swap> => {
     console.log('setASTransactionConfirmed ', swap.id, confirmed);
     return swap.update({
+      asLockupTransactionId: lockupTransactionId,
       status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
     });
   }
