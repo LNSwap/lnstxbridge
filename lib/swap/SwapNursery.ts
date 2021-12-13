@@ -801,11 +801,11 @@ class SwapNursery extends EventEmitter {
     });
 
     // atomic swap claim event
-    stacksNursery.on('as.claimed', async (swap, transactionHash, preimage2) => {
+    stacksNursery.on('as.claimed', async (swap, transactionHash, preimage) => {
       //trim 0x from preimage
-      const preimage = getHexString(preimage2).slice(2);
+      // const preimage = getHexString(preimage2).slice(2);
       // const transactionHash = transactionHash2.slice(2);
-      this.logger.error(`swapnursery.802 as.claimed ${swap} ${transactionHash} ${preimage}`);
+      this.logger.error(`swapnursery.802 as.claimed ${swap} ${transactionHash} ` + getHexString(preimage));
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         // this.emit('transaction', reverseSwap, transactionHash, true, true);
         const chainSymbol = swap.pair.split('/')[0];
@@ -817,7 +817,7 @@ class SwapNursery extends EventEmitter {
           const rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
           const tx = Transaction.fromHex(rawTx.hex);
           console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
-          await this.asClaimUtxo(chainClient!, wallet, swap, tx, getHexBuffer(preimage));
+          await this.asClaimUtxo(chainClient!, wallet, swap, tx, preimage);
         }
 
       });
@@ -1202,6 +1202,17 @@ class SwapNursery extends EventEmitter {
 
     const output = transaction.outs[swap.lockupTransactionVout!];
 
+    console.log('constructing claimutxo: ',  {
+      preimage,
+      vout: swap.lockupTransactionVout!,
+      value: output.value,
+      script: output.script,
+      type: this.swapOutputType,
+      txHash: transaction.getHash(),
+      keys: wallet.getKeysByIndex(swap.keyIndex!),
+      redeemScript: getHexBuffer(swap.redeemScript!),
+    });
+
     const claimTransaction = await constructClaimTransaction(
       [
         {
@@ -1220,6 +1231,7 @@ class SwapNursery extends EventEmitter {
       true,
     );
     const claimTransactionFee = await calculateUtxoTransactionFee(chainClient, claimTransaction);
+    console.log('claim claimtx ', claimTransaction, claimTransaction.toHex());
 
     await chainClient.sendRawTransaction(claimTransaction.toHex());
 
@@ -1265,9 +1277,10 @@ class SwapNursery extends EventEmitter {
 
     const output = transaction.outs[swap.lockupTransactionVout!];
 
-    console.log('constructing claimutxo: ',  {
+    console.log('constructing asclaimutxo: ',  {
       preimage,
-      vout: swap.lockupTransactionVout!,
+      // vout: swap.lockupTransactionVout!,
+      vout: 0,
       value: output.value,
       script: output.script,
       type: this.swapOutputType,
@@ -1293,8 +1306,8 @@ class SwapNursery extends EventEmitter {
       await chainClient.estimateFee(),
       true,
     );
+    console.log('asclaim claimtx ', claimTransaction, claimTransaction.toHex());
 
-    console.log('asclaim claimtx ', claimTransaction);
     const claimTransactionFee = await calculateUtxoTransactionFee(chainClient, claimTransaction);
 
     await chainClient.sendRawTransaction(claimTransaction.toHex());
