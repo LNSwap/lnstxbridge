@@ -8,9 +8,9 @@ import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
 // makeContractCall, , broadcastTransaction, makeStandardSTXPostCondition
-import { bufferCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
+import { bufferCV, standardPrincipalCV, contractPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
 import SIP10WalletProvider from '../providers/SIP10WalletProvider';
-import { contractPrincipalCV } from '@blockstack/stacks-transactions';
+// import { contractPrincipalCV } from '@blockstack/stacks-transactions';
 // import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 
 const BigNum = require('bn.js');
