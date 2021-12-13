@@ -18,7 +18,7 @@ class SwapRepository {
             SwapUpdateEvent.InvoiceFailedToPay,
             SwapUpdateEvent.TransactionClaimed,
           ],
-        },
+        } as any,
         timeoutBlockHeight: {
           [Op.lte]: height,
         },

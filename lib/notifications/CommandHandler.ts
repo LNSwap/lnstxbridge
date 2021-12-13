@@ -331,7 +331,7 @@ class CommandHandler {
             SwapUpdateEvent.InvoiceFailedToPay,
             SwapUpdateEvent.TransactionClaimed,
           ],
-        },
+        } as any,
       }),
       this.service.swapManager.reverseSwapRepository.getReverseSwaps({
         status: {
@@ -341,7 +341,7 @@ class CommandHandler {
             SwapUpdateEvent.TransactionFailed,
             SwapUpdateEvent.TransactionRefunded,
           ],
-        },
+        } as any,
       }),
     ]);
 

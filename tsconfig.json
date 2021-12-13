@@ -21,6 +21,7 @@
       "dom",
       "es2017"
     ],
+    "useUnknownInCatchVariables": false,
     "strictNullChecks": true, /* Enable strict null checks. */
     "strictFunctionTypes": true, /* Enable strict checking of function types. */
     "strictPropertyInitialization": true, /* Enable strict checking of property initialization in classes. */

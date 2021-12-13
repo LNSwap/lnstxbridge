@@ -102,7 +102,7 @@ class SwapManager {
             SwapUpdateEvent.InvoiceFailedToPay,
             SwapUpdateEvent.TransactionClaimed,
           ],
-        },
+        } as any,
       }),
       this.reverseSwapRepository.getReverseSwaps({
         status: {
@@ -112,7 +112,7 @@ class SwapManager {
             SwapUpdateEvent.TransactionFailed,
             SwapUpdateEvent.TransactionRefunded,
           ],
-        },
+        } as any,
       }),
     ]);
 
@@ -738,7 +738,8 @@ class SwapManager {
       // Check whether the the receiving side supports MPP and if so,
       // query a route for the number of sats of the invoice divided
       // by the max payment parts we tell to LND to use
-      const amountToQuery = decodedInvoice.featuresMap['17']?.is_known ?
+      const holder:any = decodedInvoice.featuresMap['17'];
+      const amountToQuery = holder?.is_known ?
         Math.round(decodedInvoice.numSatoshis / LndClient.paymentMaxParts) :
         decodedInvoice.numSatoshis;
 

@@ -19,9 +19,9 @@ class ReverseSwapRepository {
             SwapUpdateEvent.TransactionRefunded,
             SwapUpdateEvent.InvoiceSettled,
             // some txns get stuck in mempool, expire/cancel them as well but should avoid refunding them because it will just fail.
-            SwapUpdateEvent.TransactionMempool, 
+            SwapUpdateEvent.TransactionMempool,
           ],
-        },
+        } as any,
         timeoutBlockHeight: {
           [Op.lte]: height,
         },
