@@ -994,7 +994,8 @@ class Service {
     );
 
     // Add 3 blocks to the delta for same currency swaps and 10% for cross chain ones as buffer
-    lightningTimeoutBlockDelta += sending === receiving ? 3 : Math.ceil(lightningTimeoutBlockDelta * 0.1);
+    lightningTimeoutBlockDelta += sending === receiving ? 3 : Math.ceil(lightningTimeoutBlockDelta * 0.2);
+    this.logger.verbose('lightningTimeoutBlockDelta vs added: ' + lightningTimeoutBlockDelta + ', ' + Math.ceil(lightningTimeoutBlockDelta * 0.2));
 
     const rate = getRate(pairRate, side, true);
     const feePercent = this.rateProvider.feeProvider.getPercentageFee(args.pairId)!;
