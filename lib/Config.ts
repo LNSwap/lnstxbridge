@@ -231,8 +231,8 @@ class Config {
       api: {
         host: '0.0.0.0',
         port: Config.defaultPort,
-        sslKey: '/root/lnstxbridge-frontend/privkey.pem',
-        sslCert: '/root/lnstxbridge-frontend/fullchain.pem',
+        sslKey: '/etc/letsencrypt/live/api.lnswap.org/privkey.pem',
+        sslCert: '/etc/letsencrypt/live/api.lnswap.org/fullchain.pem',
         sslEnabled: true,
       },
 
