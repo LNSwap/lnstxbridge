@@ -70,10 +70,10 @@ class EventHandler extends EventEmitter {
    */
   private subscribeTransactions = () => {
     this.nursery.on('transaction', (swap, transaction, confirmed, isReverse) => {
-      this.logger.verbose("eventhandler.72 on transaction: " + stringify(swap) + ", " + transaction + ", " + confirmed + " , " + isReverse);
+      this.logger.verbose('eventhandler.72 on transaction: ' + stringify(swap) + ', ' + transaction + ', ' + confirmed + ' , ' + isReverse);
       if (!isReverse) {
         // triggers for onchain stx -> btc swap on btc tx
-        this.logger.verbose("eventhandler.74 on transaction: "+ confirmed);
+        this.logger.verbose('eventhandler.74 on transaction: '+ confirmed);
         this.emit('swap.update', swap.id, {
           status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
         });
@@ -81,7 +81,7 @@ class EventHandler extends EventEmitter {
         // Reverse Swaps only emit the "transaction.confirmed" event
         // "transaction.mempool" is handled by the event "coins.sent"
         if (transaction instanceof Transaction) {
-          this.logger.verbose("eventhandler.82 on transaction: ");
+          this.logger.verbose('eventhandler.82 on transaction: ');
           this.emit('swap.update', swap.id, {
             status: SwapUpdateEvent.TransactionConfirmed,
             transaction: {
@@ -89,8 +89,9 @@ class EventHandler extends EventEmitter {
               hex: transaction.toHex(),
             },
           });
-        } else if (confirmed && swap.status == "transaction.confirmed") {
-          if (swap.claimAddress) {
+        } else if (confirmed && swap.status == 'transaction.confirmed') {
+          // asRequestedAmount?
+          if (swap.claimAddress && !swap.invoice) {
             // for atomic swap this gets triggered for AStransaction.confirmed
             this.logger.verbose(`eventhandler.95 on transaction: ${transaction}`);
             this.emit('swap.update', swap.id, {
@@ -113,7 +114,7 @@ class EventHandler extends EventEmitter {
           }
 
        } else {
-         this.logger.verbose("eventhandler.104 transaction NOT confirmed yet");
+         this.logger.verbose('eventhandler.104 transaction NOT confirmed yet');
        }
 
         // removing this because otherwise stacks tx is marked as confirmed as soon as coins.sent
@@ -204,10 +205,10 @@ class EventHandler extends EventEmitter {
     });
 
     this.nursery.on('coins.sent', (reverseSwap, transaction) => {
-      this.logger.verbose("eventhandler.166 on coins.sent: " + stringify(reverseSwap));
+      this.logger.verbose('eventhandler.166 on coins.sent: ' + stringify(reverseSwap));
 
       if (transaction instanceof Transaction) {
-        this.logger.verbose("eventhandler.168 on coins.sent: ");
+        this.logger.verbose('eventhandler.168 on coins.sent: ');
         this.emit('swap.update', reverseSwap.id, {
           status: SwapUpdateEvent.TransactionMempool,
           transaction: {
@@ -217,9 +218,9 @@ class EventHandler extends EventEmitter {
           },
         });
       } else {
-        this.logger.verbose("eventhandler.178 on coins.sent: ");
+        this.logger.verbose('eventhandler.178 on coins.sent: ');
         // check if this was AStransaction
-        if (reverseSwap.claimAddress) {
+        if (reverseSwap.claimAddress && reverseSwap['asRequestedAmount']) {
           console.log('eh.210 ');
           this.emit('swap.update', reverseSwap.id, {
             status: SwapUpdateEvent.ASTransactionMempool,

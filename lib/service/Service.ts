@@ -696,7 +696,7 @@ class Service {
     let bip21 = '';
     let expectedAmount = 0;
     let contractAddress = '';
-    if (args.requestedAmount) {
+    if (args.requestedAmount && args.orderSide == 'sell') {
       const response = await this.getManualRates(id, args.requestedAmount);
       console.log('service.688 getManualRates response ', args.requestedAmount, response);
       expectedAmount = response.onchainAmount || 0;
@@ -835,7 +835,7 @@ class Service {
 
     const { base, quote } = splitPairId(swap.pair);
     const onchainCurrency = getChainCurrency(base, quote, swap.orderSide, false);
-    console.log('swap.rate ', swap.rate, swap.orderSide, base, quote);
+    console.log('s.838 swap.rate ', swap.rate, swap.orderSide, base, quote);
 
     const rate = getRate(swap.rate!, swap.orderSide, true);
     console.log('rate ', rate);
@@ -1317,10 +1317,11 @@ class Service {
       ) {
       // tslint:disable-next-line:no-parameter-reassignment
       amount = Math.floor(amount * rate);
+      console.log('s.1320 amount ', amount);
     }
 
     const { limits } = this.getPair(pairId);
-
+    console.log('s.1324 limits ', limits);
     // check if amount is greater than what's available in account
 
     if (limits) {
@@ -1349,7 +1350,9 @@ class Service {
     if (orderSide === OrderSide.BUY) {
       rate = 1 / rate;
     }
-    console.log('calculateInvoiceAmount: ', onchainAmount, baseFee, rate, percentageFee);
+
+    // stx -> btcln calculateOnchainAmount:  0.4007220000000001 87025 21710.811984368214 0.05
+    console.log('calculateOnchainAmount: ', onchainAmount, baseFee, rate, percentageFee);
     return Math.floor(
       (onchainAmount - baseFee) / (1 + percentageFee),
     );

@@ -468,6 +468,7 @@ class StacksNursery extends EventEmitter {
           },
           status: {
             [Op.not]: SwapUpdateEvent.InvoiceSettled,
+            [Op.not]: SwapUpdateEvent.TransactionClaimed,
           },
         });
 
