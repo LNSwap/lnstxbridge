@@ -324,8 +324,8 @@ class ZmqClient extends EventEmitter {
     }
 
     for (const output of transaction.outs) {
-      console.log('zmqclient checking output ', output );
-      console.log('zmqclient relevantOutputs ', this.relevantOutputs);
+      // console.log('zmqclient checking output ', output );
+      // console.log('zmqclient relevantOutputs ', this.relevantOutputs);
       if (this.relevantOutputs.has(getHexString(output.script))) {
         console.log('zmqclient found it!!! ', getHexString(output.script));
         return true;

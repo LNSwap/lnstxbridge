@@ -46,6 +46,10 @@ interface UtxoNursery {
 
   on(event: 'reverseSwap.claimed', listener: (reverseSwap: ReverseSwap, preimage: Buffer) => void): this;
   emit(event: 'reverseSwap.claimed', reverseSwap: ReverseSwap, preimage: Buffer): boolean;
+
+  // atomic swap
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction): boolean;
 }
 
 class UtxoNursery extends EventEmitter {
@@ -76,7 +80,7 @@ class UtxoNursery extends EventEmitter {
 
   private listenTransactions = (chainClient: ChainClient, wallet: Wallet) => {
     chainClient.on('transaction', async (transaction, confirmed) => {
-      console.log('check atomic swap tx and set to confirmed');
+      console.log('check atomic swap tx and set to asconfirmed');
       await Promise.all([
         this.checkSwapOutputs(chainClient, wallet, transaction, confirmed),
 
@@ -92,6 +96,7 @@ class UtxoNursery extends EventEmitter {
   private checkAtomicSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {
     for (let vout = 0; vout < transaction.outs.length; vout += 1) {
       const output = transaction.outs[vout];
+      console.log('checkAtomicSwapOutputs vout ', vout, wallet.encodeAddress(output.script));
 
       let swap = await this.swapRepository.getSwap({
         status: {
@@ -103,33 +108,38 @@ class UtxoNursery extends EventEmitter {
             SwapUpdateEvent.ASTransactionMempool,
           ],
         },
-        lockupAddress: {
+        claimAddress: {
           [Op.eq]: wallet.encodeAddress(output.script),
         }
       });
 
       if (!swap) {
-        console.log('atomic swap not found');
+        // console.log('atomic swap not found');
         continue;
       }
 
       this.logger.verbose(`Found ${confirmed ? '' : 'un'}confirmed lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
-      console.log('atomic swap found ', swap);
+      console.log('atomic swap found ', swap, transaction);
 
-      const swapOutput = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!;
+      const swapOutput = detectSwap(getHexBuffer(swap.asRedeemScript!), transaction)!;
+      console.log('un.121 swapOutput ', swapOutput);
 
-      swap = await this.swapRepository.setLockupTransaction(
+      swap = await this.swapRepository.setASTransactionConfirmed(
         swap,
-        transaction.getId(),
-        output.value,
         confirmed,
-        swapOutput.vout,
+        output.value,
+        // swapOutput.vout,
+        vout, // we already know vout
+        transaction.getId(),
       );
 
-      if (swap.expectedAmount) {
-        if (swap.expectedAmount > swapOutput.value) {
-          chainClient.removeOutputFilter(swapOutput.script);
-          this.emit('swap.lockup.failed', swap, Errors.INSUFFICIENT_AMOUNT(swapOutput.value, swap.expectedAmount).message);
+      const expectedAmount = swap.quoteAmount! * 100000000;
+      if (expectedAmount) {
+        // swapOutput.value
+        if (expectedAmount > output.value) {
+          // swapOutput.script
+          chainClient.removeOutputFilter(output.script);
+          this.emit('swap.lockup.failed', swap, Errors.INSUFFICIENT_AMOUNT(swapOutput.value, expectedAmount).message);
 
           continue;
         }
@@ -137,6 +147,7 @@ class UtxoNursery extends EventEmitter {
 
       // Confirmed transactions do not have to be checked for 0-conf criteria
       if (!confirmed) {
+        console.log('utxo.146 checking zero-conf stuff');
         if (swap.acceptZeroConf !== true) {
           this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.SWAP_DOES_NOT_ACCEPT_ZERO_CONF().message);
           continue;
@@ -170,9 +181,9 @@ class UtxoNursery extends EventEmitter {
         this.logger.debug(`Accepted 0-conf lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
       }
 
-      chainClient.removeOutputFilter(swapOutput.script);
+      chainClient.removeOutputFilter(output.script);
 
-      this.emit('swap.lockup', swap, transaction, confirmed);
+      this.emit('astransaction.confirmed', swap, transaction);
     }
   }
 

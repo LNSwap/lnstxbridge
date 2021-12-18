@@ -299,6 +299,15 @@ class SwapNursery extends EventEmitter {
       });
     });
 
+    // atomic swap events
+    this.utxoNursery.on('astransaction.confirmed', async (swap, transactionHash) => {
+      this.logger.error('swapnursery.304 astransaction.confirmed: ' + transactionHash);
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        // , true, true
+        this.emit('astransaction.confirmed', swap, transactionHash);
+      });
+    });
+
     this.lightningNursery.on('minerfee.invoice.paid', async (reverseSwap) => {
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.emit('minerfee.paid', reverseSwap);
@@ -1164,6 +1173,8 @@ class SwapNursery extends EventEmitter {
             await this.swapRepository.setASTransactionConfirmed(
               reverseSwap,
               false,
+              undefined,
+              undefined,
               contractTransaction.txid,
               // reverseSwap.onchainAmount,
               // requestedAmount,

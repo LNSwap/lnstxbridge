@@ -308,20 +308,21 @@ class SwapManager {
         const { keys, index } = sendingCurrency.wallet.getNewKeys();
         const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
         timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
-  
         redeemScript = reverseSwapScript(
           args.preimageHash,
           // args.claimPublicKey!, - use refundPublicKey instead from user
           // args.claimAddress!, - not added
           args.refundPublicKey!,
-          keys.publicKey,
+          keys.publicKey, // refund public key to lnstxbridge
           timeoutBlockHeight,
         );
         asRedeemScript = getHexString(redeemScript);
+        console.log('sm.320 reverseSwapScript can be claimed by ', getHexString(args.refundPublicKey!), ' refund to ', getHexString(keys.publicKey));
 
         const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
         lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
         keyIndex = index;
+        console.log('lockupAddress + keyIndex ', lockupAddress, keyIndex);
       }
       this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,

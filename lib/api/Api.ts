@@ -42,7 +42,7 @@ class Api {
           key: readFileSync(this.config.sslKey),
           cert: readFileSync(this.config.sslCert),
         };
-        console.log("sslenabled ", this.config.sslEnabled);
+        console.log('sslenabled ', this.config.sslEnabled);
         https.createServer(options, this.app).listen(this.config.port, this.config.host, () => {
           this.logger.info(`API server listening on: ${this.config.host}:${this.config.port}`);
           resolve();

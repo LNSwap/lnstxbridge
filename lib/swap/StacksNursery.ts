@@ -290,7 +290,7 @@ class StacksNursery extends EventEmitter {
             // this.logger.debug(`stacksnursery.218 tx: ` + stringify(reverseSwap));
             // this.checkStacksTransaction(reverseSwap, transaction);
 
-            const transaction: Transaction = await getTx(reverseSwap!.transactionId!)
+            const transaction: Transaction = await getTx(reverseSwap!.transactionId!);
             this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${reverseSwap.id}: ${reverseSwap.transactionId}, ${transaction.tx_id}`);
             // this.logger.debug(`stacksnursery.223 tx: ` + stringify(reverseSwap));
             await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed);
