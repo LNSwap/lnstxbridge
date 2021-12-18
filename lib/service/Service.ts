@@ -617,6 +617,9 @@ class Service {
 
     requestedAmount?: number,
     claimAddress?: string,
+    quoteAmount?: number,
+    baseAmount?: number,
+    claimPublicKey?: string,
   }): Promise<{
     id: string,
     address: string,
@@ -634,7 +637,10 @@ class Service {
     acceptZeroConf?: boolean,
     contractAddress?: string,
     asTimeoutBlockHeight?: number,
+    quoteAmount?: number,
+    baseAmount?: number,
   }> => {
+    // console.log('Service.641 ARGS ', args);
     const swap = await this.swapManager.swapRepository.getSwap({
       preimageHash: {
         [Op.eq]: getHexString(args.preimageHash),
@@ -668,6 +674,9 @@ class Service {
 
     const timeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, orderSide, false);
 
+    const side = this.getOrderSide(args.orderSide);
+    const onchainTimeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, side, true);
+
     const {
       id,
       address,
@@ -687,6 +696,11 @@ class Service {
       claimAddress: args.claimAddress,
 
       requestedAmount: args.requestedAmount,
+      quoteAmount: args.quoteAmount,
+      baseAmount: args.baseAmount,
+
+      onchainTimeoutBlockDelta,
+      // claimPublicKey: args.claimPublicKey, // this is keys.publickey coming from user = refundPublicKey
       // bip21,
       // expectedAmount,
       // acceptZeroConf,
@@ -721,6 +735,8 @@ class Service {
       console.log('updated swap acceptZeroConf', base, expectedAmount, acceptZeroConf);
 
       contractAddress = swap?.contractAddress || '';
+
+      console.log('TODO:: validate base/quote amount!!!');
     }
 
     this.eventHandler.emitSwapCreation(id);
@@ -736,6 +752,8 @@ class Service {
       timeoutBlockHeight,
       contractAddress,
       asTimeoutBlockHeight,
+      baseAmount: args.baseAmount,
+      quoteAmount: args.quoteAmount,
     };
   }
 

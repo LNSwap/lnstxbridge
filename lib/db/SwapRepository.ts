@@ -87,7 +87,7 @@ class SwapRepository {
     // lockupTransactionVout?: number,
     lockupTransactionId?: string,
   ): Promise<Swap> => {
-    console.log('setASTransactionConfirmed ', swap.id, confirmed);
+    console.log('sr.90 setASTransactionConfirmed ', swap.id, confirmed, lockupTransactionId);
     return swap.update({
       asLockupTransactionId: lockupTransactionId,
       status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,

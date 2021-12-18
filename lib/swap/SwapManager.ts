@@ -157,6 +157,10 @@ class SwapManager {
     acceptZeroConf?: boolean,
     claimAddress?: string,
     requestedAmount?: number,
+    quoteAmount?: number,
+    baseAmount?: number,
+    onchainTimeoutBlockDelta?: number,
+    // claimPublicKey?: string,
   }): Promise<{
     id: string,
     timeoutBlockHeight: number,
@@ -177,7 +181,7 @@ class SwapManager {
 
     asTimeoutBlockHeight?: number,
   }> => {
-    // this.logger.error("swapmanager.166 getCurrencies " + stringify(args));
+    // this.logger.error('swapmanager.166 ARGS ' + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
 
     // for btc -> stx submarine sell
@@ -202,6 +206,9 @@ class SwapManager {
     let asTimeoutBlockHeight: number;
     asTimeoutBlockHeight = 0;
     // let tokenAddress: string | undefined;
+
+    let quoteAmount: number | undefined;
+    let baseAmount: number | undefined;
 
     if (receivingCurrency.type === CurrencyType.BitcoinLike) {
       const { blocks } = await receivingCurrency.chainClient!.getBlockchainInfo();
@@ -249,6 +256,8 @@ class SwapManager {
         claimAddress: args.claimAddress,
         requestedAmount: args.requestedAmount,
         asTimeoutBlockHeight,
+        quoteAmount,
+        baseAmount,
       }));
 
       await this.swapRepository.addSwap({
@@ -266,6 +275,8 @@ class SwapManager {
         contractAddress,
         asRequestedAmount: args.requestedAmount,
         asTimeoutBlockHeight,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
       });
     } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -288,6 +299,30 @@ class SwapManager {
         redeemScript = tokenAddressHolder;
       }
 
+      // stx->btc atomic swap
+      let lockupAddress = '';
+      let keyIndex = 0;
+      let asRedeemScript = '';
+      if (args.baseAmount && args.onchainTimeoutBlockDelta){
+
+        const { keys, index } = sendingCurrency.wallet.getNewKeys();
+        const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
+        timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
+  
+        redeemScript = reverseSwapScript(
+          args.preimageHash,
+          // args.claimPublicKey!, - use refundPublicKey instead from user
+          // args.claimAddress!, - not added
+          args.refundPublicKey!,
+          keys.publicKey,
+          timeoutBlockHeight,
+        );
+        asRedeemScript = getHexString(redeemScript);
+
+        const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
+        lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
+        keyIndex = index;
+      }
       this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,
         pair,
@@ -298,6 +333,11 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         tokenAddress: getHexString(tokenAddressHolder),
         claimAddress: args.claimAddress,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
+        asRedeemScript,
+        asLockupAddress: lockupAddress,
+        keyIndex,
       }));
 
       await this.swapRepository.addSwap({
@@ -311,6 +351,11 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(tokenAddressHolder),
         claimAddress: args.claimAddress,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
+        asRedeemScript,
+        asLockupAddress: lockupAddress,
+        keyIndex,
         // tokenAddress: tokenAddress,
       });
     } else {
@@ -333,6 +378,8 @@ class SwapManager {
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
         claimAddress: args.claimAddress,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
       });
     }
 

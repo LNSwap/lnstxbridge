@@ -26,7 +26,8 @@ tasks:
       echo 'lnclibtc2 newaddress p2wkh'
       echo "bitcoin-cli send '{\"bcrt1q93rsj05zw3pvf8pa4gpjaypy5x5mqws49as43t\":10}'"
       echo 'bitcoin-cli -regtest -generate 1'
-      echp 'bitcoin-cli gettxout a15863a0b1bbce4d35bbf6d4933564d52720b7c364665cc627c82679bfe29455 0 '
+      echo 'bitcoin-cli gettxout a15863a0b1bbce4d35bbf6d4933564d52720b7c364665cc627c82679bfe29455 0 '
+      echo 'watch -n10 -x bitcoin-cli -regtest -generate 1'
     # docker exec -it regtest bash
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
@@ -43,7 +44,7 @@ tasks:
       npm run stacks:deploy
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
-        git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
+        git clone -b onchain https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
         export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API

@@ -76,13 +76,104 @@ class UtxoNursery extends EventEmitter {
 
   private listenTransactions = (chainClient: ChainClient, wallet: Wallet) => {
     chainClient.on('transaction', async (transaction, confirmed) => {
+      console.log('check atomic swap tx and set to confirmed');
       await Promise.all([
         this.checkSwapOutputs(chainClient, wallet, transaction, confirmed),
 
         this.checkReverseSwapClaims(chainClient, transaction),
         this.checkReverseSwapLockupsConfirmed(chainClient, wallet, transaction, confirmed),
+
+        // check atomic swap here!!
+        this.checkAtomicSwapOutputs(chainClient, wallet, transaction, confirmed),
       ]);
     });
+  }
+
+  private checkAtomicSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {
+    for (let vout = 0; vout < transaction.outs.length; vout += 1) {
+      const output = transaction.outs[vout];
+
+      let swap = await this.swapRepository.getSwap({
+        status: {
+          [Op.or]: [
+            SwapUpdateEvent.SwapCreated,
+            SwapUpdateEvent.InvoiceSet,
+            SwapUpdateEvent.TransactionMempool,
+            SwapUpdateEvent.TransactionZeroConfRejected,
+            SwapUpdateEvent.ASTransactionMempool,
+          ],
+        },
+        lockupAddress: {
+          [Op.eq]: wallet.encodeAddress(output.script),
+        }
+      });
+
+      if (!swap) {
+        console.log('atomic swap not found');
+        continue;
+      }
+
+      this.logger.verbose(`Found ${confirmed ? '' : 'un'}confirmed lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
+      console.log('atomic swap found ', swap);
+
+      const swapOutput = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!;
+
+      swap = await this.swapRepository.setLockupTransaction(
+        swap,
+        transaction.getId(),
+        output.value,
+        confirmed,
+        swapOutput.vout,
+      );
+
+      if (swap.expectedAmount) {
+        if (swap.expectedAmount > swapOutput.value) {
+          chainClient.removeOutputFilter(swapOutput.script);
+          this.emit('swap.lockup.failed', swap, Errors.INSUFFICIENT_AMOUNT(swapOutput.value, swap.expectedAmount).message);
+
+          continue;
+        }
+      }
+
+      // Confirmed transactions do not have to be checked for 0-conf criteria
+      if (!confirmed) {
+        if (swap.acceptZeroConf !== true) {
+          this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.SWAP_DOES_NOT_ACCEPT_ZERO_CONF().message);
+          continue;
+        }
+
+        const signalsRBF = await this.transactionSignalsRbf(chainClient, transaction);
+
+        if (signalsRBF) {
+          this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.LOCKUP_TRANSACTION_SIGNALS_RBF().message);
+          continue;
+        }
+
+        // Check if the transaction has a fee high enough to be confirmed in a timely manner
+        const feeEstimation = await chainClient.estimateFee();
+
+        const absoluteTransactionFee = await calculateUtxoTransactionFee(chainClient, transaction);
+        const transactionFeePerVbyte = absoluteTransactionFee / transaction.virtualSize();
+
+        // If the transaction fee is less than 80% of the estimation, Boltz will wait for a confirmation
+        //
+        // Special case: if the fee estimation is the lowest possible of 2 sat/vbyte,
+        // every fee paid by the transaction will be accepted
+        if (
+          transactionFeePerVbyte / feeEstimation < 0.8 &&
+          feeEstimation !== 2
+        ) {
+          this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.LOCKUP_TRANSACTION_FEE_TOO_LOW().message);
+          continue;
+        }
+
+        this.logger.debug(`Accepted 0-conf lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
+      }
+
+      chainClient.removeOutputFilter(swapOutput.script);
+
+      this.emit('swap.lockup', swap, transaction, confirmed);
+    }
   }
 
   private checkSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {

@@ -6,7 +6,7 @@ import { ApiConfig } from '../Config';
 import Service from '../service/Service';
 
 import { readFileSync } from 'fs';
-import * as https from 'https'; 
+import * as https from 'https';
 
 class Api {
   private app: Application;

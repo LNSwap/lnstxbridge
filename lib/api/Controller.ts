@@ -28,6 +28,8 @@ class Controller {
       this.logger.debug(`Swap ${id} update: ${stringify(message)}`);
       this.pendingSwapInfos.set(id, message);
 
+      // console.log('controller.30 pendingswapinfo ', id, message);
+
       const response = this.pendingSwapStreams.get(id);
 
       if (response) {
@@ -115,7 +117,7 @@ class Controller {
             //   throw error;
             // }
 
-            console.log("controller.110 ", reverseSwap.id, status)
+            console.log('controller.110 ', reverseSwap.id, status);
             this.pendingSwapInfos.set(reverseSwap.id, {
               status,
               transaction: {
@@ -310,6 +312,8 @@ class Controller {
       channel,
       requestedAmount,
       claimAddress,
+      baseAmount,
+      quoteAmount,
     } = this.validateRequest(req.body, [
       { name: 'pairId', type: 'string' },
       { name: 'pairHash', type: 'string', optional: true },
@@ -320,6 +324,8 @@ class Controller {
       { name: 'channel', type: 'object', optional: true },
       { name: 'requestedAmount', type: 'string', optional: true },
       { name: 'claimAddress', type: 'string', optional: true },
+      { name: 'baseAmount', type: 'string', optional: true },
+      { name: 'quoteAmount', type: 'string', optional: true },
     ]);
 
     if (channel !== undefined) {
@@ -357,6 +363,8 @@ class Controller {
         channel,
         requestedAmount,
         claimAddress,
+        baseAmount,
+        quoteAmount,
       });
     }
 
@@ -496,16 +504,16 @@ class Controller {
 
       // Bitcoin Core related errors
       if (errorObject.details) {
-        this.logger.error("Bitcoin Core related errors everything else");
+        this.logger.error('Bitcoin Core related errors everything else');
         this.writeErrorResponse(req, res, statusCode, { error: errorObject.details });
       // Custom error when broadcasting a refund transaction fails because
       // the locktime requirement has not been met yet
       } else if (errorObject.timeoutBlockHeight) {
-        this.logger.error("timeoutBlockHeight error everything else");
+        this.logger.error('timeoutBlockHeight error everything else');
         this.writeErrorResponse(req, res, statusCode, error);
       // Everything else
       } else {
-        this.logger.error("error everything else");
+        this.logger.error('error everything else');
         this.writeErrorResponse(req, res, statusCode, { error: errorObject.message });
       }
     }

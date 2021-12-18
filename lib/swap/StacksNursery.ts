@@ -411,7 +411,7 @@ class StacksNursery extends EventEmitter {
       //   return;
       // }
 
-      let swaptimelock = parseInt(etherSwapValues.timelock + '',16) 
+      const swaptimelock = parseInt(etherSwapValues.timelock + '',16);
       this.logger.verbose('etherSwapValues.timelock, swap.timeoutBlockHeight ' +etherSwapValues.timelock + ', ' + swap.timeoutBlockHeight)
       // etherSwapValues.timelock
       if (swaptimelock !== swap.timeoutBlockHeight) {
@@ -435,6 +435,24 @@ class StacksNursery extends EventEmitter {
             'lockup.failed',
             swap,
             Errors.INSUFFICIENT_AMOUNT(swapamount, swap.expectedAmount).message,
+          );
+          return;
+        }
+      }
+
+      // atomic swap locked amount check
+      if (swap.baseAmount) {
+        const expectedAmount = BigNumber.from(swap.baseAmount).mul(etherDecimals);
+
+        // 1995138440000000000,
+        const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
+        this.logger.verbose('sn.449 swap.baseAmount, expectedAmount , etherSwapValues.amount' +swap.baseAmount+ ', ' + expectedAmount + ', ' + etherSwapValues.amount);
+        // etherSwapValues.amount
+        if (expectedAmount.gt(bigswapamount)) {
+          this.emit(
+            'lockup.failed',
+            swap,
+            Errors.INSUFFICIENT_AMOUNT(swapamount, swap.baseAmount).message,
           );
           return;
         }

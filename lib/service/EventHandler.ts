@@ -72,11 +72,20 @@ class EventHandler extends EventEmitter {
     this.nursery.on('transaction', (swap, transaction, confirmed, isReverse) => {
       this.logger.verbose('eventhandler.72 on transaction: ' + stringify(swap) + ', ' + transaction + ', ' + confirmed + ' , ' + isReverse);
       if (!isReverse) {
-        // triggers for onchain stx -> btc swap on btc tx
         this.logger.verbose('eventhandler.74 on transaction: '+ confirmed);
-        this.emit('swap.update', swap.id, {
-          status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
-        });
+        // asconfirmed will be sent after btc (as tx) is confirmed - removing from here
+        // if(swap['asRedeemScript']) {
+        //   // stx -> BTC atomic swap - stx confirmed
+        //   this.emit('swap.update', swap.id, {
+        //     status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
+        //   });
+        // } else {
+          // triggers for onchain stx -> btc swap on btc tx
+          this.emit('swap.update', swap.id, {
+            status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
+          });
+        // }
+
       } else {
         // Reverse Swaps only emit the "transaction.confirmed" event
         // "transaction.mempool" is handled by the event "coins.sent"
@@ -209,14 +218,27 @@ class EventHandler extends EventEmitter {
 
       if (transaction instanceof Transaction) {
         this.logger.verbose('eventhandler.168 on coins.sent: ');
-        this.emit('swap.update', reverseSwap.id, {
-          status: SwapUpdateEvent.TransactionMempool,
-          transaction: {
-            id: transaction.getId(),
-            hex: transaction.toHex(),
-            eta: SwapNursery.reverseSwapMempoolEta,
-          },
-        });
+        if(reverseSwap['asRedeemScript']) {
+          this.logger.verbose('eventhandler.222 swap.update ASTransactionMempool on coins.sent: ');
+          this.emit('swap.update', reverseSwap.id, {
+            status: SwapUpdateEvent.ASTransactionMempool,
+            transaction: {
+              id: transaction.getId(),
+              hex: transaction.toHex(),
+              eta: SwapNursery.reverseSwapMempoolEta,
+            },
+          });
+        } else {
+          this.emit('swap.update', reverseSwap.id, {
+            status: SwapUpdateEvent.TransactionMempool,
+            transaction: {
+              id: transaction.getId(),
+              hex: transaction.toHex(),
+              eta: SwapNursery.reverseSwapMempoolEta,
+            },
+          });
+        }
+
       } else {
         this.logger.verbose('eventhandler.178 on coins.sent: ');
         // check if this was AStransaction

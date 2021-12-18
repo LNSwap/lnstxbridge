@@ -36,6 +36,10 @@ type SwapType = {
   // asLockedAmount?: number;
   asRequestedAmount?: number;
   asTimeoutBlockHeight?: number;
+  baseAmount?: number;
+  quoteAmount?: number;
+  asRedeemScript?: string,
+  asLockupAddress?: string,
 };
 
 class Swap extends Model implements SwapType {
@@ -78,6 +82,11 @@ class Swap extends Model implements SwapType {
   public asRequestedAmount?: number;
   public asTimeoutBlockHeight?: number;
 
+  public baseAmount?: number;
+  public quoteAmount?: number;
+  public asRedeemScript?: string;
+  public asLockupAddress?: string;
+
   public static load = (sequelize: Sequelize): void => {
     Swap.init({
       id: { type: new DataTypes.STRING(255), primaryKey: true, allowNull: false },
@@ -106,6 +115,10 @@ class Swap extends Model implements SwapType {
       asLockedAmount: { type: new DataTypes.INTEGER(), allowNull: true },
       asRequestedAmount: { type: new DataTypes.INTEGER(), allowNull: true },
       asTimeoutBlockHeight: { type: new DataTypes.INTEGER(), allowNull: true },
+      baseAmount: { type: new DataTypes.INTEGER(), allowNull: true },
+      quoteAmount: { type: new DataTypes.INTEGER(), allowNull: true },
+      asRedeemScript: { type: new DataTypes.STRING(255), allowNull: true },
+      asLockupAddress: { type: new DataTypes.STRING(255), allowNull: true },
     }, {
       sequelize,
       tableName: 'swaps',
