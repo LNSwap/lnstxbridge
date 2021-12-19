@@ -46,6 +46,7 @@ import {
   getLightningCurrency,
   getRate,
   splitPairId,
+  getScriptHashFunction,
   // stringify,
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
@@ -305,6 +306,16 @@ class SwapNursery extends EventEmitter {
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         // , true, true
         this.emit('astransaction.confirmed', swap, transactionHash);
+
+        // trigger claimstx so we get the stx user locked into the contract
+        console.log('')
+        await this.claimStx(
+          this.walletManager.stacksManager!.contractHandler,
+          swap,
+          // await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+          await querySwapValuesFromTx(swap.lockupTransactionId!),
+          // outgoingChannelId,
+        );
       });
     });
 
@@ -739,7 +750,7 @@ class SwapNursery extends EventEmitter {
 
           const wallet = this.walletManager.wallets.get(chainSymbol)!;
           // this.logger.verbose('swapnursery.732 transaction wallet ' + JSON.stringify(wallet));
-          console.log('sn.733 on transaction trigger lockuputxoswap ', base, quote, chainSymbol, swap);
+          console.log('sn.733 on transaction trigger lockuputxoswap ', base, quote, chainSymbol); //swap
           await this.lockupUtxoSwap(
             chainCurrency.chainClient!,
             // this.walletManager.wallets.get(chainSymbol)!,
@@ -922,16 +933,20 @@ class SwapNursery extends EventEmitter {
       // }
 
       const amountToSend = swap.quoteAmount! * 100000000;
+
+      const outputScript = getScriptHashFunction(ReverseSwapOutputType)(getHexBuffer(swap.asRedeemScript!));
+      const lockupAddress = wallet.encodeAddress(outputScript);
+
       console.log('lockupUtxoSwap.913 ', swap.claimAddress, amountToSend, feePerVbyte);
-      // fee
-      const { transaction, transactionId, vout } = await wallet.sendToAddress(swap.claimAddress!, amountToSend, feePerVbyte);
-      this.logger.verbose(`sh.919 lockupUtxoSwap Locked up ${swap.onchainAmount} ${wallet.symbol} for Reverse Swap ${swap.id}: ${transactionId}:${vout!}`);
+      // fee, swap.claimAddress!
+      const { transaction, transactionId, vout } = await wallet.sendToAddress(lockupAddress, amountToSend, feePerVbyte);
+      this.logger.verbose(`sh.919 lockupUtxoSwap Locked up ${amountToSend} ${wallet.symbol} for Reverse Swap ${swap.id}: ${transactionId}:${vout!} into address ${lockupAddress}`);
 
       // when blocks are too fast (regtest@10 seconds) -> this is missed?
       // For the "transaction.confirmed" event of the lockup transaction
-      chainClient.addOutputFilter(wallet.decodeAddress(swap.claimAddress!));
+      chainClient.addOutputFilter(wallet.decodeAddress(lockupAddress));
 
-      console.log('sn921 not getting transaction.confirmed from chainclient ', transaction!.getHash(), wallet.decodeAddress(swap.claimAddress!));
+      console.log('sn921 not getting transaction.confirmed from chainclient ', transaction!.getHash(), wallet.decodeAddress(lockupAddress));
       chainClient.addInputFilter(transaction!.getHash());
 
       // fee!,

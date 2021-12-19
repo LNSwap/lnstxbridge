@@ -20,7 +20,8 @@ import {
   reverseBuffer,
   splitPairId,
   transactionHashToId,
-  transactionSignalsRbfExplicitly
+  transactionSignalsRbfExplicitly,
+  getHexString
 } from '../Utils';
 
 interface UtxoNursery {
@@ -108,18 +109,18 @@ class UtxoNursery extends EventEmitter {
             SwapUpdateEvent.ASTransactionMempool,
           ],
         },
-        claimAddress: {
+        asLockupAddress: {
           [Op.eq]: wallet.encodeAddress(output.script),
         }
       });
 
       if (!swap) {
-        // console.log('atomic swap not found');
+        console.log('atomic swap not found');
         continue;
       }
 
       this.logger.verbose(`Found ${confirmed ? '' : 'un'}confirmed lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
-      console.log('atomic swap found ', swap, transaction);
+      // console.log('un.122 atomic swap found ', swap, transaction);
 
       const swapOutput = detectSwap(getHexBuffer(swap.asRedeemScript!), transaction)!;
       console.log('un.121 swapOutput!!!! should NOT be undefined! ', swapOutput);
@@ -185,7 +186,47 @@ class UtxoNursery extends EventEmitter {
 
       this.emit('astransaction.confirmed', swap, transaction);
     }
+
+
+    for (let vin = 0; vin < transaction.ins.length; vin += 1) {
+      const input = transaction.ins[vin];
+      console.log('tx input ', input);
+
+      const atomicSwap = await this.swapRepository.getSwap({
+        status: {
+          [Op.or]: [
+            SwapUpdateEvent.TransactionMempool,
+            SwapUpdateEvent.TransactionConfirmed,
+            SwapUpdateEvent.ASTransactionMempool,
+            SwapUpdateEvent.ASTransactionConfirmed,
+          ],
+        },
+        // transactionId: {
+        //   [Op.eq]: transactionHashToId(input.hash),
+        // },
+        // transactionVout: {
+        //   [Op.eq]: input.index,
+        // },
+        asLockupAddress: {
+          [Op.eq]: wallet.encodeAddress(input.script),
+        }
+      });
+
+      if (!atomicSwap) {
+        console.log('atomicswap input not found ');
+        continue;
+      }
+
+      this.logger.verbose(`Found claim transaction of Reverse Swap ${atomicSwap.id}: ${transaction.getId()}`);
+
+      const preimage = detectPreimage(vin, transaction);
+      console.log('preimage detected ', getHexString(preimage));
+
+      // chainClient.removeInputFilter(input.hash);
+      // this.emit('reverseSwap.claimed', atomicSwap, detectPreimage(vin, transaction));
+    }
   }
+
 
   private checkSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {
     for (let vout = 0; vout < transaction.outs.length; vout += 1) {

@@ -329,20 +329,35 @@ class SwapManager {
         // console.log('lockupAddress + keyIndex ', lockupAddress, keyIndex);
 
         // generate swapscript instead of reverseswap script?!
-        console.log('generating swapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), timeoutBlockHeight);
-        redeemScript = swapScript(
+        // console.log('generating swapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), timeoutBlockHeight);
+        // redeemScript = swapScript(
+        //   args.preimageHash,
+        //   // keys.publicKey,
+        //   args.refundPublicKey!,
+        //   keys.publicKey,
+        //   // args.refundPublicKey!,
+        //   timeoutBlockHeight,
+        // );
+        // asRedeemScript = getHexString(redeemScript);
+        // const encodeFunction = getScriptHashFunction(this.swapOutputType);
+        // const outputScript = encodeFunction(redeemScript);
+        // lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
+        // console.log('sm.341 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
+
+
+        // using reverseswapscript
+        console.log('generating reverseswapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), timeoutBlockHeight);
+        redeemScript = reverseSwapScript(
           args.preimageHash,
-          // keys.publicKey,
           args.refundPublicKey!,
+          // args.claimPublicKey!,
           keys.publicKey,
-          // args.refundPublicKey!,
           timeoutBlockHeight,
         );
         asRedeemScript = getHexString(redeemScript);
-        const encodeFunction = getScriptHashFunction(this.swapOutputType);
-        const outputScript = encodeFunction(redeemScript);
+        const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
         lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
-        console.log('sm.341 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
+        console.log('sm.360 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
       }
       this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,
