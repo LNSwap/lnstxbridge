@@ -96,7 +96,7 @@ class UtxoNursery extends EventEmitter {
   private checkAtomicSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {
     for (let vout = 0; vout < transaction.outs.length; vout += 1) {
       const output = transaction.outs[vout];
-      console.log('checkAtomicSwapOutputs vout ', vout, wallet.encodeAddress(output.script));
+      console.log('utxo.99 checkAtomicSwapOutputs vout ', vout, output.script, wallet.encodeAddress(output.script));
 
       let swap = await this.swapRepository.getSwap({
         status: {
@@ -122,7 +122,7 @@ class UtxoNursery extends EventEmitter {
       console.log('atomic swap found ', swap, transaction);
 
       const swapOutput = detectSwap(getHexBuffer(swap.asRedeemScript!), transaction)!;
-      console.log('un.121 swapOutput ', swapOutput);
+      console.log('un.121 swapOutput!!!! should NOT be undefined! ', swapOutput);
 
       swap = await this.swapRepository.setASTransactionConfirmed(
         swap,

@@ -223,6 +223,7 @@ class SwapManager {
       const { keys, index } = receivingCurrency.wallet.getNewKeys();
       console.log('receiving currency BitcoinLike ', keys, index);
 
+      console.log('sm.226 create swapScript ', getHexString(args.preimageHash), getHexString(keys.publicKey), getHexString(args.refundPublicKey!));
       redeemScript = swapScript(
         args.preimageHash,
         keys.publicKey,
@@ -234,6 +235,7 @@ class SwapManager {
       const outputScript = encodeFunction(redeemScript);
 
       address = receivingCurrency.wallet.encodeAddress(outputScript);
+      console.log('sn.238 address, outputScript, redeemScript', address, outputScript, redeemScript);
 
       receivingCurrency.chainClient!.addOutputFilter(outputScript);
 
@@ -301,28 +303,46 @@ class SwapManager {
 
       // stx->btc atomic swap
       let lockupAddress = '';
-      let keyIndex = 0;
+      // let keyIndex = 0;
       let asRedeemScript = '';
       if (args.baseAmount && args.onchainTimeoutBlockDelta){
 
-        const { keys, index } = sendingCurrency.wallet.getNewKeys();
+        // index
+        const { keys } = sendingCurrency.wallet.getNewKeys();
         const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
         timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
-        redeemScript = reverseSwapScript(
+        // redeemScript = reverseSwapScript(
+        //   args.preimageHash,
+        //   // args.claimPublicKey!, - use refundPublicKey instead from user
+        //   // args.claimAddress!, - not added
+        //   args.refundPublicKey!,
+        //   keys.publicKey, // refund public key to lnstxbridge
+        //   timeoutBlockHeight,
+        // );
+        // asRedeemScript = getHexString(redeemScript);
+        // console.log('sm.320 reverseSwapScript can be claimed by ', getHexString(args.refundPublicKey!), ' refund to ', getHexString(keys.publicKey));
+        // console.log('sm.321 asRedeemScript ', asRedeemScript);
+
+        // const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
+        // lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
+        // keyIndex = index;
+        // console.log('lockupAddress + keyIndex ', lockupAddress, keyIndex);
+
+        // generate swapscript instead of reverseswap script?!
+        console.log('generating swapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), timeoutBlockHeight);
+        redeemScript = swapScript(
           args.preimageHash,
-          // args.claimPublicKey!, - use refundPublicKey instead from user
-          // args.claimAddress!, - not added
+          // keys.publicKey,
           args.refundPublicKey!,
-          keys.publicKey, // refund public key to lnstxbridge
+          keys.publicKey,
+          // args.refundPublicKey!,
           timeoutBlockHeight,
         );
         asRedeemScript = getHexString(redeemScript);
-        console.log('sm.320 reverseSwapScript can be claimed by ', getHexString(args.refundPublicKey!), ' refund to ', getHexString(keys.publicKey));
-
-        const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
+        const encodeFunction = getScriptHashFunction(this.swapOutputType);
+        const outputScript = encodeFunction(redeemScript);
         lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
-        keyIndex = index;
-        console.log('lockupAddress + keyIndex ', lockupAddress, keyIndex);
+        console.log('sm.341 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
       }
       this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,
@@ -338,7 +358,7 @@ class SwapManager {
         baseAmount: args.baseAmount,
         asRedeemScript,
         asLockupAddress: lockupAddress,
-        keyIndex,
+        // keyIndex,
       }));
 
       await this.swapRepository.addSwap({
@@ -356,7 +376,7 @@ class SwapManager {
         baseAmount: args.baseAmount,
         asRedeemScript,
         asLockupAddress: lockupAddress,
-        keyIndex,
+        // keyIndex,
         // tokenAddress: tokenAddress,
       });
     } else {

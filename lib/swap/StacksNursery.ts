@@ -368,12 +368,14 @@ class StacksNursery extends EventEmitter {
           // await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed);
           // const check = await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionFailed);
           // await this.swapRepository.setASTransactionConfirmed(swap, true);
+
+          // changed this to ASTransactionConfirmed from TransactionConfirmed
           this.emit(
             'astransaction.confirmed',
-            await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionConfirmed),
+            await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed),
             transactionHash,
           );
-          console.log('emit astransaction.confirmed');
+          console.log('stacksnursery.376 emit astransaction.confirmed');
         }
 
         return;
@@ -424,6 +426,7 @@ class StacksNursery extends EventEmitter {
       }
 
       if (swap.expectedAmount) {
+        console.log('stacksn.429 ', swap.expectedAmount);
         const expectedAmount = BigNumber.from(swap.expectedAmount).mul(etherDecimals);
 
         // 1995138440000000000,
@@ -442,6 +445,7 @@ class StacksNursery extends EventEmitter {
 
       // atomic swap locked amount check
       if (swap.baseAmount) {
+        console.log('stacksn.447 ', swap.baseAmount);
         const expectedAmount = BigNumber.from(swap.baseAmount).mul(etherDecimals);
 
         // 1995138440000000000,

@@ -1346,6 +1346,7 @@ class SwapNursery extends EventEmitter {
       console.log('vout is there but just confirming ', swap.lockupTransactionVout, test);
     }
 
+    console.log('detectswap: redeemscript inside transaction ', swap.redeemScript,  detectSwap(getHexBuffer(swap.redeemScript!), transaction));
     const output = transaction.outs[swap.lockupTransactionVout!];
 
     console.log('constructing asclaimutxo: ',  {

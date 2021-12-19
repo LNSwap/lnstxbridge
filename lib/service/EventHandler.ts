@@ -74,17 +74,20 @@ class EventHandler extends EventEmitter {
       if (!isReverse) {
         this.logger.verbose('eventhandler.74 on transaction: '+ confirmed);
         // asconfirmed will be sent after btc (as tx) is confirmed - removing from here
-        // if(swap['asRedeemScript']) {
-        //   // stx -> BTC atomic swap - stx confirmed
-        //   this.emit('swap.update', swap.id, {
-        //     status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
-        //   });
-        // } else {
+        // I need this for btc -> stx? - btc confirmed!
+        if(swap['asRedeemScript']) {
+          console.log('eth.79');
+          // stx -> BTC atomic swap - stx confirmed
+          this.emit('swap.update', swap.id, {
+            status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
+          });
+        } else {
           // triggers for onchain stx -> btc swap on btc tx
+          console.log('eh.85');
           this.emit('swap.update', swap.id, {
             status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
           });
-        // }
+        }
 
       } else {
         // Reverse Swaps only emit the "transaction.confirmed" event
@@ -98,7 +101,7 @@ class EventHandler extends EventEmitter {
               hex: transaction.toHex(),
             },
           });
-        } else if (confirmed && swap.status == 'transaction.confirmed') {
+        } else if ((confirmed && swap.status == 'transaction.confirmed') || (confirmed && swap.status == 'astransaction.confirmed')) {
           // asRequestedAmount?
           if (swap.claimAddress && !swap.invoice) {
             // for atomic swap this gets triggered for AStransaction.confirmed
