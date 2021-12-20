@@ -289,11 +289,12 @@ class SwapManager {
       const info = await getInfo();
       const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
+      console.log('sm.292 receiving STX/SIP10 ', receivingCurrency.symbol, blockNumber, timeoutBlockHeight);
 
       const chainTipRepository = new ChainTipRepository();
-      const otherChainTip = await chainTipRepository.findOrCreateTip(receivingCurrency.symbol, 0);
+      const otherChainTip = await chainTipRepository.findOrCreateTip(sendingCurrency.symbol, 0);
       asTimeoutBlockHeight = otherChainTip.height + args.timeoutBlockDelta;
-      console.log('chainTipRepository ', receivingCurrency.symbol, otherChainTip, asTimeoutBlockHeight);
+      console.log('sm.297 chainTipRepository ', sendingCurrency.symbol, otherChainTip.height, asTimeoutBlockHeight);
       // it works because stx blocktime = btc blocktime
 
       // this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
@@ -311,12 +312,13 @@ class SwapManager {
       let lockupAddress = '';
       // let keyIndex = 0;
       let asRedeemScript = '';
-      if (args.baseAmount && args.onchainTimeoutBlockDelta){
+      if (args.baseAmount && args.onchainTimeoutBlockDelta) {
 
         // index
         const { keys } = sendingCurrency.wallet.getNewKeys();
-        const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
-        timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
+        // const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
+        // timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
+
         // redeemScript = reverseSwapScript(
         //   args.preimageHash,
         //   // args.claimPublicKey!, - use refundPublicKey instead from user
@@ -358,7 +360,8 @@ class SwapManager {
           args.refundPublicKey!,
           // args.claimPublicKey!,
           keys.publicKey,
-          timeoutBlockHeight,
+          // timeoutBlockHeight,
+          asTimeoutBlockHeight
         );
         asRedeemScript = getHexString(redeemScript);
         const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
@@ -386,7 +389,7 @@ class SwapManager {
       await this.swapRepository.addSwap({
         id,
         pair,
-        timeoutBlockHeight,
+        timeoutBlockHeight: asTimeoutBlockHeight,
 
         lockupAddress: address,
         orderSide: args.orderSide,

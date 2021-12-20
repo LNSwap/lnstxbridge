@@ -746,7 +746,7 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredSwaps = async (height: number) => {
     const expirableSwaps = await this.swapRepository.getSwapsExpirable(height);
-    // this.logger.verbose("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
+    this.logger.verbose('stacksnursery.400 checkExpiredSwaps ' + expirableSwaps);
 
     for (const expirableSwap of expirableSwaps) {
       const { base, quote } = splitPairId(expirableSwap.pair);
@@ -755,6 +755,7 @@ class StacksNursery extends EventEmitter {
       const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {
+        console.log('stacksn.758 throw swap.expired at height ', height, expirableSwap);
         this.emit('swap.expired', expirableSwap, wallet.symbol === 'STX');
       }
     }
@@ -768,7 +769,7 @@ class StacksNursery extends EventEmitter {
       const { base, quote } = splitPairId(expirableReverseSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, expirableReverseSwap.orderSide, true);
 
-      this.logger.verbose('stacksnursery.393 checkExpiredReverseSwaps, ' + height + ', ' + expirableReverseSwap.id)
+      this.logger.verbose('stacksnursery.393 checkExpiredReverseSwaps, ' + height + ', ' + expirableReverseSwap.id);
       const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {

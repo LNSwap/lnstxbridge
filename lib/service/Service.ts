@@ -740,6 +740,7 @@ class Service {
       console.log('TODO:: validate base/quote amount!!!');
 
       // set timeout = astimeout for atomic swaps
+      console.log('s.743 setting timeout=asTimeoutBlockHeight: ', asTimeoutBlockHeight);
       finalTimeoutBlockheight = asTimeoutBlockHeight!;
     }
 
