@@ -710,6 +710,7 @@ class Service {
     let bip21 = '';
     let expectedAmount = 0;
     let contractAddress = '';
+    let finalTimeoutBlockheight = timeoutBlockHeight;
     if (args.requestedAmount && args.orderSide == 'sell') {
       const response = await this.getManualRates(id, args.requestedAmount);
       console.log('service.688 getManualRates response ', args.requestedAmount, response);
@@ -737,6 +738,9 @@ class Service {
       contractAddress = swap?.contractAddress || '';
 
       console.log('TODO:: validate base/quote amount!!!');
+
+      // set timeout = astimeout for atomic swaps
+      finalTimeoutBlockheight = asTimeoutBlockHeight!;
     }
 
     this.eventHandler.emitSwapCreation(id);
@@ -749,7 +753,7 @@ class Service {
       address,
       redeemScript,
       claimAddress,
-      timeoutBlockHeight,
+      timeoutBlockHeight: finalTimeoutBlockheight,
       contractAddress,
       asTimeoutBlockHeight,
       baseAmount: args.baseAmount,
@@ -853,29 +857,41 @@ class Service {
 
     const { base, quote } = splitPairId(swap.pair);
     const onchainCurrency = getChainCurrency(base, quote, swap.orderSide, false);
-    console.log('s.838 swap.rate ', swap.rate, swap.orderSide, base, quote);
+    console.log('s.838 swap.rate swap.orderSide, base, quote', swap.rate, swap.orderSide, base, quote);
 
     const rate = getRate(swap.rate!, swap.orderSide, true);
     console.log('rate ', rate);
 
     const percentageFee = this.rateProvider.feeProvider.getPercentageFee(swap.pair);
     const baseFee = this.rateProvider.feeProvider.getBaseFee(onchainCurrency, BaseFeeType.NormalClaim);
-    console.log('781 ', onchainCurrency, percentageFee, baseFee);
+    console.log('781 onchainCurrency, percentageFee, baseFee', onchainCurrency, percentageFee, baseFee);
 
-    // requested amount in mstx
-    const onchainAmount = ((requestedAmount/1000000) * rate) * 100000000;
-    console.log('810: ', requestedAmount, onchainAmount, swap.orderSide);
+    let onchainAmount, invoiceAmount;
+    if ((swap.pair === 'BTC/STX' || swap.pair === 'BTC/USDA') && swap.orderSide === 1) {
+      // requested amount is already in mstx
+      onchainAmount = requestedAmount*100; //go from mstx -> boltz (10^8)
+      invoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      console.log('s.872 onchainAmount=requestedAmount ', requestedAmount);
+      console.log('s.873 invoiceAmount ', invoiceAmount);
 
-    const invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
-    console.log('784 ', requestedAmount, onchainAmount, invoiceAmount);
+      this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
+    } else {
+      // requested amount in mstx
+      onchainAmount = ((requestedAmount/1000000) * rate) * 100000000;
+      console.log('810 requestedAmount, onchainAmount, swap.orderSide: ', requestedAmount, onchainAmount, swap.orderSide);
 
-    this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
+      invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      console.log('784 requestedAmount, onchainAmount, invoiceAmount', requestedAmount, onchainAmount, invoiceAmount);
 
-    console.log('service.785 getManualRates: ', {
-      onchainAmount: swap.onchainAmount,
-      submarineSwap: {
-        invoiceAmount,
-      }});
+      console.log('verifyAmount pair,rate,invoiceamount,orderside: ', swap.pair, 'rate', rate, 'invoiceamount', invoiceAmount, 'orderside', swap.orderSide);
+      this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
+
+      console.log('service.785 getManualRates: ', {
+        onchainAmount: swap.onchainAmount,
+        submarineSwap: {
+          invoiceAmount,
+        }});
+    }
 
     return {
       requestedAmount,
@@ -1337,10 +1353,14 @@ class Service {
       // tslint:disable-next-line:no-parameter-reassignment
       amount = Math.floor(amount * rate);
       console.log('s.1320 amount ', amount);
+    } else {
+      // convert amount for atomic swaps
+      amount = Math.floor(amount * 1/rate);
+      console.log('s.1343 amount ', amount, rate);
     }
 
     const { limits } = this.getPair(pairId);
-    console.log('s.1324 limits ', limits);
+    console.log('s.1324 amount vs limits ', amount, limits);
     // check if amount is greater than what's available in account
 
     if (limits) {

@@ -290,6 +290,12 @@ class SwapManager {
       const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
 
+      const chainTipRepository = new ChainTipRepository();
+      const otherChainTip = await chainTipRepository.findOrCreateTip(receivingCurrency.symbol, 0);
+      asTimeoutBlockHeight = otherChainTip.height + args.timeoutBlockDelta;
+      console.log('chainTipRepository ', receivingCurrency.symbol, otherChainTip, asTimeoutBlockHeight);
+      // it works because stx blocktime = btc blocktime
+
       // this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
       claimAddress = await receivingCurrency.wallet.getAddress();
       // claimAddress = await receivingCurrency.wallet.
@@ -373,6 +379,7 @@ class SwapManager {
         baseAmount: args.baseAmount,
         asRedeemScript,
         asLockupAddress: lockupAddress,
+        asTimeoutBlockHeight,
         // keyIndex,
       }));
 
@@ -391,6 +398,7 @@ class SwapManager {
         baseAmount: args.baseAmount,
         asRedeemScript,
         asLockupAddress: lockupAddress,
+        asTimeoutBlockHeight,
         // keyIndex,
         // tokenAddress: tokenAddress,
       });

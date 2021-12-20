@@ -242,9 +242,11 @@ class RateProvider {
     // this.logger.error("rateprovider.233 baseLimits, quoteLimits " + base+":"+ stringify(baseLimits) + ", " +quote+":"+ stringify(quoteLimits) + "," +rate)
 
     if (baseLimits && quoteLimits) {
-      let minimalLimit = Math.max(quoteLimits.minimal, baseLimits.minimal * rate);
+      // minimalLimit should not be math.max
+      // let minimalLimit = Math.max(quoteLimits.minimal, baseLimits.minimal * rate);
+      let minimalLimit = Math.min(quoteLimits.minimal, baseLimits.minimal * rate);
       // rateprovider.231 base, quote, baselimit*4, quotelimit                    BTC,           STX,          332115576.2205247,            10000
-      // this.logger.error("rateprovider.231 base, quote, baselimit*4, quotelimit "+ base +", " + quote +", " + baseLimits.minimal * rate+", " +quoteLimits.minimal);
+      // this.logger.error("rateprovider.231 base, quote, baseminimal*4, quoteminimal "+ base +", " + quote +", " + baseLimits.minimal * rate+", " +quoteLimits.minimal);
 
       // Make sure the minimal limit is at least 4 times the fee needed to claim
       const minimalLimitQuoteTransactionFee = this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim) * 4;
@@ -267,14 +269,15 @@ class RateProvider {
       const signerBalances = await getAddressAllBalances();
       // this.logger.error('rateprovider.267 signerBalances '+ JSON.stringify(signerBalances) + ', ' + signerBalances[quote]);
 
-      maximalLimit = Math.floor(Math.min(maximalLimit, signerBalances[quote] * 100));
+      maximalLimit = Math.floor(Math.min(maximalLimit, (signerBalances[quote] || 0) * 100));
+      console.log('maximalLimit based on available balance: ', maximalLimit);
 
-      // TODO: Fix this before production to optimize it!!!
-      // btc limits
-      if ((base === 'STX' && quote === 'BTC') || (base === 'BTC' && quote === 'STX' || base === quote) ) {
-        maximalLimit = 12949670000000;
-        minimalLimit = 10000;
-      }
+      // // TODO: Fix this before production to optimize it!!!
+      // // btc limits
+      // if ((base === 'STX' && quote === 'BTC') || (base === 'BTC' && quote === 'STX' || base === quote) ) {
+      //   maximalLimit = 12949670000000;
+      //   minimalLimit = 10000;
+      // }
 
       this.logger.error('RATEPROVIDER base, quote, minimal, maximal: ' + base + ', ' + quote + ', ' + minimalLimit + ', ' + maximalLimit);
       return {
