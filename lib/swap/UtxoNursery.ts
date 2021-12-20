@@ -49,8 +49,8 @@ interface UtxoNursery {
   emit(event: 'reverseSwap.claimed', reverseSwap: ReverseSwap, preimage: Buffer): boolean;
 
   // atomic swap
-  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction) => void): this;
-  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction): boolean;
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction, preimage?: string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction, preimage?: string): boolean;
 }
 
 class UtxoNursery extends EventEmitter {
@@ -81,7 +81,7 @@ class UtxoNursery extends EventEmitter {
 
   private listenTransactions = (chainClient: ChainClient, wallet: Wallet) => {
     chainClient.on('transaction', async (transaction, confirmed) => {
-      console.log('check atomic swap tx and set to asconfirmed');
+      console.log('un.84 on transaction');
       await Promise.all([
         this.checkSwapOutputs(chainClient, wallet, transaction, confirmed),
 
@@ -190,7 +190,8 @@ class UtxoNursery extends EventEmitter {
 
     for (let vin = 0; vin < transaction.ins.length; vin += 1) {
       const input = transaction.ins[vin];
-      console.log('tx input ', input);
+      // console.log('tx input ', input, input.script);
+      // console.log('find swap with asLockupAddress = ', wallet.encodeAddress(input.script));
 
       const atomicSwap = await this.swapRepository.getSwap({
         status: {
@@ -201,15 +202,15 @@ class UtxoNursery extends EventEmitter {
             SwapUpdateEvent.ASTransactionConfirmed,
           ],
         },
-        // transactionId: {
-        //   [Op.eq]: transactionHashToId(input.hash),
-        // },
-        // transactionVout: {
-        //   [Op.eq]: input.index,
-        // },
-        asLockupAddress: {
-          [Op.eq]: wallet.encodeAddress(input.script),
-        }
+        lockupTransactionId: {
+          [Op.eq]: transactionHashToId(input.hash),
+        },
+        lockupTransactionVout: {
+          [Op.eq]: input.index,
+        },
+        // asLockupAddress: {
+        //   [Op.eq]: wallet.encodeAddress(input.script),
+        // }
       });
 
       if (!atomicSwap) {
@@ -217,12 +218,15 @@ class UtxoNursery extends EventEmitter {
         continue;
       }
 
-      this.logger.verbose(`Found claim transaction of Reverse Swap ${atomicSwap.id}: ${transaction.getId()}`);
+      this.logger.verbose(`Found claim transaction of atomic Swap ${atomicSwap.id}: ${transaction.getId()}`);
 
+      console.log('un.222 detecting preimage vin, tx: ', vin , transaction);
+      // console.log('un.222 detecting preimage manually: ', transaction.ins[vin].witness[1]);
       const preimage = detectPreimage(vin, transaction);
       console.log('preimage detected ', getHexString(preimage));
 
-      // chainClient.removeInputFilter(input.hash);
+      chainClient.removeInputFilter(input.hash);
+      this.emit('astransaction.confirmed', atomicSwap, transaction, getHexString(preimage));
       // this.emit('reverseSwap.claimed', atomicSwap, detectPreimage(vin, transaction));
     }
   }

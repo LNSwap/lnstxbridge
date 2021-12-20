@@ -265,22 +265,32 @@ class EventHandler extends EventEmitter {
       }
     });
 
-    this.nursery.on('astransaction.confirmed', (swap, transaction) => {
+    this.nursery.on('astransaction.confirmed', (swap, transaction, preimage) => {
       this.logger.verbose('eventhandler.266 on astransaction.confirmed: ' + stringify(swap));
-      let id = '';
-      let hex = '';
-      if (typeof transaction !== 'string') {
-        id = transaction.getId();
-        hex = transaction.toHex();
+      if(!preimage) {
+        let id = '';
+        let hex = '';
+        if (typeof transaction !== 'string') {
+          id = transaction.getId();
+          hex = transaction.toHex();
+        }
+        this.emit('swap.update', swap.id, {
+          status: SwapUpdateEvent.ASTransactionConfirmed,
+          transaction: {
+            id,
+            hex,
+          },
+        });
       }
+    });
+
+    this.nursery.on('transaction.claimed', (swap) => {
+      this.logger.verbose('eventhandler.288 on astransaction.claimed: ' + swap);
       this.emit('swap.update', swap.id, {
-        status: SwapUpdateEvent.ASTransactionConfirmed,
-        transaction: {
-          id,
-          hex,
-        },
+        status: SwapUpdateEvent.TransactionClaimed,
       });
     });
+
     this.nursery.on('coins.failedToSend', (reverseSwap) => {
       this.handleFailedReverseSwap(reverseSwap, SwapUpdateEvent.TransactionFailed, reverseSwap.failureReason!);
     });

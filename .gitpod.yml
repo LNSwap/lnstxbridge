@@ -4,7 +4,7 @@ tasks:
   - init: |
       echo 'init script' 
       echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
-      sudo apt install rsync --assume-yes
+      sudo apt update && sudo apt install rsync --assume-yes
       nvm install 14
       mkdir ~/.lnstx
       cp boltz.conf ~/.lnstx/boltz.conf

@@ -318,7 +318,10 @@ class ZmqClient extends EventEmitter {
 
   private isRelevantTransaction = (transaction: Transaction) => {
     for (const input of transaction.ins) {
+      // console.log('isrelevantinput? ', input);
+      // console.log('zmqclient relevantinputs ', this.relevantInputs);
       if (this.relevantInputs.has(getHexString(input.hash))) {
+        console.log('isrelevantinput yes it is. found it!!! ', input);
         return true;
       }
     }

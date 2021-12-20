@@ -111,11 +111,14 @@ interface SwapNursery {
   on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'tx.sent', reverseSwap: ReverseSwap): boolean;
 
-  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction | string) => void): this;
-  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction | string): boolean;
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction | string, preimage?: string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction | string, preimage?: string): boolean;
 
   on(event: 'as.claimed', listener: (swap: Swap, transaction: Transaction | string, preimage: Buffer) => void): this;
   emit(event: 'as.claimed', swap: Swap, transaction: Transaction | string, preimage: Buffer): boolean;
+
+  on(event: 'transaction.claimed', listener: (swap: Swap, transaction: Transaction | string, preimage?: string) => void): this;
+  emit(event: 'transaction.claimed', swap: Swap, transaction: Transaction | string, preimage?: string): boolean;
 }
 
 class SwapNursery extends EventEmitter {
@@ -301,21 +304,28 @@ class SwapNursery extends EventEmitter {
     });
 
     // atomic swap events
-    this.utxoNursery.on('astransaction.confirmed', async (swap, transactionHash) => {
+    this.utxoNursery.on('astransaction.confirmed', async (swap, transactionHash, preimage) => {
       this.logger.error('swapnursery.304 astransaction.confirmed: ' + transactionHash);
       await this.lock.acquire(SwapNursery.swapLock, async () => {
-        // , true, true
-        this.emit('astransaction.confirmed', swap, transactionHash);
-
-        // trigger claimstx so we get the stx user locked into the contract
-        console.log('')
-        await this.claimStx(
-          this.walletManager.stacksManager!.contractHandler,
-          swap,
-          // await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
-          await querySwapValuesFromTx(swap.lockupTransactionId!),
-          // outgoingChannelId,
-        );
+        if(preimage) {
+          // trigger claimstx so we get the stx user locked into the contract
+          console.log('triggering claimstx after finding preimage in utxonursery tx');
+          await this.claimStx(
+            this.walletManager.stacksManager!.contractHandler,
+            swap,
+            // await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+            // await querySwapValuesFromTx(swap.lockupTransactionId!),
+            undefined,
+            undefined,
+            preimage
+            // outgoingChannelId,
+          );
+          this.emit('transaction.claimed', swap, transactionHash);
+        } else {
+          // from before
+          // , true, true
+          this.emit('astransaction.confirmed', swap, transactionHash);
+        }
       });
     });
 
@@ -1514,8 +1524,8 @@ class SwapNursery extends EventEmitter {
     this.emit('claim', await this.swapRepository.setMinerFee(swap, calculateRskTransactionFee(contractTransaction)), channelCreation || undefined);
   }
 
-  private claimStx = async (contractHandler: StacksContractHandler, swap: Swap, etherSwapValues: EtherSwapValues, outgoingChannelId?: string) => {
-    this.logger.error('swapnursery.1040 claimStx triggered');
+  private claimStx = async (contractHandler: StacksContractHandler, swap: Swap, etherSwapValues?: EtherSwapValues, outgoingChannelId?: string, detectedPreimage?: string) => {
+    this.logger.error('swapnursery.1040 claimStx triggered detectedPreimage? '+ detectedPreimage);
     // add additional check to see if swap expired before paying the invoice
     // happens when app is restarted on mocknet
     const queriedSwap = await this.swapRepository.getSwap({
@@ -1523,8 +1533,9 @@ class SwapNursery extends EventEmitter {
         [Op.eq]: swap.id,
       },
     });
-    let latestBlockHeight = (await getInfo()).stacks_tip_height;
+    const latestBlockHeight = (await getInfo()).stacks_tip_height;
     if (queriedSwap!.timeoutBlockHeight <= latestBlockHeight) {
+      console.log('can NOT claim, timeout passed!!!');
       return;
     }
 
@@ -1533,17 +1544,32 @@ class SwapNursery extends EventEmitter {
         [Op.eq]: swap.id,
       },
     });
-    const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    let preimage, amount, refundAddress, timelock;
+    if(!detectedPreimage && etherSwapValues) {
+      preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+      amount = etherSwapValues.amount;
+      refundAddress = etherSwapValues.refundAddress;
+      timelock = etherSwapValues.timelock;
+    } else {
+      preimage = detectedPreimage;
+      amount = (swap.baseAmount! * 1000000).toString(16).padStart(32, '0');
+      refundAddress = 'dummyrefundaddress';
+      timelock = swap.timeoutBlockHeight;
+    }
 
     if (!preimage) {
+      console.log('can NOT claim, no preimage!!!');
       return;
     }
 
+    console.log('swapnursery.1559 triggerin claimStx with preimage, amount, refundAddress, timelock ', preimage, amount, refundAddress, timelock);
     const contractTransaction = await contractHandler.claimEther(
-      preimage,
-      etherSwapValues.amount,
-      etherSwapValues.refundAddress,
-      etherSwapValues.timelock,
+      getHexBuffer(preimage),
+      // etherSwapValues.amount,
+      amount,
+      refundAddress,
+      timelock,
     );
 
     if(contractTransaction.error) {
