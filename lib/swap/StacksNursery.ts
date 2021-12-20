@@ -268,7 +268,7 @@ class StacksNursery extends EventEmitter {
         this.logger.error('StacksNursery.137 swap not found! ' + transactionHash);
 
         // check if this is our own lockup that user needs to claim from GUI so just set tx to confirmed and exit
-        let reverseSwap = await this.reverseSwapRepository.getReverseSwap({
+        const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
           preimageHash: {
             [Op.eq]: getHexString(etherSwapValues.preimageHash),
           },
@@ -347,7 +347,7 @@ class StacksNursery extends EventEmitter {
         // this.logger.error("StacksNursery.276 checking swap 1" + stringify(etherSwapValues));
 
         // onchain atomic swap
-        let swap = await this.swapRepository.getSwap({
+        const swap = await this.swapRepository.getSwap({
           preimageHash: {
             [Op.eq]: getHexString(etherSwapValues.preimageHash),
           },
@@ -414,7 +414,7 @@ class StacksNursery extends EventEmitter {
       // }
 
       const swaptimelock = parseInt(etherSwapValues.timelock + '',16);
-      this.logger.verbose('etherSwapValues.timelock, swap.timeoutBlockHeight ' +etherSwapValues.timelock + ', ' + swap.timeoutBlockHeight)
+      this.logger.verbose('etherSwapValues.timelock, swap.timeoutBlockHeight ' +etherSwapValues.timelock + ', ' + swap.timeoutBlockHeight);
       // etherSwapValues.timelock
       if (swaptimelock !== swap.timeoutBlockHeight) {
         this.emit(
@@ -431,7 +431,7 @@ class StacksNursery extends EventEmitter {
 
         // 1995138440000000000,
         const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
-        this.logger.verbose('swap.expectedAmount, expectedAmount , etherSwapValues.amount' +swap.expectedAmount+ ', ' + expectedAmount + ', ' + etherSwapValues.amount)
+        this.logger.verbose('swap.expectedAmount, expectedAmount , etherSwapValues.amount' +swap.expectedAmount+ ', ' + expectedAmount + ', ' + etherSwapValues.amount);
         // etherSwapValues.amount
         if (expectedAmount.gt(bigswapamount)) {
           this.emit(
@@ -445,8 +445,8 @@ class StacksNursery extends EventEmitter {
 
       // atomic swap locked amount check
       if (swap.baseAmount) {
-        console.log('stacksn.447 ', swap.baseAmount);
-        const expectedAmount = BigNumber.from(swap.baseAmount).mul(etherDecimals);
+        console.log('stacksn.447 ', swap.baseAmount); // this is in stx - mul 10^6 to get mstx - 10^8 to get boltz
+        const expectedAmount = BigNumber.from(swap.baseAmount*100000000).mul(etherDecimals);
 
         // 1995138440000000000,
         const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
@@ -532,7 +532,7 @@ class StacksNursery extends EventEmitter {
         this.logger.error('StacksNursery.410 swap not found! ' + transactionHash);
 
         // check if this is our own lockup that user needs to claim from GUI so just set tx to confirmed and exit
-        let reverseSwap = await this.reverseSwapRepository.getReverseSwap({
+        const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
           preimageHash: {
             [Op.eq]: getHexString(erc20SwapValues.preimageHash),
           },

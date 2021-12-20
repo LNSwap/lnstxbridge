@@ -62,8 +62,9 @@ tasks:
     command: npm run start
   - init: brew install clarinet
     command: clarinet test
-  # - init: |
-  #     # npm run compile:watch
+  - init: |
+        echo 'npm run compile:watch'
+    command: echo 'npm run compile:watch'
   # gitpod might have issue with archive.ubuntu.com
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i

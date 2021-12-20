@@ -1008,6 +1008,7 @@ class Service {
     }
 
     const preimageHash = getHexBuffer(decodeInvoice(invoice).paymentHash!);
+    console.log('s.1010 createswapwithinvoice preimageHash = ', decodeInvoice(invoice).paymentHash!);
 
     const {
       id,
