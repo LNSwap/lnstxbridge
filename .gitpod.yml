@@ -3,6 +3,7 @@ tasks:
   # runs during prebuild
   - init: |
       echo 'init script' 
+      echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
       sudo apt install rsync --assume-yes
       nvm install 14
       mkdir ~/.lnstx
@@ -61,6 +62,11 @@ tasks:
     command: npm run start
   - init: brew install clarinet
     command: clarinet test
+  # - init: |
+  #     # npm run compile:watch
+  # gitpod might have issue with archive.ubuntu.com
+  # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
+  # sudo apt update && sudo apt install rsync --assume-yes && npm i
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
