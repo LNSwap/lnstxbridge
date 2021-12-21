@@ -52,7 +52,7 @@ import {
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
 import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
-import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
+import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -277,11 +277,18 @@ class SwapNursery extends EventEmitter {
 
           const { base, quote } = splitPairId(swap.pair);
           const chainSymbol = getChainCurrency(base, quote, swap.orderSide, false);
-
+          const otherChainSymbol = getChainCurrency(quote, base, swap.orderSide, false);
+          console.log('swapnursery.281 ', otherChainSymbol);
           // const { chainClient } = this.currencies.get(chainSymbol)!;
+          let walletToSend = this.walletManager.wallets.get(chainSymbol)!;
+          let wallet = this.walletManager.wallets.get(chainSymbol)!.walletProvider as SIP10WalletProvider;
+          if(!wallet.getTokenContractAddress) {
+            wallet = this.walletManager.wallets.get(otherChainSymbol)!.walletProvider as SIP10WalletProvider;
+            walletToSend = this.walletManager.wallets.get(otherChainSymbol)!;
+          }
           // we lock to the other chain!
-          const wallet = this.walletManager.wallets.get(chainSymbol)!;
-          const otherlock = await this.lockupStxSwap(wallet, swap, undefined);
+          // const walletToSend = this.walletManager.wallets.get(chainSymbol)!;
+          const otherlock = await this.lockupStxSwap(walletToSend, swap, undefined);
           console.log('swapnursery.269 end of utxo swap.lockup ', otherlock);
         } else {
           console.log('swapnursery.259 swap.lockup no invoice ', swap.id);
@@ -1217,8 +1224,9 @@ class SwapNursery extends EventEmitter {
           // lockupstxswap FOR  8224 200048649 2000547
 
           if(reverseSwap.tokenAddress) {
-            console.log('lockupsip10swap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
+            console.log('swapnursery.1220 lockupsip10swap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
             const walletProvider = wallet.walletProvider as SIP10WalletProvider;
+
             contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupToken(
               walletProvider,
               getHexBuffer(reverseSwap.preimageHash),
@@ -1228,7 +1236,7 @@ class SwapNursery extends EventEmitter {
               reverseSwap.asTimeoutBlockHeight,
             );
           } else {
-            console.log('lockupstxswap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
+            console.log('swapnursery.1239 lockupstxswap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
             contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
               getHexBuffer(reverseSwap.preimageHash),
               BigNumber.from(requestedAmount).mul(etherDecimals),
@@ -1240,7 +1248,7 @@ class SwapNursery extends EventEmitter {
 
           // listenContractTransaction
           this.stacksNursery!.listenStacksContractTransactionSwap(reverseSwap, contractTransaction);
-          this.logger.verbose(`lockupStxSwap up ${requestedAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
+          this.logger.verbose(`lockupStxSwap up ${requestedAmount} Stx/sip10 for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
           this.logger.error('swapnursery.943 lockupStxSwap TODO: add stacks tx fee calculation to setLockupTransaction');
           this.emit(

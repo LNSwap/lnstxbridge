@@ -343,7 +343,7 @@ class StacksNursery extends EventEmitter {
           }
         }
 
-        this.logger.error('StacksNursery.276 checking swap ' + transactionHash);
+        this.logger.error('StacksNursery.276 checking if atomicswap ' + transactionHash);
         // this.logger.error("StacksNursery.276 checking swap 1" + stringify(etherSwapValues));
 
         // onchain atomic swap
@@ -604,6 +604,39 @@ class StacksNursery extends EventEmitter {
           } catch (error) {
             this.logger.error(`stacksnursery.483 error ${error}`);
           }
+        }
+
+        // onchain atomic swap
+        console.log('stacksnursery.610 checking for SIP10 Atomic Swap with preimagehash', getHexString(erc20SwapValues.preimageHash));
+        const swap = await this.swapRepository.getSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(erc20SwapValues.preimageHash),
+          },
+          status: {
+            [Op.or]: [
+              SwapUpdateEvent.ASTransactionMempool,
+              SwapUpdateEvent.ASTransactionConfirmed,
+            ],
+          },
+        });
+
+        // console.log('checking for atomic swap: ', getHexString(etherSwapValues.preimageHash), swap);
+
+        if (swap) {
+          console.log('stacksnursery.626 sip10 atomic onchain swap found, they locked and we locked ', swap.id);
+          // start listening to claim - which we already are.
+          // need to set astransactionconfirmed so UI can show claim
+          // await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed);
+          // const check = await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionFailed);
+          // await this.swapRepository.setASTransactionConfirmed(swap, true);
+
+          // changed this to ASTransactionConfirmed from TransactionConfirmed
+          this.emit(
+            'astransaction.confirmed',
+            await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed),
+            transactionHash,
+          );
+          console.log('stacksnursery.376 emit astransaction.confirmed');
         }
 
         return;

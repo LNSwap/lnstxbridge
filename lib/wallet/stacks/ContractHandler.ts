@@ -381,7 +381,8 @@ class ContractHandler {
     // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
     amount = amount.div(etherDecimals).div(100);
-    const decimalamount = parseInt(amount.toString(),10) + 1;
+    const decimalamount = parseInt(amount.toString(),10);
+    // stop doing this  + 1;
     this.logger.verbose('contracthandler.380 smaller amount: '+ amount + ', '+ decimalamount + ', '+ this.sip10contractAddress);
     //  + ', ' JSON.stringify(token) +
 
@@ -417,6 +418,7 @@ class ContractHandler {
 
     console.log('contracthandler.413: amounts',decimalamount,swapamount,paddedamount);
     console.log('contracthandler.414: timelocks ',timeLock,tl1, tl2, tl3);
+    // console.log('ch.420 token itself ', token);
 
     // lockStx (preimageHash (buff 32)) (amount (buff 16)) (tokenAddress (buff 42)) (claimAddress (buff 42)) (timelock (buff 16)) (claimPrincipal principal) (tokenPrincipal <ft-trait>)
   const functionArgs = [
