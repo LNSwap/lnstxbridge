@@ -354,7 +354,7 @@ class SwapManager {
 
 
         // using reverseswapscript
-        console.log('generating reverseswapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), timeoutBlockHeight);
+        console.log('generating reverseswapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), asTimeoutBlockHeight);
         redeemScript = reverseSwapScript(
           args.preimageHash,
           args.refundPublicKey!,
@@ -368,6 +368,9 @@ class SwapManager {
         lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
         console.log('sm.360 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
       }
+
+      // timeout = receiving currency = stx
+      // asTimeout = sending currency = btc
       this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,
         pair,
@@ -389,7 +392,7 @@ class SwapManager {
       await this.swapRepository.addSwap({
         id,
         pair,
-        timeoutBlockHeight: asTimeoutBlockHeight,
+        timeoutBlockHeight,
 
         lockupAddress: address,
         orderSide: args.orderSide,

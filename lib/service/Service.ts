@@ -714,7 +714,14 @@ class Service {
     if (args.requestedAmount && args.orderSide == 'sell') {
       const response = await this.getManualRates(id, args.requestedAmount);
       console.log('service.688 getManualRates response ', args.requestedAmount, response);
-      expectedAmount = response.onchainAmount || 0;
+      if(base !== 'BTC') {
+        expectedAmount = response.onchainAmount || 0;
+        console.log('base is NOT BTC so set expected = onchainamount ', expectedAmount);
+      } else {
+        expectedAmount = args.baseAmount || 0;
+        console.log('base is BTC so set expected = args.baseAmount ', expectedAmount);
+      }
+
       // acceptZeroConf = true;
       bip21 = encodeBip21(
         base,

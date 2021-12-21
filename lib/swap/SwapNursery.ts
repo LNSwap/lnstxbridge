@@ -942,7 +942,7 @@ class SwapNursery extends EventEmitter {
       const feePerVbyte = await chainClient.estimateFee(SwapNursery.reverseSwapMempoolEta);
       // }
 
-      const amountToSend = swap.quoteAmount! * 100000000;
+      const amountToSend = Math.floor(swap.quoteAmount! * 100000000);
 
       const outputScript = getScriptHashFunction(ReverseSwapOutputType)(getHexBuffer(swap.asRedeemScript!));
       const lockupAddress = wallet.encodeAddress(outputScript);

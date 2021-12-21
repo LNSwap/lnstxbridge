@@ -746,7 +746,7 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredSwaps = async (height: number) => {
     const expirableSwaps = await this.swapRepository.getSwapsExpirable(height);
-    this.logger.verbose('stacksnursery.400 checkExpiredSwaps ' + expirableSwaps);
+    // this.logger.verbose('stacksnursery.400 checkExpiredSwaps ' + expirableSwaps);
 
     for (const expirableSwap of expirableSwaps) {
       const { base, quote } = splitPairId(expirableSwap.pair);
