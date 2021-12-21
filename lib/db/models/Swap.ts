@@ -30,7 +30,7 @@ type SwapType = {
   lockupTransactionVout?: number;
 
   claimAddress?: string;
-  // tokenAddress?: string;
+  tokenAddress?: string;
   contractAddress?: string;
   asLockupTransactionId?: string;
   // asLockedAmount?: number;
@@ -74,7 +74,7 @@ class Swap extends Model implements SwapType {
   public updatedAt!: Date;
 
   public claimAddress?: string;
-  // public tokenAddress?: string;
+  public tokenAddress?: string;
   public contractAddress?: string;
 
   public asLockupTransactionId?: string;
@@ -119,6 +119,7 @@ class Swap extends Model implements SwapType {
       quoteAmount: { type: new DataTypes.INTEGER(), allowNull: true },
       asRedeemScript: { type: new DataTypes.STRING(255), allowNull: true },
       asLockupAddress: { type: new DataTypes.STRING(255), allowNull: true },
+      tokenAddress: { type: new DataTypes.STRING(255), allowNull: true },
     }, {
       sequelize,
       tableName: 'swaps',

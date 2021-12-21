@@ -86,7 +86,7 @@ class Service {
     this.pairRepository = new PairRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
 
-    console.log("service.ts 88")
+    console.log('service.ts 88');
     this.rateProvider = new RateProvider(
       this.logger,
       config.rates.interval,
@@ -96,7 +96,7 @@ class Service {
 
     this.logger.debug(`Using ${config.swapwitnessaddress ? 'P2WSH' : 'P2SH nested P2WSH'} addresses for Submarine Swaps`);
 
-    this.logger.error(`starting swapmanager inside service from Boltz`);
+    // this.logger.error('starting swapmanager inside service from Boltz');
     this.swapManager = new SwapManager(
       this.logger,
       this.walletManager,
@@ -106,7 +106,7 @@ class Service {
       config.retryInterval,
     );
 
-    this.logger.error(`starting EventHandler inside service from Boltz for ${this.currencies}` + JSON.stringify(Array.from(this.currencies)) + " " + currencies);
+    // this.logger.error(`starting EventHandler inside service from Boltz for ${this.currencies}` + JSON.stringify(Array.from(this.currencies)) + " " + currencies);
     this.eventHandler = new EventHandler(
       this.logger,
       this.currencies,
@@ -157,13 +157,13 @@ class Service {
    * Gets general information about this Boltz instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<GetInfoResponse> => {
-    this.logger.error("service.160 STARTED")
+    this.logger.error('service.160 STARTED');
     const response = new GetInfoResponse();
     const map = response.getChainsMap();
 
     response.setVersion(getVersion());
 
-    this.logger.error("service.165 - " + JSON.stringify(this.currencies))
+    this.logger.error('service.165 - ' + JSON.stringify(this.currencies));
     for (const [symbol, currency] of this.currencies) {
       const chain = new ChainInfo();
       const lnd = new LndInfo();
@@ -191,9 +191,9 @@ class Service {
           chain.setError(formatError(error));
         }
       } else if (currency.stacksClient) {
-        this.logger.error("service.ts 192 TODO");
+        this.logger.error('service.ts 192 TODO');
         const blockNumber = await getInfo();
-        this.logger.error("blockNumber: " + blockNumber);
+        this.logger.error('blockNumber: ' + blockNumber);
       }
 
       if (currency.lndClient) {
@@ -383,7 +383,7 @@ class Service {
         // this.logger.error("service.383 gettransaction ")
         return await getStacksRawTransaction(transactionHash);
       } else {
-        console.log("service.381 NOT_SUPPORTED_BY_SYMBOL");
+        console.log('service.381 NOT_SUPPORTED_BY_SYMBOL');
         throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
       }
     }
@@ -419,7 +419,7 @@ class Service {
     const currency = this.getCurrency(chainCurrency);
 
     if (currency.chainClient === undefined) {
-      console.log("service.ts 408 NOT_SUPPORTED_BY_SYMBOL")
+      console.log('service.ts 408 NOT_SUPPORTED_BY_SYMBOL');
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(currency.symbol);
     }
 
@@ -443,7 +443,7 @@ class Service {
     const wallet = this.walletManager.wallets.get(symbol.toUpperCase());
 
     if (wallet === undefined) {
-      console.log("service.ts line 411");
+      console.log('service.ts line 411');
       throw Errors.CURRENCY_NOT_FOUND(symbol);
     }
 
@@ -466,7 +466,7 @@ class Service {
     if (wallet !== undefined) {
       return wallet.getAddress();
     }
-    console.log("service.ts line 434");
+    console.log('service.ts line 434');
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
@@ -489,7 +489,7 @@ class Service {
         return gasPrice.div(gweiDecimals).toNumber();
       } else if (currency.stacksClient) {
         // STACKS I do it manually differently.
-        let fee = await getFee();
+        const fee = await getFee();
         // this.logger.error("service.485 got fee: " + fee + ", gweiDecimals " + gweiDecimals)
         // // fee = fee / BigInt(gweiDecimals)
         // // fee = new BigNumber(fee).toNumber().div(gweiDecimals).toNumber()
@@ -502,7 +502,7 @@ class Service {
         return fee.div(gweiDecimals).toNumber();
 
       } else {
-        console.log("service.ts 475 NOT_SUPPORTED_BY_SYMBOL")
+        console.log('service.ts 475 NOT_SUPPORTED_BY_SYMBOL');
         throw Errors.NOT_SUPPORTED_BY_SYMBOL(currency.symbol);
       }
     };
@@ -527,13 +527,13 @@ class Service {
       for (const [symbol, currency] of this.currencies) {
         if (currency.type === CurrencyType.ERC20) {
           if (!map.has('ETH')) {
-            console.log("service.ts 507 estimateFee", currency)
+            console.log('service.ts 507 estimateFee', currency);
             map.set('ETH', await estimateFee(currency));
           }
 
           continue;
         }
-        console.log("service.ts 513 estimateFee ", currency.symbol)
+        console.log('service.ts 513 estimateFee ', currency.symbol);
         map.set(symbol, await estimateFee(currency));
       }
     }
@@ -548,7 +548,7 @@ class Service {
     const currency = this.getCurrency(symbol);
 
     if (currency.chainClient === undefined) {
-      console.log("service.ts 518 NOT_SUPPORTED_BY_SYMBOL")
+      console.log('service.ts 518 NOT_SUPPORTED_BY_SYMBOL');
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
     }
 
@@ -639,6 +639,7 @@ class Service {
     asTimeoutBlockHeight?: number,
     quoteAmount?: number,
     baseAmount?: number,
+    tokenAddress?: string,
   }> => {
     // console.log('Service.641 ARGS ', args);
     const swap = await this.swapManager.swapRepository.getSwap({
@@ -684,6 +685,7 @@ class Service {
       claimAddress,
       timeoutBlockHeight,
       asTimeoutBlockHeight,
+      tokenAddress,
     } = await this.swapManager.createSwap({
       orderSide,
       timeoutBlockDelta,
@@ -766,6 +768,7 @@ class Service {
       asTimeoutBlockHeight,
       baseAmount: args.baseAmount,
       quoteAmount: args.quoteAmount,
+      tokenAddress
     };
   }
 
@@ -1346,7 +1349,7 @@ class Service {
         vout: vout!,
       };
     }
-    console.log("service.ts line 1096");
+    console.log('service.ts line 1096');
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
@@ -1425,7 +1428,7 @@ class Service {
     const currency = this.currencies.get(symbol);
 
     if (!currency) {
-      console.log("service.ts line 1155");
+      console.log('service.ts line 1155');
       throw Errors.CURRENCY_NOT_FOUND(symbol);
     }
 

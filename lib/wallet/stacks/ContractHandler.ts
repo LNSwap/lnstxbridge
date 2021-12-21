@@ -382,8 +382,8 @@ class ContractHandler {
 
     amount = amount.div(etherDecimals).div(100);
     const decimalamount = parseInt(amount.toString(),10) + 1;
-    this.logger.verbose('contracthandler.380 smaller amount: '+ amount + ', '+ decimalamount + ', ' + JSON.stringify(token) + ', ' + this.sip10contractAddress);
-
+    this.logger.verbose('contracthandler.380 smaller amount: '+ amount + ', '+ decimalamount + ', '+ this.sip10contractAddress);
+    //  + ', ' JSON.stringify(token) +
 
     // Add an optional post condition
     // See below for details on constructing post conditions
@@ -490,7 +490,7 @@ class ContractHandler {
     // const postConditionAddress = this.contractAddress;
     const postConditionCode = FungibleConditionCode.GreaterEqual;
     // new BigNum(1000000);
-    const postConditionAmount = new BigNum(100000);
+    const postConditionAmount = new BigNum(decimalamount);
     // const postConditions = [
     //   makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
     // ];
@@ -504,16 +504,18 @@ class ContractHandler {
       )
     ];
 
-    console.log('contracthandler.129 postConditions: ' + postConditions, claimAddress);
+    console.log('contracthandler.129 postConditions: ', postConditions, claimAddress);
 
     const swapamount = smallamount.toString(16).split('.')[0] + '';
     const paddedamount = swapamount.padStart(32, '0');
     const tl1 = timeLock.toString(16);
     const tl2 = tl1.padStart(32, '0');
-    const tl3 = tl2.slice(2);
+    // why slice it?! dont slice it
+    // const tl3 = tl2.slice(2);
+    const tl3 = tl2;
     const paddedtimelock = timeLock.toString(16).padStart(32, '0');
     console.log('contracthandler.135 ', smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
-    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162 
+    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162
     // 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea
     // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
     const functionArgs = [
@@ -542,7 +544,7 @@ class ContractHandler {
       functionName: 'claimToken',
       functionArgs: functionArgs,
       senderKey: stacksNetworkData.privateKey,
-      validateWithAbi: true,
+      // validateWithAbi: true,
       network: stacksNetworkData.stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
       // postConditions,
@@ -708,7 +710,7 @@ class ContractHandler {
     refundAddress: string,
     timelock: number,
   ): Promise<TxBroadcastResult> => {
-    this.logger.debug(`Claiming Stx with preimage: ${getHexString(preimage)}`);
+    this.logger.debug(`ch.711 Claiming Stx with preimage: ${getHexString(preimage)}`);
     this.logger.error('contracthandler.151 claim data refundAddress: ' + refundAddress);
 
     return this.claimStx(preimage, amount, refundAddress, timelock);

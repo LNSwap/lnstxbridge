@@ -180,6 +180,7 @@ class SwapManager {
     // tokenAddress?: string,
 
     asTimeoutBlockHeight?: number,
+    tokenAddress?: string;
   }> => {
     // this.logger.error('swapmanager.166 ARGS ' + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
@@ -199,13 +200,14 @@ class SwapManager {
     let address: string;
     let timeoutBlockHeight: number;
 
-    let redeemScript: Buffer | undefined;
+    // let redeemScript: Buffer | undefined;
+    let redeemScript = Buffer.from('', 'utf8');
 
     let claimAddress: string | undefined;
 
     let asTimeoutBlockHeight: number;
     asTimeoutBlockHeight = 0;
-    // let tokenAddress: string | undefined;
+    let tokenAddress: string | undefined;
 
     let quoteAmount: number | undefined;
     let baseAmount: number | undefined;
@@ -242,6 +244,13 @@ class SwapManager {
       console.log('sm.221 ', sendingCurrency.type, args.quoteCurrency);
       const contractAddress = this.getLockupContractAddress(sendingCurrency.type, args.quoteCurrency);
 
+      if(sendingCurrency.type === CurrencyType.Sip10) {
+        const tokenWallet = sendingCurrency.wallet.walletProvider as SIP10WalletProvider;
+        tokenAddress = tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName();
+        // redeemScript = tokenAddress; // used to be a placeholder but I'm adding tokenAddress to swaps now
+        console.log('sm.251 setting tokenAddress: ', tokenAddress);
+      }
+
       // atomic swap user:btc -> stx
       this.logger.info('swapmanager.220 createswap data: ' + stringify({
         id,
@@ -260,6 +269,7 @@ class SwapManager {
         asTimeoutBlockHeight,
         quoteAmount,
         baseAmount,
+        tokenAddress,
       }));
 
       await this.swapRepository.addSwap({
@@ -279,6 +289,7 @@ class SwapManager {
         asTimeoutBlockHeight,
         quoteAmount: args.quoteAmount,
         baseAmount: args.baseAmount,
+        tokenAddress,
       });
     } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -301,11 +312,13 @@ class SwapManager {
       claimAddress = await receivingCurrency.wallet.getAddress();
       // claimAddress = await receivingCurrency.wallet.
 
-      let tokenAddressHolder = Buffer.from('', 'utf8');
-      if(receivingCurrency.type === CurrencyType.Sip10) {
+      // let tokenAddress;
+      // = Buffer.from('', 'utf8');
+      if(receivingCurrency.type === CurrencyType.Sip10 || sendingCurrency.type === CurrencyType.Sip10) {
         const tokenWallet = receivingCurrency.wallet.walletProvider as SIP10WalletProvider;
-        tokenAddressHolder = Buffer.from(tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName(), 'utf8');
-        redeemScript = tokenAddressHolder;
+        tokenAddress = tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName();
+        // redeemScript = tokenAddress; // used to be a placeholder but I'm adding tokenAddress to swaps now
+        console.log('sm.312 setting tokenAddress: ', tokenAddress);
       }
 
       // stx->btc atomic swap
@@ -379,7 +392,7 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
-        tokenAddress: getHexString(tokenAddressHolder),
+        tokenAddress,
         claimAddress: args.claimAddress,
         quoteAmount: args.quoteAmount,
         baseAmount: args.baseAmount,
@@ -398,7 +411,7 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
-        redeemScript: getHexString(tokenAddressHolder),
+        redeemScript: getHexString(redeemScript),
         claimAddress: args.claimAddress,
         quoteAmount: args.quoteAmount,
         baseAmount: args.baseAmount,
@@ -406,7 +419,7 @@ class SwapManager {
         asLockupAddress: lockupAddress,
         asTimeoutBlockHeight,
         // keyIndex,
-        // tokenAddress: tokenAddress,
+        tokenAddress,
       });
     } else {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -451,7 +464,7 @@ class SwapManager {
       timeoutBlockHeight,
       // redeemScript,
       redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
-      // tokenAddress: tokenAddress ? tokenAddress : undefined,
+      tokenAddress,
     }));
 
     return {
@@ -461,7 +474,7 @@ class SwapManager {
       timeoutBlockHeight,
       // redeemScript,
       redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
-      // tokenAddress: tokenAddress ? tokenAddress : undefined,
+      tokenAddress,
       asTimeoutBlockHeight,
     };
   }
@@ -877,7 +890,7 @@ class SwapManager {
 
   private getCurrency = (currencySymbol: string) => {
     const currency = this.currencies.get(currencySymbol);
-    
+
     if (!currency) {
       // console.log("swapmanager.ts line 638");
       throw Errors.CURRENCY_NOT_FOUND(currencySymbol).message;

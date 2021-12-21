@@ -72,6 +72,7 @@ class Migration {
         await this.sequelize.query('ALTER TABLE swaps ADD quoteAmount INTEGER');
         await this.sequelize.query('ALTER TABLE swaps ADD asRedeemScript VARCHAR(255)');
         await this.sequelize.query('ALTER TABLE swaps ADD asLockupAddress VARCHAR(255)');
+        await this.sequelize.query('ALTER TABLE swaps ADD tokenAddress VARCHAR(255)');
 
         const allSwaps = await Swap.findAll();
         const allChannelCreations = await ChannelCreation.findAll();
