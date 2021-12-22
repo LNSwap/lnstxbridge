@@ -640,6 +640,7 @@ class Service {
     quoteAmount?: number,
     baseAmount?: number,
     tokenAddress?: string,
+    origBlockHeight?: number,
   }> => {
     // console.log('Service.641 ARGS ', args);
     const swap = await this.swapManager.swapRepository.getSwap({
@@ -768,7 +769,8 @@ class Service {
       asTimeoutBlockHeight,
       baseAmount: args.baseAmount,
       quoteAmount: args.quoteAmount,
-      tokenAddress
+      tokenAddress,
+      origBlockHeight: timeoutBlockHeight
     };
   }
 
