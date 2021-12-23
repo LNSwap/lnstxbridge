@@ -779,6 +779,23 @@ class Service {
 
     this.eventHandler.emitSwapCreation(id);
 
+    console.log('s.782 end returning this ', {
+      bip21,
+      expectedAmount,
+      acceptZeroConf,
+      id,
+      address,
+      redeemScript,
+      claimAddress,
+      timeoutBlockHeight: finalTimeoutBlockheight,
+      contractAddress,
+      asTimeoutBlockHeight,
+      baseAmount: args.baseAmount,
+      quoteAmount: args.quoteAmount,
+      tokenAddress,
+      origBlockHeight: timeoutBlockHeight
+    });
+
     return {
       bip21,
       expectedAmount,
@@ -1107,6 +1124,8 @@ class Service {
 
     // Is undefined when Bitcoin or Litecoin is swapped to Lightning
     claimAddress?: string,
+
+    tokenAddress?: string,
   }> => {
     let swap = await this.swapManager.swapRepository.getSwap({
       invoice: {
@@ -1127,6 +1146,7 @@ class Service {
       claimAddress,
       redeemScript,
       timeoutBlockHeight,
+      tokenAddress,
     } = await this.createSwap({
       pairId,
       channel,
@@ -1151,6 +1171,7 @@ class Service {
         acceptZeroConf,
         expectedAmount,
         timeoutBlockHeight,
+        tokenAddress,
       };
     } catch (error) {
       const channelCreation = await this.swapManager.channelCreationRepository.getChannelCreation({

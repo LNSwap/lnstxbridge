@@ -96,6 +96,15 @@ class SwapRepository {
     });
   }
 
+  // minerFee: number, 
+  public setTransactionRefunded = (reverseSwap: Swap, failureReason: string): Promise<Swap> => {
+    return reverseSwap.update({
+      failureReason,
+      // minerFee: reverseSwap.minerFee + minerFee,
+      status: SwapUpdateEvent.TransactionRefunded,
+    });
+  }
+
   public setRate = (swap: Swap, rate: number): Promise<Swap> => {
     return swap.update({
       rate,

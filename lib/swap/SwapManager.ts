@@ -328,12 +328,12 @@ class SwapManager {
 
       // stx->btc atomic swap
       let lockupAddress = '';
-      // let keyIndex = 0;
+      let keyIndex = 0;
       let asRedeemScript = '';
       if (args.baseAmount && args.onchainTimeoutBlockDelta) {
 
-        // index
-        const { keys } = sendingCurrency.wallet.getNewKeys();
+        // 
+        const { keys, index } = sendingCurrency.wallet.getNewKeys();
         // const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
         // timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
 
@@ -351,7 +351,7 @@ class SwapManager {
 
         // const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
         // lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
-        // keyIndex = index;
+        keyIndex = index;
         // console.log('lockupAddress + keyIndex ', lockupAddress, keyIndex);
 
         // generate swapscript instead of reverseswap script?!
@@ -404,7 +404,7 @@ class SwapManager {
         asRedeemScript,
         asLockupAddress: lockupAddress,
         asTimeoutBlockHeight,
-        // keyIndex,
+        keyIndex,
       }));
 
       await this.swapRepository.addSwap({
@@ -423,7 +423,7 @@ class SwapManager {
         asRedeemScript,
         asLockupAddress: lockupAddress,
         asTimeoutBlockHeight,
-        // keyIndex,
+        keyIndex,
         tokenAddress,
       });
     } else {
