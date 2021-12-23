@@ -739,7 +739,8 @@ class Service {
       bip21 = encodeBip21(
         base,
         address,
-        expectedAmount,
+        // expectedAmount,
+        expectedAmount*10**8,
         'onchain swap',
         // getSwapMemo(quote, false),
       ) || '';
@@ -757,26 +758,23 @@ class Service {
 
       contractAddress = swap?.contractAddress || '';
 
-      console.log('TODO:: validate base/quote amount!!!');
+      // console.log('TODO:: validate base/quote amount!!!');//done
 
       // set timeout = astimeout for atomic swaps
       console.log('s.743 setting timeout=asTimeoutBlockHeight: ', asTimeoutBlockHeight);
       finalTimeoutBlockheight = asTimeoutBlockHeight!;
     } else if(args.baseAmount) {
-      console.log('TODO: more validation NEEDED');
-
       // verify client-side input
-      // const response = await this.getManualRates(id, args.baseAmount, true);
-      // if (args.quoteAmount && (args.baseAmount != Math.floor(args.quoteAmount*10**6))) {
-      //   console.log('s.769 VERIFICATION FAILED baseAmount vs quoteAmount', args.baseAmount, args.quoteAmount*10**6, args.baseAmount !== args.quoteAmount*10**6);
-      //   throw Errors.INVALID_PARAMETER()
-      // }
-      // if (args.baseAmount < response.submarineSwap.invoiceAmount/10**8) {
-      //   console.log('s.773 VERIFICATION FAILED args.baseAmount (user will lock) vs invoiceAmount (operator will pay) ', args.baseAmount, response.submarineSwap.invoiceAmount/10**8);
-      //   throw Errors.WRONG_RATE()
-      // }  
+      const response = await this.getManualRates(id, args.baseAmount, true);
+      console.log('s.770 response ', response);
+
+      // console.log('TODO: more validation NEEDED'); //done
+      if (response.onchainAmount && args.quoteAmount && (args.quoteAmount > response.onchainAmount/100)) {
+        throw Errors.WRONG_RATE()
+      }
+
     } else {
-      console.log('s.777 no validation');
+      console.log('s.777 no validation done');
     }
 
     this.eventHandler.emitSwapCreation(id);
@@ -933,6 +931,12 @@ class Service {
 
       invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       console.log('s.784 requestedAmount, onchainAmount, invoiceAmount', requestedAmount, onchainAmount, invoiceAmount);
+
+      
+
+      // let originvoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      // invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      // console.log('s.940 originvoiceAmount, invoiceAmountAS', originvoiceAmount, invoiceAmountAS)
 
       if(!skipVerify) {
         console.log('s.899 verifyAmount pair,rate,invoiceamount,orderside: ', swap.pair, 'rate', rate, 'invoiceamount', invoiceAmount, 'orderside', swap.orderSide);
@@ -1492,7 +1496,7 @@ class Service {
     }
 
     // stx -> btcln calculateOnchainAmount:  0.4007220000000001 87025 21710.811984368214 0.05
-    console.log('s,1437 calculateOnchainAmount: ', onchainAmount, baseFee, rate, percentageFee);
+    console.log('s.1437 calculateOnchainAmount, baseFee, rate, percentageFee: ', onchainAmount, baseFee, rate, percentageFee);
     return Math.floor(
       (onchainAmount - baseFee) / (1 + percentageFee),
     );
