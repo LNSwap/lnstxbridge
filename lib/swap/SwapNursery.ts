@@ -51,7 +51,7 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
-import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx, getStacksNetwork } from '../wallet/stacks/StacksUtils';
+import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
 import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
 
 import mempoolJS from "@mempool/mempool.js";
