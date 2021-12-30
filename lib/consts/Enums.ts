@@ -50,6 +50,13 @@ export enum SwapUpdateEvent {
   // Events for the prepay miner fee Reverse Swap protocol
   MinerFeePaid = 'minerfee.paid',
   InvoiceExpired = 'invoice.expired',
+
+  // onchain atomic swap events
+  ASTransactionMempool = 'astransaction.mempool',
+  ASTransactionClaimed = 'astransaction.claimed',
+  ASTransactionRefunded = 'astransaction.refunded',
+  ASTransactionConfirmed = 'astransaction.confirmed',
+  ASTransactionLockupFailed = 'astransaction.lockupFailed',
 }
 
 export enum ChannelCreationType {

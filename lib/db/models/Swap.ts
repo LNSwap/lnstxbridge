@@ -29,7 +29,17 @@ type SwapType = {
   lockupTransactionId?: string;
   lockupTransactionVout?: number;
 
-  // tokenAddress?: string;
+  claimAddress?: string;
+  tokenAddress?: string;
+  contractAddress?: string;
+  asLockupTransactionId?: string;
+  // asLockedAmount?: number;
+  asRequestedAmount?: number;
+  asTimeoutBlockHeight?: number;
+  baseAmount?: number;
+  quoteAmount?: number;
+  asRedeemScript?: string,
+  asLockupAddress?: string,
 };
 
 class Swap extends Model implements SwapType {
@@ -63,7 +73,19 @@ class Swap extends Model implements SwapType {
   public createdAt!: Date;
   public updatedAt!: Date;
 
-  // public tokenAddress?: string;
+  public claimAddress?: string;
+  public tokenAddress?: string;
+  public contractAddress?: string;
+
+  public asLockupTransactionId?: string;
+  // public asLockedAmount?: number;
+  public asRequestedAmount?: number;
+  public asTimeoutBlockHeight?: number;
+
+  public baseAmount?: number;
+  public quoteAmount?: number;
+  public asRedeemScript?: string;
+  public asLockupAddress?: string;
 
   public static load = (sequelize: Sequelize): void => {
     Swap.init({
@@ -87,7 +109,17 @@ class Swap extends Model implements SwapType {
       lockupAddress: { type: new DataTypes.STRING(255), allowNull: false },
       lockupTransactionId: { type: new DataTypes.STRING(255), allowNull: true },
       lockupTransactionVout: { type: new DataTypes.INTEGER(), allowNull: true },
-      // tokenAddress: { type: new DataTypes.STRING(255), allowNull: true },
+      claimAddress: { type: new DataTypes.STRING(255), allowNull: true },
+      contractAddress: { type: new DataTypes.STRING(255), allowNull: true },
+      asLockupTransactionId: { type: new DataTypes.STRING(255), allowNull: true },
+      asLockedAmount: { type: new DataTypes.INTEGER(), allowNull: true },
+      asRequestedAmount: { type: new DataTypes.INTEGER(), allowNull: true },
+      asTimeoutBlockHeight: { type: new DataTypes.INTEGER(), allowNull: true },
+      baseAmount: { type: new DataTypes.INTEGER(), allowNull: true },
+      quoteAmount: { type: new DataTypes.INTEGER(), allowNull: true },
+      asRedeemScript: { type: new DataTypes.STRING(255), allowNull: true },
+      asLockupAddress: { type: new DataTypes.STRING(255), allowNull: true },
+      tokenAddress: { type: new DataTypes.STRING(255), allowNull: true },
     }, {
       sequelize,
       tableName: 'swaps',

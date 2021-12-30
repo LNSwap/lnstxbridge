@@ -20,7 +20,8 @@ import {
   reverseBuffer,
   splitPairId,
   transactionHashToId,
-  transactionSignalsRbfExplicitly
+  transactionSignalsRbfExplicitly,
+  getHexString
 } from '../Utils';
 
 interface UtxoNursery {
@@ -46,6 +47,10 @@ interface UtxoNursery {
 
   on(event: 'reverseSwap.claimed', listener: (reverseSwap: ReverseSwap, preimage: Buffer) => void): this;
   emit(event: 'reverseSwap.claimed', reverseSwap: ReverseSwap, preimage: Buffer): boolean;
+
+  // atomic swap
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction, preimage?: string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction, preimage?: string): boolean;
 }
 
 class UtxoNursery extends EventEmitter {
@@ -76,14 +81,156 @@ class UtxoNursery extends EventEmitter {
 
   private listenTransactions = (chainClient: ChainClient, wallet: Wallet) => {
     chainClient.on('transaction', async (transaction, confirmed) => {
+      console.log('un.84 on transaction');
       await Promise.all([
         this.checkSwapOutputs(chainClient, wallet, transaction, confirmed),
 
         this.checkReverseSwapClaims(chainClient, transaction),
         this.checkReverseSwapLockupsConfirmed(chainClient, wallet, transaction, confirmed),
+
+        // check atomic swap here!!
+        this.checkAtomicSwapOutputs(chainClient, wallet, transaction, confirmed),
       ]);
     });
   }
+
+  private checkAtomicSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {
+    for (let vout = 0; vout < transaction.outs.length; vout += 1) {
+      const output = transaction.outs[vout];
+      // console.log('utxo.99 checkAtomicSwapOutputs vout ', vout, output.script, wallet.encodeAddress(output.script));
+
+      let swap = await this.swapRepository.getSwap({
+        status: {
+          [Op.or]: [
+            SwapUpdateEvent.SwapCreated,
+            SwapUpdateEvent.InvoiceSet,
+            SwapUpdateEvent.TransactionMempool,
+            SwapUpdateEvent.TransactionZeroConfRejected,
+            SwapUpdateEvent.ASTransactionMempool,
+          ],
+        },
+        asLockupAddress: {
+          [Op.eq]: wallet.encodeAddress(output.script),
+        }
+      });
+
+      if (!swap) {
+        console.log('atomic swap not found');
+        continue;
+      }
+
+      this.logger.verbose(`Found ${confirmed ? '' : 'un'}confirmed lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
+      // console.log('un.122 atomic swap found ', swap, transaction);
+
+      const swapOutput = detectSwap(getHexBuffer(swap.asRedeemScript!), transaction)!;
+      console.log('un.121 swapOutput!!!! should NOT be undefined! ', swapOutput);
+
+      swap = await this.swapRepository.setASTransactionConfirmed(
+        swap,
+        confirmed,
+        output.value,
+        // swapOutput.vout,
+        vout, // we already know vout
+        transaction.getId(),
+      );
+
+      const expectedAmount = swap.quoteAmount! * 100000000;
+      if (expectedAmount) {
+        // swapOutput.value
+        if (expectedAmount > output.value) {
+          // swapOutput.script
+          chainClient.removeOutputFilter(output.script);
+          this.emit('swap.lockup.failed', swap, Errors.INSUFFICIENT_AMOUNT(swapOutput.value, expectedAmount).message);
+
+          continue;
+        }
+      }
+
+      // Confirmed transactions do not have to be checked for 0-conf criteria
+      if (!confirmed) {
+        console.log('utxo.146 checking zero-conf stuff');
+        if (swap.acceptZeroConf !== true) {
+          this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.SWAP_DOES_NOT_ACCEPT_ZERO_CONF().message);
+          continue;
+        }
+
+        const signalsRBF = await this.transactionSignalsRbf(chainClient, transaction);
+
+        if (signalsRBF) {
+          this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.LOCKUP_TRANSACTION_SIGNALS_RBF().message);
+          continue;
+        }
+
+        // Check if the transaction has a fee high enough to be confirmed in a timely manner
+        const feeEstimation = await chainClient.estimateFee();
+
+        const absoluteTransactionFee = await calculateUtxoTransactionFee(chainClient, transaction);
+        const transactionFeePerVbyte = absoluteTransactionFee / transaction.virtualSize();
+
+        // If the transaction fee is less than 80% of the estimation, Boltz will wait for a confirmation
+        //
+        // Special case: if the fee estimation is the lowest possible of 2 sat/vbyte,
+        // every fee paid by the transaction will be accepted
+        if (
+          transactionFeePerVbyte / feeEstimation < 0.8 &&
+          feeEstimation !== 2
+        ) {
+          this.emit('swap.lockup.zeroconf.rejected', swap, transaction, Errors.LOCKUP_TRANSACTION_FEE_TOO_LOW().message);
+          continue;
+        }
+
+        this.logger.debug(`Accepted 0-conf lockup transaction for Swap ${swap.id}: ${transaction.getId()}`);
+      }
+
+      chainClient.removeOutputFilter(output.script);
+
+      this.emit('astransaction.confirmed', swap, transaction);
+    }
+
+
+    for (let vin = 0; vin < transaction.ins.length; vin += 1) {
+      const input = transaction.ins[vin];
+      // console.log('tx input ', input, input.script);
+      // console.log('find swap with asLockupAddress = ', wallet.encodeAddress(input.script));
+
+      const atomicSwap = await this.swapRepository.getSwap({
+        status: {
+          [Op.or]: [
+            SwapUpdateEvent.TransactionMempool,
+            SwapUpdateEvent.TransactionConfirmed,
+            SwapUpdateEvent.ASTransactionMempool,
+            SwapUpdateEvent.ASTransactionConfirmed,
+          ],
+        },
+        lockupTransactionId: {
+          [Op.eq]: transactionHashToId(input.hash),
+        },
+        lockupTransactionVout: {
+          [Op.eq]: input.index,
+        },
+        // asLockupAddress: {
+        //   [Op.eq]: wallet.encodeAddress(input.script),
+        // }
+      });
+
+      if (!atomicSwap) {
+        console.log('atomicswap input not found ');
+        continue;
+      }
+
+      this.logger.verbose(`Found claim transaction of atomic Swap ${atomicSwap.id}: ${transaction.getId()}`);
+
+      console.log('un.222 detecting preimage vin, tx: ', vin , transaction);
+      // console.log('un.222 detecting preimage manually: ', transaction.ins[vin].witness[1]);
+      const preimage = detectPreimage(vin, transaction);
+      console.log('preimage detected ', getHexString(preimage));
+
+      chainClient.removeInputFilter(input.hash);
+      this.emit('astransaction.confirmed', atomicSwap, transaction, getHexString(preimage));
+      // this.emit('reverseSwap.claimed', atomicSwap, detectPreimage(vin, transaction));
+    }
+  }
+
 
   private checkSwapOutputs = async (chainClient: ChainClient, wallet: Wallet, transaction: Transaction, confirmed: boolean) => {
     for (let vout = 0; vout < transaction.outs.length; vout += 1) {

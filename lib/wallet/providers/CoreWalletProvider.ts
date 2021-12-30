@@ -30,6 +30,7 @@ class CoreWalletProvider implements WalletProviderInterface {
   }
 
   public sendToAddress = async (address: string, amount: number): Promise<SentTransaction> => {
+    console.log('corewalletinterface.33 ', address, amount);
     const transactionId = await this.chainClient.sendToAddress(address, amount);
     return await this.handleCoreTransaction(transactionId, address);
   }

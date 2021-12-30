@@ -3,7 +3,8 @@ tasks:
   # runs during prebuild
   - init: |
       echo 'init script' 
-      sudo apt install rsync --assume-yes
+      echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
+      sudo apt update && sudo apt install rsync --assume-yes
       nvm install 14
       mkdir ~/.lnstx
       cp boltz.conf ~/.lnstx/boltz.conf
@@ -11,12 +12,23 @@ tasks:
       npm i
       npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
-    command: npm run dev
+    # git stash
+    command: |
+      npm run dev
+    # rm package-lock.json
+    # npm i
   - init: |
       docker ps
     # sleep 60
     command: >
-      alias lnclibtc2='docker exec -it regtest lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'
+      alias lnclibtc2='docker exec -it regtest lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc2/tls.cert --macaroonpath=/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon'
+      alias lnclibtc1='docker exec -it regtest lncli --rpcserver=127.0.0.1:10009 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'
+      alias btccli='docker exec -it regtest /usr/bin/bitcon-cli '
+      echo 'lnclibtc2 newaddress p2wkh'
+      echo "bitcoin-cli send '{\"bcrt1q93rsj05zw3pvf8pa4gpjaypy5x5mqws49as43t\":10}'"
+      echo 'bitcoin-cli -regtest -generate 1'
+      echo 'bitcoin-cli gettxout a15863a0b1bbce4d35bbf6d4933564d52720b7c364665cc627c82679bfe29455 0 '
+      echo 'watch -n10 -x bitcoin-cli -regtest -generate 1'
     # docker exec -it regtest bash
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
@@ -27,12 +39,13 @@ tasks:
     command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer
+      sleep 5
       SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP npm run stacks:fund:signer
       sleep 10
       npm run stacks:deploy
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
-        git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
+        git clone -b onchain https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
         export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API
@@ -41,12 +54,20 @@ tasks:
         sed -i 's/PORT=443/PORT=8888/g' .env
         sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
         sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9002#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
-        sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
-        sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
         npm i    
+      # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
+      # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
+      # git stash
+      # git update-index --assume-unchanged .env
     command: npm run start
   - init: brew install clarinet
     command: clarinet test
+  - init: |
+        echo 'npm run compile:watch'
+    command: echo 'npm run compile:watch'
+  # gitpod might have issue with archive.ubuntu.com
+  # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
+  # sudo apt update && sudo apt install rsync --assume-yes && npm i
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000

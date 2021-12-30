@@ -175,18 +175,23 @@ class ZmqClient extends EventEmitter {
       // the second time the client receives the transaction
       if (this.utxos.has(id)) {
         this.utxos.delete(id);
+        // console.log('zmq.178 ', transaction);
         this.emit('transaction', transaction, true);
 
         return;
       }
 
       if (this.isRelevantTransaction(transaction)) {
+        // console.log('zmq.185 ', transaction);
         const transactionData = await this.getRawTransactionVerbose(id) as RawTransaction;
 
         // Check whether the transaction got confirmed or added to the mempool
         if (transactionData.confirmations) {
+          // when astransaction mempool -> conf
+          // console.log('zmq.190 ', transaction);
           this.emit('transaction', transaction, true);
         } else {
+          // console.log('zmq.193 ', transaction);
           this.utxos.add(id);
           this.emit('transaction', transaction, false);
         }
@@ -313,13 +318,19 @@ class ZmqClient extends EventEmitter {
 
   private isRelevantTransaction = (transaction: Transaction) => {
     for (const input of transaction.ins) {
+      // console.log('isrelevantinput? ', input);
+      // console.log('zmqclient relevantinputs ', this.relevantInputs);
       if (this.relevantInputs.has(getHexString(input.hash))) {
+        console.log('isrelevantinput yes it is. found it!!! ', input);
         return true;
       }
     }
 
     for (const output of transaction.outs) {
+      // console.log('zmqclient checking output ', output );
+      // console.log('zmqclient relevantOutputs ', this.relevantOutputs);
       if (this.relevantOutputs.has(getHexString(output.script))) {
+        console.log('zmqclient found it!!! ', getHexString(output.script));
         return true;
       }
     }

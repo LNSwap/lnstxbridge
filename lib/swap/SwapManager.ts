@@ -37,7 +37,8 @@ import {
   stringify,
 } from '../Utils';
 import { getInfo } from '../wallet/stacks/StacksUtils';
-import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
+import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
+import ChainTipRepository from '../db/ChainTipRepository';
 
 type ChannelCreationInfo = {
   auto: boolean,
@@ -101,7 +102,7 @@ class SwapManager {
             SwapUpdateEvent.InvoiceFailedToPay,
             SwapUpdateEvent.TransactionClaimed,
           ],
-        },
+        } as any,
       }),
       this.reverseSwapRepository.getReverseSwaps({
         status: {
@@ -111,7 +112,7 @@ class SwapManager {
             SwapUpdateEvent.TransactionFailed,
             SwapUpdateEvent.TransactionRefunded,
           ],
-        },
+        } as any,
       }),
     ]);
 
@@ -149,6 +150,17 @@ class SwapManager {
 
     // Only required for UTXO based chains
     refundPublicKey?: Buffer,
+
+    // for onchainswaps
+    bip21?: string,
+    expectedAmount?: number,
+    acceptZeroConf?: boolean,
+    claimAddress?: string,
+    requestedAmount?: number,
+    quoteAmount?: number,
+    baseAmount?: number,
+    onchainTimeoutBlockDelta?: number,
+    // claimPublicKey?: string,
   }): Promise<{
     id: string,
     timeoutBlockHeight: number,
@@ -166,16 +178,21 @@ class SwapManager {
 
     // // only for sip10 swaps
     // tokenAddress?: string,
+
+    asTimeoutBlockHeight?: number,
+    tokenAddress?: string;
   }> => {
-    // this.logger.error("swapmanager.166 getCurrencies " + stringify(args));
+    // this.logger.error('swapmanager.166 ARGS ' + stringify(args));
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(args.baseCurrency, args.quoteCurrency, args.orderSide);
 
-    if (!sendingCurrency.lndClient) {
+    // for btc -> stx submarine sell
+    if (!sendingCurrency.lndClient && !sendingCurrency.stacksClient) {
       throw Errors.NO_LND_CLIENT(sendingCurrency.symbol);
     }
 
     const id = generateId();
 
+    // Creating new Swap from BTC to STX
     this.logger.verbose(`Creating new Swap from ${receivingCurrency.symbol} to ${sendingCurrency.symbol}: ${id}`);
 
     const pair = getPairId({ base: args.baseCurrency, quote: args.quoteCurrency });
@@ -183,18 +200,37 @@ class SwapManager {
     let address: string;
     let timeoutBlockHeight: number;
 
-    let redeemScript: Buffer | undefined;
+    // let redeemScript: Buffer | undefined;
+    let redeemScript = Buffer.from('', 'utf8');
 
     let claimAddress: string | undefined;
 
-    // let tokenAddress: string | undefined;
+    let asTimeoutBlockHeight: number;
+    asTimeoutBlockHeight = 0;
+    let tokenAddress: string | undefined;
+
+    let quoteAmount: number | undefined;
+    let baseAmount: number | undefined;
 
     if (receivingCurrency.type === CurrencyType.BitcoinLike) {
       const { blocks } = await receivingCurrency.chainClient!.getBlockchainInfo();
       timeoutBlockHeight = blocks + args.timeoutBlockDelta;
 
-      const { keys, index } = receivingCurrency.wallet.getNewKeys();
+      const chainTipRepository = new ChainTipRepository();
+      let otherChainTip;
+      if(sendingCurrency.type == CurrencyType.Sip10) {
+        otherChainTip = await chainTipRepository.findOrCreateTip('STX', 0);
+      } else {
+        otherChainTip = await chainTipRepository.findOrCreateTip(sendingCurrency.symbol, 0);
+      }
+      asTimeoutBlockHeight = otherChainTip.height + args.timeoutBlockDelta;
+      console.log('swapmanager.222 sendingchainTip ', sendingCurrency.symbol, otherChainTip, asTimeoutBlockHeight);
+      // it works because stx blocktime = btc blocktime
 
+      const { keys, index } = receivingCurrency.wallet.getNewKeys();
+      console.log('receiving currency BitcoinLike ', keys, index);
+
+      console.log('sm.226 create swapScript ', getHexString(args.preimageHash), getHexString(keys.publicKey), getHexString(args.refundPublicKey!));
       redeemScript = swapScript(
         args.preimageHash,
         keys.publicKey,
@@ -206,8 +242,40 @@ class SwapManager {
       const outputScript = encodeFunction(redeemScript);
 
       address = receivingCurrency.wallet.encodeAddress(outputScript);
+      console.log('sn.238 address, outputScript, redeemScript', address, outputScript, redeemScript);
 
       receivingCurrency.chainClient!.addOutputFilter(outputScript);
+
+      console.log('sm.221 ', sendingCurrency.type, args.quoteCurrency);
+      const contractAddress = this.getLockupContractAddress(sendingCurrency.type, args.quoteCurrency);
+
+      if(sendingCurrency.type === CurrencyType.Sip10) {
+        const tokenWallet = sendingCurrency.wallet.walletProvider as SIP10WalletProvider;
+        tokenAddress = tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName();
+        // redeemScript = tokenAddress; // used to be a placeholder but I'm adding tokenAddress to swaps now
+        console.log('sm.251 setting tokenAddress: ', tokenAddress);
+      }
+
+      // atomic swap user:btc -> stx
+      this.logger.info('swapmanager.220 createswap data: ' + stringify({
+        id,
+        pair,
+        timeoutBlockHeight,
+
+        keyIndex: index,
+        orderSide: args.orderSide,
+        lockupAddress: address,
+        contractAddress,
+        status: SwapUpdateEvent.SwapCreated,
+        preimageHash: getHexString(args.preimageHash),
+        redeemScript: getHexString(redeemScript),
+        claimAddress: args.claimAddress,
+        requestedAmount: args.requestedAmount,
+        asTimeoutBlockHeight,
+        quoteAmount,
+        baseAmount,
+        tokenAddress,
+      }));
 
       await this.swapRepository.addSwap({
         id,
@@ -220,6 +288,13 @@ class SwapManager {
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
         redeemScript: getHexString(redeemScript),
+        claimAddress: args.claimAddress,
+        contractAddress,
+        asRequestedAmount: args.requestedAmount,
+        asTimeoutBlockHeight,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
+        tokenAddress,
       });
     } else if (receivingCurrency.type === CurrencyType.Stx || receivingCurrency.type === CurrencyType.Sip10 ) {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
@@ -230,18 +305,90 @@ class SwapManager {
       const info = await getInfo();
       const blockNumber = info.stacks_tip_height;
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
+      console.log('sm.292 receiving STX/SIP10 ', receivingCurrency.symbol, blockNumber, timeoutBlockHeight);
+
+      const chainTipRepository = new ChainTipRepository();
+      const otherChainTip = await chainTipRepository.findOrCreateTip(sendingCurrency.symbol, 0);
+      asTimeoutBlockHeight = otherChainTip.height + args.timeoutBlockDelta;
+      console.log('sm.297 chainTipRepository ', sendingCurrency.symbol, otherChainTip.height, asTimeoutBlockHeight);
+      // it works because stx blocktime = btc blocktime
 
       // this.logger.error("swapmanager.227 " + stringify(receivingCurrency));
       claimAddress = await receivingCurrency.wallet.getAddress();
       // claimAddress = await receivingCurrency.wallet.
 
-      let tokenAddressHolder = Buffer.from('', 'utf8');
-      if(receivingCurrency.type === CurrencyType.Sip10) {
+      // let tokenAddress;
+      // = Buffer.from('', 'utf8');
+      if(receivingCurrency.type === CurrencyType.Sip10 || sendingCurrency.type === CurrencyType.Sip10) {
         const tokenWallet = receivingCurrency.wallet.walletProvider as SIP10WalletProvider;
-        tokenAddressHolder = Buffer.from(tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName(), 'utf8');
-        redeemScript = tokenAddressHolder;
+        tokenAddress = tokenWallet.getTokenContractAddress() + '.' + tokenWallet.getTokenContractName();
+        // redeemScript = tokenAddress; // used to be a placeholder but I'm adding tokenAddress to swaps now
+        console.log('sm.312 setting tokenAddress: ', tokenAddress);
       }
 
+      // stx->btc atomic swap
+      let lockupAddress = '';
+      let keyIndex = 0;
+      let asRedeemScript = '';
+      if (args.baseAmount && args.onchainTimeoutBlockDelta) {
+
+        // 
+        const { keys, index } = sendingCurrency.wallet.getNewKeys();
+        // const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
+        // timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;
+
+        // redeemScript = reverseSwapScript(
+        //   args.preimageHash,
+        //   // args.claimPublicKey!, - use refundPublicKey instead from user
+        //   // args.claimAddress!, - not added
+        //   args.refundPublicKey!,
+        //   keys.publicKey, // refund public key to lnstxbridge
+        //   timeoutBlockHeight,
+        // );
+        // asRedeemScript = getHexString(redeemScript);
+        // console.log('sm.320 reverseSwapScript can be claimed by ', getHexString(args.refundPublicKey!), ' refund to ', getHexString(keys.publicKey));
+        // console.log('sm.321 asRedeemScript ', asRedeemScript);
+
+        // const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
+        // lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
+        keyIndex = index;
+        // console.log('lockupAddress + keyIndex ', lockupAddress, keyIndex);
+
+        // generate swapscript instead of reverseswap script?!
+        // console.log('generating swapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), timeoutBlockHeight);
+        // redeemScript = swapScript(
+        //   args.preimageHash,
+        //   // keys.publicKey,
+        //   args.refundPublicKey!,
+        //   keys.publicKey,
+        //   // args.refundPublicKey!,
+        //   timeoutBlockHeight,
+        // );
+        // asRedeemScript = getHexString(redeemScript);
+        // const encodeFunction = getScriptHashFunction(this.swapOutputType);
+        // const outputScript = encodeFunction(redeemScript);
+        // lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
+        // console.log('sm.341 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
+
+
+        // using reverseswapscript
+        console.log('generating reverseswapscript with ', getHexString(args.preimageHash), getHexString(args.refundPublicKey!), getHexString(keys.publicKey), asTimeoutBlockHeight);
+        redeemScript = reverseSwapScript(
+          args.preimageHash,
+          args.refundPublicKey!,
+          // args.claimPublicKey!,
+          keys.publicKey,
+          // timeoutBlockHeight,
+          asTimeoutBlockHeight
+        );
+        asRedeemScript = getHexString(redeemScript);
+        const outputScript = getScriptHashFunction(ReverseSwapOutputType)(redeemScript);
+        lockupAddress = sendingCurrency.wallet.encodeAddress(outputScript);
+        console.log('sm.360 outputScript, lockupAddress ', getHexString(outputScript), lockupAddress);
+      }
+
+      // timeout = receiving currency = stx
+      // asTimeout = sending currency = btc
       this.logger.info('swapmanager.228 createswap data: ' + stringify({
         id,
         pair,
@@ -250,7 +397,14 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
-        tokenAddress: getHexString(tokenAddressHolder),
+        tokenAddress,
+        claimAddress: args.claimAddress,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
+        asRedeemScript,
+        asLockupAddress: lockupAddress,
+        asTimeoutBlockHeight,
+        keyIndex,
       }));
 
       await this.swapRepository.addSwap({
@@ -262,14 +416,21 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
-        redeemScript: getHexString(tokenAddressHolder),
-        // tokenAddress: tokenAddress,
+        redeemScript: getHexString(redeemScript),
+        claimAddress: args.claimAddress,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
+        asRedeemScript,
+        asLockupAddress: lockupAddress,
+        asTimeoutBlockHeight,
+        keyIndex,
+        tokenAddress,
       });
     } else {
       address = this.getLockupContractAddress(receivingCurrency.type, args.quoteCurrency);
 
       // undefined!
-      this.logger.info("swapmanager.237 " + receivingCurrency.provider!);
+      this.logger.info('swapmanager.237 ' + receivingCurrency.provider!);
       const blockNumber = await receivingCurrency.provider!.getBlockNumber();
       timeoutBlockHeight = blockNumber + args.timeoutBlockDelta;
 
@@ -284,6 +445,9 @@ class SwapManager {
         orderSide: args.orderSide,
         status: SwapUpdateEvent.SwapCreated,
         preimageHash: getHexString(args.preimageHash),
+        claimAddress: args.claimAddress,
+        quoteAmount: args.quoteAmount,
+        baseAmount: args.baseAmount,
       });
     }
 
@@ -305,7 +469,7 @@ class SwapManager {
       timeoutBlockHeight,
       // redeemScript,
       redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
-      // tokenAddress: tokenAddress ? tokenAddress : undefined,
+      tokenAddress,
     }));
 
     return {
@@ -315,7 +479,8 @@ class SwapManager {
       timeoutBlockHeight,
       // redeemScript,
       redeemScript: redeemScript ? getHexString(redeemScript) : undefined,
-      // tokenAddress: tokenAddress ? tokenAddress : undefined,
+      tokenAddress,
+      asTimeoutBlockHeight,
     };
   }
 
@@ -590,7 +755,7 @@ class SwapManager {
       refundAddress = await this.walletManager.wallets.get(sendingCurrency.symbol)!.getAddress();
       refundAddress = refundAddress.toLowerCase();
 
-      this.logger.verbose("prepared reverse swap data: " + blockNumber + ", " + lockupAddress + ", " + refundAddress);
+      this.logger.verbose('prepared reverse swap data: ' + blockNumber + ', ' + lockupAddress + ', ' + refundAddress);
 
       let tokenAddressHolder = Buffer.from('', 'utf8');
       if(sendingCurrency.type === CurrencyType.Sip10) {
@@ -638,7 +803,7 @@ class SwapManager {
       const lightningCurrency = getLightningCurrency(base, quote, swap.orderSide, isReverse);
 
       if ((swap.status === SwapUpdateEvent.SwapCreated || swap.status === SwapUpdateEvent.MinerFeePaid) && isReverse) {
-        this.logger.info("swapmanager recreateFilters foreach SwapCreated chainCurrency " + chainCurrency);
+        this.logger.info('swapmanager recreateFilters foreach SwapCreated chainCurrency ' + chainCurrency);
         const reverseSwap = swap as ReverseSwap;
 
         const { lndClient } = this.currencies.get(lightningCurrency)!;
@@ -653,7 +818,7 @@ class SwapManager {
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
-          this.logger.info("swapmanager recreateFilters foreach TransactionConfirmed chainCurrency " + chainCurrency);
+          this.logger.info('swapmanager recreateFilters foreach TransactionConfirmed chainCurrency ' + chainCurrency);
           const transactionId = reverseBuffer(getHexBuffer((swap as ReverseSwap).transactionId!));
           chainClient.addInputFilter(transactionId);
 
@@ -667,7 +832,7 @@ class SwapManager {
         const { chainClient } = this.currencies.get(chainCurrency)!;
 
         if (chainClient) {
-          this.logger.info("swapmanager recreateFilters foreach else chainCurrency " + chainCurrency);
+          this.logger.info('swapmanager recreateFilters foreach else chainCurrency ' + chainCurrency);
           const wallet = this.walletManager.wallets.get(chainCurrency)!;
           const outputScript = wallet.decodeAddress(swap.lockupAddress);
 
@@ -688,7 +853,8 @@ class SwapManager {
       // Check whether the the receiving side supports MPP and if so,
       // query a route for the number of sats of the invoice divided
       // by the max payment parts we tell to LND to use
-      const amountToQuery = decodedInvoice.featuresMap['17']?.is_known ?
+      const holder:any = decodedInvoice.featuresMap['17'];
+      const amountToQuery = holder?.is_known ?
         Math.round(decodedInvoice.numSatoshis / LndClient.paymentMaxParts) :
         decodedInvoice.numSatoshis;
 
@@ -729,7 +895,7 @@ class SwapManager {
 
   private getCurrency = (currencySymbol: string) => {
     const currency = this.currencies.get(currencySymbol);
-    
+
     if (!currency) {
       // console.log("swapmanager.ts line 638");
       throw Errors.CURRENCY_NOT_FOUND(currencySymbol).message;
@@ -739,7 +905,7 @@ class SwapManager {
   }
 
   private getLockupContractAddress = (type: CurrencyType, quoteCurrency: string): string => {
-    this.logger.verbose("getLockupContractAddress CurrencyType: " + type)
+    this.logger.verbose('getLockupContractAddress CurrencyType: ' + type);
     const ethereumManager = this.walletManager.ethereumManager!;
     const rskManager = this.walletManager.rskManager!;
     const stacksManager = this.walletManager.stacksManager!;
@@ -754,13 +920,14 @@ class SwapManager {
     } else if (type === CurrencyType.Sip10) {
       addresstoreturn = stacksManager.sip10SwapAddress;
     } else {
-      if (quoteCurrency == "SOV") {
-        this.logger.error("getlockupcontractaddress from rsk");
-        addresstoreturn = rskManager.erc20Swap.address;
-      } else {
-        addresstoreturn = ethereumManager.erc20Swap.address;
-      }
-      
+      console.log('getLockupContractAddress ', quoteCurrency);
+      addresstoreturn = 'dummyvalue';
+      // if (quoteCurrency == "SOV") {
+      //   this.logger.error("getlockupcontractaddress from rsk");
+      //   addresstoreturn = rskManager.erc20Swap.address;
+      // } else {
+      //   addresstoreturn = ethereumManager.erc20Swap.address;
+      // }
     }
 
     return addresstoreturn;

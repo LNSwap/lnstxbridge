@@ -18,7 +18,7 @@ class SwapRepository {
             SwapUpdateEvent.InvoiceFailedToPay,
             SwapUpdateEvent.TransactionClaimed,
           ],
-        },
+        } as any,
         timeoutBlockHeight: {
           [Op.lte]: height,
         },
@@ -53,6 +53,16 @@ class SwapRepository {
     });
   }
 
+  // invoice: string, expectedAmount: number, fee: number, 
+  public setAcceptZeroConf = (swap: Swap, acceptZeroConf: boolean): Promise<Swap> => {
+    return swap.update({
+      acceptZeroConf,
+      // expectedAmount,
+      // status: SwapUpdateEvent.InvoiceSet,
+    });
+  }
+
+  // TODO: probably bad idea changing this? - reverted
   public setLockupTransaction = (
     swap: Swap,
     lockupTransactionId: string,
@@ -60,11 +70,38 @@ class SwapRepository {
     confirmed: boolean,
     lockupTransactionVout?: number,
   ): Promise<Swap> => {
+    console.log('setLockupTransaction ', swap.id, lockupTransactionId, confirmed);
     return swap.update({
       onchainAmount,
       lockupTransactionId,
       lockupTransactionVout,
+      // status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
       status: confirmed ? SwapUpdateEvent.TransactionConfirmed : SwapUpdateEvent.TransactionMempool,
+    });
+  }
+
+  public setASTransactionConfirmed = (
+    swap: Swap,
+    confirmed: boolean,
+    onchainAmount?: number,
+    lockupTransactionVout?: number,
+    lockupTransactionId?: string,
+  ): Promise<Swap> => {
+    console.log('sr.90 setASTransactionConfirmed ', swap.id, confirmed, lockupTransactionId);
+    return swap.update({
+      asLockupTransactionId: lockupTransactionId,
+      lockupTransactionVout,
+      onchainAmount,
+      status: confirmed ? SwapUpdateEvent.ASTransactionConfirmed : SwapUpdateEvent.ASTransactionMempool,
+    });
+  }
+
+  // minerFee: number, 
+  public setTransactionRefunded = (reverseSwap: Swap, failureReason: string): Promise<Swap> => {
+    return reverseSwap.update({
+      failureReason,
+      // minerFee: reverseSwap.minerFee + minerFee,
+      status: SwapUpdateEvent.TransactionRefunded,
     });
   }
 

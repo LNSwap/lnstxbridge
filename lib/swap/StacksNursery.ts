@@ -13,14 +13,14 @@ import ReverseSwapRepository from '../db/ReverseSwapRepository';
 import { CurrencyType, SwapUpdateEvent } from '../consts/Enums';
 // import EthereumManager from '../wallet/ethereum/EthereumManager';
 // import RskManager from '../wallet/rsk/RskManager';
-import { ERC20SwapValues, EtherSwapValues } from '../consts/Types';
+import { ERC20SwapValues, EtherSwapValues, SwapUpdate } from '../consts/Types';
 import { getChainCurrency, getHexString, splitPairId, stringify } from '../Utils';
 // import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
 import StacksManager from 'lib/wallet/stacks/StacksManager';
 import { TxBroadcastResult } from '@stacks/transactions';
 import { getStacksNetwork, getTx, incrementNonce } from '../wallet/stacks/StacksUtils';
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { io } from "socket.io-client";
+import { io } from 'socket.io-client';
 import * as stacks from '@stacks/blockchain-api-client';
 import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
 
@@ -28,7 +28,7 @@ const socket = io(getStacksNetwork().coreApiUrl, {
   query: {
     subscriptions: Array.from(new Set(['block', 'microblock'])).join(','),
   },
-  transports: [ "websocket" ]
+  transports: [ 'websocket' ]
 });
 const sc = new stacks.StacksApiSocketClient(socket);
 
@@ -58,20 +58,32 @@ interface StacksNursery {
   on(event: 'lockup.failedToSend', listener: (reverseSwap: ReverseSwap, reason: string) => void): this;
   emit(event: 'lockup.failedToSend', reverseSwap: ReverseSwap, reason: string): boolean;
 
+  on(event: 'lockup.failedToSend', listener: (swap: Swap, reason: string) => void): this;
+  emit(event: 'lockup.failedToSend', swap: Swap, reason: string): boolean;
+
+  on(event: 'lockup.confirmed', listener: (swap: Swap, transactionHash: string) => void): this;
+  emit(event: 'lockup.confirmed', swap: Swap, transactionHash: string): boolean;
+
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transactionHash: string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transactionHash: string): boolean;
+
   on(event: 'lockup.confirmed', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'lockup.confirmed', reverseSwap: ReverseSwap, transactionHash: string): boolean;
 
   on(event: 'claim', listener: (reverseSwap: ReverseSwap, preimage: Buffer) => void): this;
   emit(event: 'claim', reverseSwap: ReverseSwap, preimage: Buffer): boolean;
 
-  // on(event: 'swap.update', listener: (id: string, message: SwapUpdate) => void): this;
-  // emit(event: 'swap.update', id: string, message: SwapUpdate): boolean;
+  on(event: 'swap.update', listener: (id: string, message: SwapUpdate) => void): this;
+  emit(event: 'swap.update', id: string, message: SwapUpdate): boolean;
 
   on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'tx.sent', reverseSwap: ReverseSwap, transactionHash: string): boolean;
 
   on(event: 'new.block', listener: (height: number) => void): this;
   emit(event: 'new.block', height: number): boolean;
+
+  on(event: 'as.claimed', listener: (swap: Swap, transaction: string, preimage: Buffer) => void): this;
+  emit(event: 'as.claimed', swap: Swap, transaction: string, preimage: Buffer): boolean;
 }
 
 class StacksNursery extends EventEmitter {
@@ -91,7 +103,7 @@ class StacksNursery extends EventEmitter {
 
     this.listenBlocks();
 
-    this.logger.verbose("StacksNursery listeners are starting...");
+    this.logger.verbose('StacksNursery listeners are starting...');
     this.listenEtherSwap();
     this.listenERC20Swap();
   }
@@ -121,7 +133,7 @@ class StacksNursery extends EventEmitter {
       // }
 
       try {
-        this.logger.error("stacksnurseryr.98 mempoolReverseSwap " + mempoolReverseSwap.transactionId)
+        this.logger.error('stacksnurseryr.98 mempoolReverseSwap ' + mempoolReverseSwap.transactionId)
         // const transaction = await this.stacksManager.provider.getTransaction(mempoolReverseSwap.transactionId!);
         const transaction = await getTx(mempoolReverseSwap.transactionId!)
         this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${mempoolReverseSwap.id}: ${mempoolReverseSwap.transactionId}, ${transaction}`);
@@ -155,8 +167,8 @@ class StacksNursery extends EventEmitter {
   public listenStacksContractTransaction = async (reverseSwap: ReverseSwap, transaction: TxBroadcastResult): Promise<void> => {
     // transaction.wait(1).then(async () => {
     try {
-      this.logger.error("stacksnursery.120 listenStacksContractTransaction tx: "+ transaction);
-      this.logger.error("stacksnursery.120 listenStacksContractTransaction jsontx: " + JSON.stringify(transaction));
+      this.logger.error('stacksnursery.120 listenStacksContractTransaction tx: '+ transaction);
+      this.logger.error('stacksnursery.120 listenStacksContractTransaction jsontx: ' + JSON.stringify(transaction));
       if(transaction.error) {
         this.emit(
           'lockup.failedToSend',
@@ -174,7 +186,37 @@ class StacksNursery extends EventEmitter {
         incrementNonce();
       }
     } catch (error) {
-      this.logger.error("stacksnursery.120 listenStacksContractTransaction error: "+ error);
+      this.logger.error('stacksnursery.120 listenStacksContractTransaction error: '+ error);
+    }
+
+    // }).catch(async (reason) => {
+
+    // });
+  }
+
+  public listenStacksContractTransactionSwap = async (reverseSwap: Swap, transaction: TxBroadcastResult): Promise<void> => {
+    // transaction.wait(1).then(async () => {
+    try {
+      this.logger.error('stacksnursery.120 listenStacksContractTransactionSwap tx: '+ transaction);
+      this.logger.error('stacksnursery.120 listenStacksContractTransactionSwap jsontx: ' + JSON.stringify(transaction));
+      if(transaction.error) {
+        this.emit(
+          'lockup.failedToSend',
+          await this.swapRepository.setSwapStatus(reverseSwap, SwapUpdateEvent.TransactionFailed),
+          transaction.error,
+        );
+      } else {
+        // TODO: this causes transaction.confirmed immediately - need to add another state mempool here
+        // no this is lockup.confirmed not transaction.confirmed
+        this.emit(
+          'lockup.confirmed',
+          await this.swapRepository.setSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed),
+          transaction.txid,
+        );
+        incrementNonce();
+      }
+    } catch (error) {
+      this.logger.error('stacksnursery.120 listenStacksContractTransactionSwap error: '+ error);
     }
 
     // }).catch(async (reason) => {
@@ -184,8 +226,8 @@ class StacksNursery extends EventEmitter {
 
   public checkStacksTransaction = async (reverseSwap: ReverseSwap, transaction: Transaction): Promise<void> => {
     // transaction.wait(1).then(async () => {
-      this.logger.error("stacksnursery.154 checkStacksTransaction tx: "+ JSON.stringify(transaction) + ", " + stringify(reverseSwap))
-      if(transaction.tx_status !== "success") {
+      this.logger.error('stacksnursery.154 checkStacksTransaction tx: '+ JSON.stringify(transaction) + ', ' + stringify(reverseSwap))
+      if(transaction.tx_status !== 'success') {
         this.emit(
           'lockup.failedToSend',
           await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionFailed),
@@ -209,7 +251,7 @@ class StacksNursery extends EventEmitter {
       transactionHash,
       etherSwapValues,
     ) => {
-      this.logger.verbose("StacksNursery listenEtherSwap eth.lockup enter " + getHexString(etherSwapValues.preimageHash));
+      this.logger.verbose('StacksNursery listenEtherSwap eth.lockup enter ' + getHexString(etherSwapValues.preimageHash));
       let swap = await this.swapRepository.getSwap({
         preimageHash: {
           [Op.eq]: getHexString(etherSwapValues.preimageHash),
@@ -223,10 +265,10 @@ class StacksNursery extends EventEmitter {
       });
 
       if (!swap) {
-        this.logger.error("StacksNursery.137 swap not found! " + transactionHash);
+        this.logger.error('StacksNursery.137 swap not found! ' + transactionHash);
 
         // check if this is our own lockup that user needs to claim from GUI so just set tx to confirmed and exit
-        let reverseSwap = await this.reverseSwapRepository.getReverseSwap({
+        const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
           preimageHash: {
             [Op.eq]: getHexString(etherSwapValues.preimageHash),
           },
@@ -236,8 +278,10 @@ class StacksNursery extends EventEmitter {
             ],
           },
         });
+
+        this.logger.error('StacksNursery.276 checking reverseswap ' + transactionHash);
         if(reverseSwap){
-          this.logger.error("StacksNursery.209 reverseswap self lockup found " + reverseSwap.transactionId!);
+          this.logger.error('StacksNursery.209 reverseswap self lockup found ' + reverseSwap.transactionId!);
           try {
 
             // exact same thing as in mempoolreverseswap
@@ -246,7 +290,7 @@ class StacksNursery extends EventEmitter {
             // this.logger.debug(`stacksnursery.218 tx: ` + stringify(reverseSwap));
             // this.checkStacksTransaction(reverseSwap, transaction);
 
-            const transaction: Transaction = await getTx(reverseSwap!.transactionId!)
+            const transaction: Transaction = await getTx(reverseSwap!.transactionId!);
             this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${reverseSwap.id}: ${reverseSwap.transactionId}, ${transaction.tx_id}`);
             // this.logger.debug(`stacksnursery.223 tx: ` + stringify(reverseSwap));
             await this.reverseSwapRepository.setReverseSwapStatus(reverseSwap, SwapUpdateEvent.TransactionConfirmed);
@@ -299,6 +343,41 @@ class StacksNursery extends EventEmitter {
           }
         }
 
+        this.logger.error('StacksNursery.276 checking if atomicswap ' + transactionHash);
+        // this.logger.error("StacksNursery.276 checking swap 1" + stringify(etherSwapValues));
+
+        // onchain atomic swap
+        const swap = await this.swapRepository.getSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(etherSwapValues.preimageHash),
+          },
+          status: {
+            [Op.or]: [
+              SwapUpdateEvent.ASTransactionMempool,
+              SwapUpdateEvent.ASTransactionConfirmed,
+            ],
+          },
+        });
+
+        // console.log('checking for atomic swap: ', getHexString(etherSwapValues.preimageHash), swap);
+
+        if (swap) {
+          console.log('atomic onchain swap found, they locked and we locked ', swap.id);
+          // start listening to claim - which we already are.
+          // need to set astransactionconfirmed so UI can show claim
+          // await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed);
+          // const check = await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionFailed);
+          // await this.swapRepository.setASTransactionConfirmed(swap, true);
+
+          // changed this to ASTransactionConfirmed from TransactionConfirmed
+          this.emit(
+            'astransaction.confirmed',
+            await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed),
+            transactionHash,
+          );
+          console.log('stacksnursery.376 emit astransaction.confirmed');
+        }
+
         return;
       }
 
@@ -323,7 +402,7 @@ class StacksNursery extends EventEmitter {
         true,
       );
 
-      this.logger.error("StacksNursery listenetherswap claimAddress, this.stacksmanageraddress: " + etherSwapValues.claimAddress + ", " + this.stacksManager.address + ", " + JSON.stringify(etherSwapValues));
+      this.logger.error('StacksNursery listenetherswap claimAddress, this.stacksmanageraddress: ' + etherSwapValues.claimAddress + ', ' + this.stacksManager.address + ', ' + JSON.stringify(etherSwapValues));
       // skip claimaddress check because Stacks claim address are dummy buffers...
       // if (etherSwapValues.claimAddress !== this.stacksManager.address) {
       //   this.emit(
@@ -334,8 +413,8 @@ class StacksNursery extends EventEmitter {
       //   return;
       // }
 
-      let swaptimelock = parseInt(etherSwapValues.timelock + "",16) 
-      this.logger.verbose("etherSwapValues.timelock, swap.timeoutBlockHeight " +etherSwapValues.timelock + ", " + swap.timeoutBlockHeight)
+      const swaptimelock = parseInt(etherSwapValues.timelock + '',16);
+      this.logger.verbose('etherSwapValues.timelock, swap.timeoutBlockHeight ' +etherSwapValues.timelock + ', ' + swap.timeoutBlockHeight);
       // etherSwapValues.timelock
       if (swaptimelock !== swap.timeoutBlockHeight) {
         this.emit(
@@ -347,11 +426,12 @@ class StacksNursery extends EventEmitter {
       }
 
       if (swap.expectedAmount) {
+        console.log('stacksn.429 ', swap.expectedAmount);
         const expectedAmount = BigNumber.from(swap.expectedAmount).mul(etherDecimals);
 
         // 1995138440000000000,
         const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
-        this.logger.verbose("swap.expectedAmount, expectedAmount , etherSwapValues.amount" +swap.expectedAmount+ ", " + expectedAmount + ", " + etherSwapValues.amount)
+        this.logger.verbose('swap.expectedAmount, expectedAmount , etherSwapValues.amount' +swap.expectedAmount+ ', ' + expectedAmount + ', ' + etherSwapValues.amount);
         // etherSwapValues.amount
         if (expectedAmount.gt(bigswapamount)) {
           this.emit(
@@ -363,11 +443,30 @@ class StacksNursery extends EventEmitter {
         }
       }
 
+      // atomic swap locked amount check
+      if (swap.baseAmount) {
+        console.log('stacksn.447 ', swap.baseAmount); // this is in stx - mul 10^6 to get mstx - 10^8 to get boltz
+        const expectedAmount = BigNumber.from(swap.baseAmount*100000000).mul(etherDecimals);
+
+        // 1995138440000000000,
+        const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);
+        this.logger.verbose('sn.449 swap.baseAmount, expectedAmount , etherSwapValues.amount' +swap.baseAmount+ ', ' + expectedAmount + ', ' + etherSwapValues.amount);
+        // etherSwapValues.amount
+        if (expectedAmount.gt(bigswapamount)) {
+          this.emit(
+            'lockup.failed',
+            swap,
+            Errors.INSUFFICIENT_AMOUNT(swapamount, swap.baseAmount).message,
+          );
+          return;
+        }
+      }
+
       this.emit('eth.lockup', swap, transactionHash, etherSwapValues);
     });
 
     this.stacksManager.contractEventHandler.on('eth.claim', async (transactionHash, preimageHash, preimage) => {
-      this.logger.debug("stacksnursery.228 on 'eth.claim " + transactionHash+ ", " + getHexString(preimageHash));
+      this.logger.debug("stacksnursery.228 on 'eth.claim " + transactionHash+ ', ' + getHexString(preimageHash));
 
       // const allReverseSwaps = await ReverseSwap.findAll();
       // console.log("allReverseSwaps: ", allReverseSwaps);
@@ -382,7 +481,24 @@ class StacksNursery extends EventEmitter {
       });
 
       if (!reverseSwap) {
-        this.logger.error("stacksnursery.239 reverseswap not found")
+        this.logger.error('stacksnursery.239 reverseswap not found');
+
+        // this could be an atomic swap claim that user claimed on STX and we should claim the corresponding utxo.
+        const swap = await this.swapRepository.getSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(preimageHash),
+          },
+          status: {
+            [Op.not]: SwapUpdateEvent.InvoiceSettled,
+            [Op.not]: SwapUpdateEvent.TransactionClaimed,
+          },
+        });
+
+        if (swap && swap.lockupTransactionId) {
+          // transactionHash -> stacks tx
+          this.emit('as.claimed',swap, swap.lockupTransactionId, preimage);
+        }
+
         return;
       }
 
@@ -413,10 +529,10 @@ class StacksNursery extends EventEmitter {
       });
 
       if (!swap) {
-        this.logger.error("StacksNursery.410 swap not found! " + transactionHash);
+        this.logger.error('StacksNursery.410 swap not found! ' + transactionHash);
 
         // check if this is our own lockup that user needs to claim from GUI so just set tx to confirmed and exit
-        let reverseSwap = await this.reverseSwapRepository.getReverseSwap({
+        const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
           preimageHash: {
             [Op.eq]: getHexString(erc20SwapValues.preimageHash),
           },
@@ -428,7 +544,7 @@ class StacksNursery extends EventEmitter {
         });
 
         if(reverseSwap){
-          this.logger.error("StacksNursery.425 reverseswap sip10 self lockup found " + reverseSwap.transactionId!);
+          this.logger.error('StacksNursery.425 reverseswap sip10 self lockup found ' + reverseSwap.transactionId!);
           try {
 
             // exact same thing as in mempoolreverseswap
@@ -488,6 +604,39 @@ class StacksNursery extends EventEmitter {
           } catch (error) {
             this.logger.error(`stacksnursery.483 error ${error}`);
           }
+        }
+
+        // onchain atomic swap
+        console.log('stacksnursery.610 checking for SIP10 Atomic Swap with preimagehash', getHexString(erc20SwapValues.preimageHash));
+        const swap = await this.swapRepository.getSwap({
+          preimageHash: {
+            [Op.eq]: getHexString(erc20SwapValues.preimageHash),
+          },
+          status: {
+            [Op.or]: [
+              SwapUpdateEvent.ASTransactionMempool,
+              SwapUpdateEvent.ASTransactionConfirmed,
+            ],
+          },
+        });
+
+        // console.log('checking for atomic swap: ', getHexString(etherSwapValues.preimageHash), swap);
+
+        if (swap) {
+          console.log('stacksnursery.626 sip10 atomic onchain swap found, they locked and we locked ', swap.id);
+          // start listening to claim - which we already are.
+          // need to set astransactionconfirmed so UI can show claim
+          // await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed);
+          // const check = await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionFailed);
+          // await this.swapRepository.setASTransactionConfirmed(swap, true);
+
+          // changed this to ASTransactionConfirmed from TransactionConfirmed
+          this.emit(
+            'astransaction.confirmed',
+            await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.ASTransactionConfirmed),
+            transactionHash,
+          );
+          console.log('stacksnursery.376 emit astransaction.confirmed');
         }
 
         return;
@@ -630,7 +779,7 @@ class StacksNursery extends EventEmitter {
 
   private checkExpiredSwaps = async (height: number) => {
     const expirableSwaps = await this.swapRepository.getSwapsExpirable(height);
-    // this.logger.verbose("stacksnursery.400 checkExpiredSwaps " + expirableSwaps)
+    // this.logger.verbose('stacksnursery.400 checkExpiredSwaps ' + expirableSwaps);
 
     for (const expirableSwap of expirableSwaps) {
       const { base, quote } = splitPairId(expirableSwap.pair);
@@ -639,6 +788,7 @@ class StacksNursery extends EventEmitter {
       const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {
+        console.log('stacksn.758 throw swap.expired at height ', height, expirableSwap);
         this.emit('swap.expired', expirableSwap, wallet.symbol === 'STX');
       }
     }
@@ -652,7 +802,7 @@ class StacksNursery extends EventEmitter {
       const { base, quote } = splitPairId(expirableReverseSwap.pair);
       const chainCurrency = getChainCurrency(base, quote, expirableReverseSwap.orderSide, true);
 
-      this.logger.verbose("stacksnursery.393 checkExpiredReverseSwaps, " + height + ", " + expirableReverseSwap.id)
+      this.logger.verbose('stacksnursery.393 checkExpiredReverseSwaps, ' + height + ', ' + expirableReverseSwap.id);
       const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {
@@ -672,11 +822,12 @@ class StacksNursery extends EventEmitter {
     }
 
     // || wallet.type === CurrencyType.ERC20
-    if (wallet.type === CurrencyType.Stx || wallet.type === CurrencyType.Sip10) {
+    if (wallet.type === CurrencyType.Stx || wallet.type === CurrencyType.Sip10 || CurrencyType.BitcoinLike) {
       return wallet;
     }
 
-    this.logger.error("getStacksWallet returning empty!!");
+    // TODO: This is thrown alot!!!
+    // this.logger.error("getStacksWallet returning empty!!");
     return;
   }
 }

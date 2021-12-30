@@ -46,12 +46,13 @@ import {
   getLightningCurrency,
   getRate,
   splitPairId,
+  getScriptHashFunction,
   // stringify,
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
 import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
-import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
+import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -91,11 +92,20 @@ interface SwapNursery {
   on(event: 'coins.sent', listener: (reverseSwap: ReverseSwap, transaction: Transaction | string) => void): this;
   emit(event: 'coins.sent', reverseSwap: ReverseSwap, transaction: Transaction | string): boolean;
 
+  on(event: 'coins.sent', listener: (swap: Swap, transaction: Transaction | string) => void): this;
+  emit(event: 'coins.sent', swap: Swap, transaction: Transaction | string): boolean;
+
   on(event: 'coins.failedToSend', listener: (reverseSwap: ReverseSwap) => void): this;
   emit(event: 'coins.failedToSend', reverseSwap: ReverseSwap): boolean;
 
+  on(event: 'coins.failedToSend', listener: (swap: Swap) => void): this;
+  emit(event: 'coins.failedToSend', swap: Swap): boolean;
+
   on(event: 'refund', listener: (reverseSwap: ReverseSwap, refundTransaction: string) => void): this;
   emit(event: 'refund', reverseSwap: ReverseSwap, refundTransaction: string): boolean;
+
+  on(event: 'refund', listener: (reverseSwap: Swap, refundTransaction: string) => void): this;
+  emit(event: 'refund', reverseSwap: Swap, refundTransaction: string): boolean;
 
   on(event: 'invoice.settled', listener: (reverseSwap: ReverseSwap) => void): this;
   emit(event: 'invoice.settled', reverseSwap: ReverseSwap): boolean;
@@ -104,6 +114,14 @@ interface SwapNursery {
   on(event: 'tx.sent', listener: (reverseSwap: ReverseSwap, transactionHash: string) => void): this;
   emit(event: 'tx.sent', reverseSwap: ReverseSwap): boolean;
 
+  on(event: 'astransaction.confirmed', listener: (swap: Swap, transaction: Transaction | string, preimage?: string) => void): this;
+  emit(event: 'astransaction.confirmed', swap: Swap, transaction: Transaction | string, preimage?: string): boolean;
+
+  on(event: 'as.claimed', listener: (swap: Swap, transaction: Transaction | string, preimage: Buffer) => void): this;
+  emit(event: 'as.claimed', swap: Swap, transaction: Transaction | string, preimage: Buffer): boolean;
+
+  on(event: 'transaction.claimed', listener: (swap: Swap, transaction: Transaction | string, preimage?: string) => void): this;
+  emit(event: 'transaction.claimed', swap: Swap, transaction: Transaction | string, preimage?: string): boolean;
 }
 
 class SwapNursery extends EventEmitter {
@@ -178,7 +196,7 @@ class SwapNursery extends EventEmitter {
         this.swapRepository,
         this.reverseSwapRepository,
       );
-    }    
+    }
 
     if (this.walletManager.stacksManager) {
       this.stacksNursery = new StacksNursery(
@@ -187,7 +205,7 @@ class SwapNursery extends EventEmitter {
         this.swapRepository,
         this.reverseSwapRepository,
       );
-    } 
+    }
 
     this.channelNursery = new ChannelNursery(
       this.logger,
@@ -246,6 +264,7 @@ class SwapNursery extends EventEmitter {
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         this.emit('transaction', swap, transaction, confirmed, false);
 
+        console.log('swapnursery.249 swap.lockup ', swap.id);
         if (swap.invoice) {
           const { base, quote } = splitPairId(swap.pair);
           const chainSymbol = getChainCurrency(base, quote, swap.orderSide, false);
@@ -254,7 +273,28 @@ class SwapNursery extends EventEmitter {
           const wallet = this.walletManager.wallets.get(chainSymbol)!;
 
           await this.claimUtxo(chainClient!, wallet, swap, transaction);
+        } else if (swap && swap.redeemScript) {
+          // onchain swap coins locked & confirmed - no triggers in mempool as well!
+          // TODO:::: why mempool
+          console.log('swapnursery.260 onchain swap confirmed ', swap.id);
+
+          const { base, quote } = splitPairId(swap.pair);
+          const chainSymbol = getChainCurrency(base, quote, swap.orderSide, false);
+          const otherChainSymbol = getChainCurrency(quote, base, swap.orderSide, false);
+          console.log('swapnursery.281 ', otherChainSymbol);
+          // const { chainClient } = this.currencies.get(chainSymbol)!;
+          let walletToSend = this.walletManager.wallets.get(chainSymbol)!;
+          let wallet = this.walletManager.wallets.get(chainSymbol)!.walletProvider as SIP10WalletProvider;
+          if(!wallet.getTokenContractAddress) {
+            wallet = this.walletManager.wallets.get(otherChainSymbol)!.walletProvider as SIP10WalletProvider;
+            walletToSend = this.walletManager.wallets.get(otherChainSymbol)!;
+          }
+          // we lock to the other chain!
+          // const walletToSend = this.walletManager.wallets.get(chainSymbol)!;
+          const otherlock = await this.lockupStxSwap(walletToSend, swap, undefined);
+          console.log('swapnursery.269 end of utxo swap.lockup ', otherlock);
         } else {
+          console.log('swapnursery.259 swap.lockup no invoice ', swap.id);
           await this.setSwapRate(swap);
         }
       });
@@ -270,6 +310,46 @@ class SwapNursery extends EventEmitter {
     this.utxoNursery.on('reverseSwap.lockup.confirmed', async (reverseSwap, transaction) => {
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.emit('transaction', reverseSwap, transaction, true, true);
+      });
+    });
+
+    // atomic swap events
+    this.utxoNursery.on('astransaction.confirmed', async (swap, transactionHash, preimage) => {
+      // this.logger.error('swapnursery.304 astransaction.confirmed: ' + transactionHash);
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        if(preimage) {
+          // trigger claimstx so we get the stx user locked into the contract
+          if(swap.tokenAddress) {
+            console.log('swapn.313 triggering claimSip10 after finding preimage in utxonursery tx');
+            await this.claimSip10(
+              this.walletManager.stacksManager!.contractHandler,
+              swap,
+              // await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+              // await querySwapValuesFromTx(swap.lockupTransactionId!),
+              undefined,
+              undefined,
+              preimage
+              // outgoingChannelId,
+            );
+          } else {
+            console.log('swapn.325 triggering claimstx after finding preimage in utxonursery tx');
+            await this.claimStx(
+              this.walletManager.stacksManager!.contractHandler,
+              swap,
+              // await queryEtherSwapValuesFromLock(this.walletManager.rskManager!.etherSwap, swap.lockupTransactionId!),
+              // await querySwapValuesFromTx(swap.lockupTransactionId!),
+              undefined,
+              undefined,
+              preimage
+              // outgoingChannelId,
+            );
+          }
+          this.emit('transaction.claimed', swap, transactionHash);
+        } else {
+          // from before
+          // , true, true
+          this.emit('astransaction.confirmed', swap, transactionHash);
+        }
       });
     });
 
@@ -310,8 +390,8 @@ class SwapNursery extends EventEmitter {
             break;
 
           case CurrencyType.ERC20:
-            this.logger.error("swapnursery reverseswap invoice.paid lockupERC20 for" + quote);
-            if(quote == "SOV") {
+            this.logger.error('swapnursery reverseswap invoice.paid lockupERC20 for' + quote);
+            if(quote == 'SOV') {
               await this.rlockupERC20(
                 wallet,
                 lndClient!,
@@ -328,7 +408,7 @@ class SwapNursery extends EventEmitter {
             break;
 
           case CurrencyType.Stx:
-            this.logger.debug("swapnursery reverseswap invoice.paid lockupStx for " + quote);
+            this.logger.debug('swapnursery reverseswap invoice.paid lockupStx for ' + quote);
             await this.lockupStx(
               wallet,
               lndClient!,
@@ -352,7 +432,7 @@ class SwapNursery extends EventEmitter {
             break;
 
             case CurrencyType.Sip10:
-              this.logger.debug("swapnursery reverseswap invoice.paid lockupToken for " + quote);
+              this.logger.debug('swapnursery reverseswap invoice.paid lockupToken for ' + quote);
               await this.lockupToken(
                 wallet,
                 lndClient!,
@@ -472,7 +552,7 @@ class SwapNursery extends EventEmitter {
         break;
 
       case CurrencyType.ERC20:
-        this.logger.error("attemptSettleSwap ERC20 " + currency.symbol);
+        this.logger.error('attemptSettleSwap ERC20 ' + currency.symbol);
         await this.claimERC20(
           this.walletManager.ethereumManager!.contractHandler,
           swap,
@@ -489,14 +569,14 @@ class SwapNursery extends EventEmitter {
           outgoingChannelId,
         );
         break;
-    
+
       case CurrencyType.Stx:
         // TODO: this happens when invoice can not be paid / no route
-        // + stringify(this.walletManager.stacksManager!) 
-        this.logger.error("swapnursery.476 attemptSettleSwap, " + swap.lockupTransactionId!);
+        // + stringify(this.walletManager.stacksManager!)
+        this.logger.error('swapnursery.476 attemptSettleSwap, ' + swap.lockupTransactionId!);
         // this.logger.verbose("???480 swap: " + stringify(swap));
         // error: Unhandled rejection: Cannot read property 'etherSwap' of undefined
-        // transactionhash = 0xb7c491801d4aee63263c69734fb66cd5e64b0b9 is shorter compared to stacks chain 
+        // transactionhash = 0xb7c491801d4aee63263c69734fb66cd5e64b0b9 is shorter compared to stacks chain
         // 0xb7c491801d4aee63263c69734fb66cd5e64b0b9d47f943216bef31feaec2959c
         await this.claimStx(
           this.walletManager.stacksManager!.contractHandler,
@@ -506,7 +586,7 @@ class SwapNursery extends EventEmitter {
           outgoingChannelId,
         );
         break;
-        
+
     }
   }
 
@@ -552,7 +632,7 @@ class SwapNursery extends EventEmitter {
 
     // Reverse Swap events
     ethereumNursery.on('reverseSwap.expired', async (reverseSwap) => {
-      this.logger.error("ethereumNursery reverseSwap.expired ");
+      this.logger.error('ethereumNursery reverseSwap.expired ');
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         await this.expireReverseSwap(reverseSwap);
       });
@@ -592,7 +672,7 @@ class SwapNursery extends EventEmitter {
 
     // Swap events
     rskNursery.on('swap.expired', async (swap) => {
-      this.logger.error("rskNursery swap.expired ");
+      this.logger.error('rskNursery swap.expired ');
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         await this.expireSwap(swap);
       });
@@ -605,7 +685,7 @@ class SwapNursery extends EventEmitter {
     });
 
     rskNursery.on('eth.lockup', async (swap, transactionHash, etherSwapValues) => {
-      this.logger.error("listenRskNursery eth.lockup: " + transactionHash);
+      this.logger.error('listenRskNursery eth.lockup: ' + transactionHash);
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         this.emit('transaction', swap, transactionHash, true, false);
 
@@ -631,7 +711,7 @@ class SwapNursery extends EventEmitter {
 
     // Reverse Swap events
     rskNursery.on('reverseSwap.expired', async (reverseSwap) => {
-      this.logger.error("rskNursery reverseSwap.expired ");
+      this.logger.error('rskNursery reverseSwap.expired ');
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         await this.expireReverseSwap(reverseSwap);
       });
@@ -652,14 +732,14 @@ class SwapNursery extends EventEmitter {
     });
 
     rskNursery.on('lockup.confirmed', async (reverseSwap, transactionHash) => {
-      this.logger.error("listenRskNursery lockup.confirmed: " + transactionHash);
+      this.logger.error('listenRskNursery lockup.confirmed: ' + transactionHash);
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.emit('transaction', reverseSwap, transactionHash, true, true);
       });
     });
 
     rskNursery.on('claim', async (reverseSwap, preimage) => {
-      this.logger.error("listenRskNursery claim: ");
+      this.logger.error('listenRskNursery claim: ');
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         await this.settleReverseSwapInvoice(reverseSwap, preimage);
       });
@@ -673,7 +753,7 @@ class SwapNursery extends EventEmitter {
 
     // Swap events
     stacksNursery.on('swap.expired', async (swap) => {
-      this.logger.error("stacksNursery swap.expired ");
+      this.logger.error('stacksNursery swap.expired ');
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         await this.expireSwap(swap);
       });
@@ -686,14 +766,36 @@ class SwapNursery extends EventEmitter {
     });
 
     stacksNursery.on('eth.lockup', async (swap, transactionHash, etherSwapValues) => {
-      this.logger.error("listenStacksNursery eth.lockup: " + transactionHash);
+      this.logger.error('listenStacksNursery eth.lockup: ' + transactionHash);
       await this.lock.acquire(SwapNursery.swapLock, async () => {
         this.emit('transaction', swap, transactionHash, true, false);
 
         if (swap.invoice) {
-          this.logger.error("swapnursery.670 triggering claimstx!");
+          this.logger.error('swapnursery.670 triggering claimstx!');
           await this.claimStx(contractHandler, swap, etherSwapValues);
+        } else if (swap.claimAddress) {
+          this.logger.error('swapnursery.670 triggering lockutxo?!!');
+          const { base, quote } = splitPairId(swap.pair);
+          const chainSymbol = getChainCurrency(base, quote, swap.orderSide, true);
+          // const lightningSymbol = getLightningCurrency(base, quote, swap.orderSide, true);
+
+          const chainCurrency = this.currencies.get(chainSymbol)!;
+          // const { lndClient } = this.currencies.get(lightningSymbol)!;
+
+          const wallet = this.walletManager.wallets.get(chainSymbol)!;
+          // this.logger.verbose('swapnursery.732 transaction wallet ' + JSON.stringify(wallet));
+          console.log('sn.733 on transaction trigger lockuputxoswap ', base, quote, chainSymbol); //swap
+          await this.lockupUtxoSwap(
+            chainCurrency.chainClient!,
+            // this.walletManager.wallets.get(chainSymbol)!,
+            wallet,
+            // lndClient!,
+            swap
+          );
+          // user locked onchain stx, we should lock utxo to claimaddress
+          // await this.claimStx(contractHandler, swap, etherSwapValues);
         } else {
+          this.logger.error('swapnursery.723 triggering setSwapRate!');
           await this.setSwapRate(swap);
         }
       });
@@ -705,6 +807,27 @@ class SwapNursery extends EventEmitter {
 
         if (swap.invoice) {
           await this.claimSip10(contractHandler, swap, erc20SwapValues);
+        } else if (swap.claimAddress) {
+          console.log('stacksn.787 sip10.lockup received, lockutxo!!!');
+          const { base, quote } = splitPairId(swap.pair);
+          const chainSymbol = getChainCurrency(base, quote, swap.orderSide, true);
+          // const lightningSymbol = getLightningCurrency(base, quote, swap.orderSide, true);
+
+          const chainCurrency = this.currencies.get(chainSymbol)!;
+          // const { lndClient } = this.currencies.get(lightningSymbol)!;
+
+          const wallet = this.walletManager.wallets.get(chainSymbol)!;
+          // this.logger.verbose('swapnursery.732 transaction wallet ' + JSON.stringify(wallet));
+          console.log('sn.797 on transaction trigger lockuputxoswap ', base, quote, chainSymbol); //swap
+          await this.lockupUtxoSwap(
+            chainCurrency.chainClient!,
+            // this.walletManager.wallets.get(chainSymbol)!,
+            wallet,
+            // lndClient!,
+            swap
+          );
+          // user locked onchain stx, we should lock utxo to claimaddress
+          // await this.claimStx(contractHandler, swap, etherSwapValues);
         } else {
           await this.setSwapRate(swap);
         }
@@ -725,7 +848,7 @@ class SwapNursery extends EventEmitter {
 
     // Reverse Swap events
     stacksNursery.on('reverseSwap.expired', async (reverseSwap) => {
-      this.logger.error("stacksNursery reverseSwap.expired ");
+      this.logger.error('stacksNursery reverseSwap.expired ');
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         await this.expireReverseSwap(reverseSwap);
       });
@@ -746,16 +869,23 @@ class SwapNursery extends EventEmitter {
     });
 
     stacksNursery.on('lockup.confirmed', async (reverseSwap, transactionHash) => {
-      this.logger.error("listenstacksNursery lockup.confirmed: " + transactionHash);
+      this.logger.error('listenstacksNursery lockup.confirmed event sent but tx not confirmed!: ' + transactionHash);
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.emit('transaction', reverseSwap, transactionHash, true, true);
       });
     });
 
+    stacksNursery.on('astransaction.confirmed', async (swap, transactionHash) => {
+      this.logger.error('listenstacksNursery astransaction.confirmed: ' + transactionHash);
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        this.emit('transaction', swap, transactionHash, true, true);
+      });
+    });
+
     stacksNursery.on('claim', async (reverseSwap, preimage) => {
-      this.logger.error("listenstacksNursery on claim!");
+      this.logger.error('listenstacksNursery on claim!');
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
-        this.logger.error("swapnursery.723 acquire reverseSwapLock: settleReverseSwapInvoice!");
+        this.logger.error('swapnursery.723 acquire reverseSwapLock: settleReverseSwapInvoice!');
         await this.settleReverseSwapInvoice(reverseSwap, preimage);
       });
     });
@@ -764,6 +894,29 @@ class SwapNursery extends EventEmitter {
       this.logger.error(`swapnursery.741 tx.sent ${reverseSwap} ${transactionHash}`);
       await this.lock.acquire(SwapNursery.reverseSwapLock, async () => {
         this.emit('transaction', reverseSwap, transactionHash, true, true);
+      });
+    });
+
+    // atomic swap claim event
+    stacksNursery.on('as.claimed', async (swap, transactionHash, preimage) => {
+      //trim 0x from preimage
+      // const preimage = getHexString(preimage2).slice(2);
+      // const transactionHash = transactionHash2.slice(2);
+      this.logger.error(`swapnursery.802 as.claimed ${swap} ${transactionHash} ` + getHexString(preimage));
+      await this.lock.acquire(SwapNursery.swapLock, async () => {
+        // this.emit('transaction', reverseSwap, transactionHash, true, true);
+        const chainSymbol = swap.pair.split('/')[0];
+        console.log('TODO: dynamic chainSymbol ', chainSymbol);
+        const { chainClient } = this.currencies.get(chainSymbol)!;
+        const wallet = this.walletManager.wallets.get(chainSymbol)!;
+
+        if (chainClient) {
+          const rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
+          const tx = Transaction.fromHex(rawTx.hex);
+          console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
+          await this.asClaimUtxo(chainClient!, wallet, swap, tx, preimage);
+        }
+
       });
     });
 
@@ -817,6 +970,48 @@ class SwapNursery extends EventEmitter {
     }
   }
 
+  private lockupUtxoSwap = async (
+    chainClient: ChainClient,
+    wallet: Wallet,
+    // lndClient: LndClient,
+    swap: Swap,
+  ) => {
+    try {
+      // let feePerVbyte: number;
+
+      // if (reverseSwap.minerFeeInvoice) {
+      //   // TODO: how does this behave cross chain
+      //   feePerVbyte = Math.round(decodeInvoice(reverseSwap.minerFeeInvoice).satoshis / FeeProvider.transactionSizes.reverseLockup);
+      //   this.logger.debug(`Using prepay minerfee for lockup of Reverse Swap ${reverseSwap.id}: ${feePerVbyte} sat/vbyte`);
+      // } else {
+      const feePerVbyte = await chainClient.estimateFee(SwapNursery.reverseSwapMempoolEta);
+      // }
+
+      const amountToSend = Math.floor(swap.quoteAmount! * 100000000);
+
+      const outputScript = getScriptHashFunction(ReverseSwapOutputType)(getHexBuffer(swap.asRedeemScript!));
+      const lockupAddress = wallet.encodeAddress(outputScript);
+
+      console.log('lockupUtxoSwap.913 ', swap.claimAddress, amountToSend, feePerVbyte);
+      // fee, swap.claimAddress!
+      const { transaction, transactionId, vout } = await wallet.sendToAddress(lockupAddress, amountToSend, feePerVbyte);
+      this.logger.verbose(`sh.919 lockupUtxoSwap Locked up ${amountToSend} ${wallet.symbol} for Reverse Swap ${swap.id}: ${transactionId}:${vout!} into address ${lockupAddress}`);
+
+      // when blocks are too fast (regtest@10 seconds) -> this is missed?
+      // For the "transaction.confirmed" event of the lockup transaction
+      chainClient.addOutputFilter(wallet.decodeAddress(lockupAddress));
+
+      // console.log('sn921 not getting transaction.confirmed from chainclient ', transaction!.getHash(), wallet.decodeAddress(lockupAddress));
+      chainClient.addInputFilter(transaction!.getHash());
+
+      // fee!,
+      this.emit('coins.sent', await this.swapRepository.setLockupTransaction(swap, transactionId, amountToSend, false, vout!), transaction!);
+    } catch (error) {
+      // await this.handleReverseSwapSendFailed(swap, wallet.symbol, lndClient, error);
+      await this.handleSwapSendFailed(swap, wallet.symbol, error);
+    }
+  }
+
   private lockupEther = async (
     wallet: Wallet,
     lndClient: LndClient,
@@ -864,7 +1059,7 @@ class SwapNursery extends EventEmitter {
     lndClient: LndClient,
     reverseSwap: ReverseSwap,
   ) => {
-    this.logger.error("swapnursery lockuperc20");
+    this.logger.error('swapnursery lockuperc20');
     try {
       const walletProvider = wallet.walletProvider as ERC20WalletProvider;
 
@@ -880,7 +1075,7 @@ class SwapNursery extends EventEmitter {
           reverseSwap.timeoutBlockHeight,
         );
       } else {
-        this.logger.error("lockuperc20 is called with: walletprovider" + reverseSwap.preimageHash + ", " + walletProvider.formatTokenAmount(reverseSwap.onchainAmount) + ", " + reverseSwap.claimAddress! + ", " + reverseSwap.timeoutBlockHeight);
+        this.logger.error('lockuperc20 is called with: walletprovider' + reverseSwap.preimageHash + ', ' + walletProvider.formatTokenAmount(reverseSwap.onchainAmount) + ', ' + reverseSwap.claimAddress! + ', ' + reverseSwap.timeoutBlockHeight);
         contractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupToken(
           walletProvider,
           getHexBuffer(reverseSwap.preimageHash),
@@ -912,7 +1107,7 @@ class SwapNursery extends EventEmitter {
     lndClient: LndClient,
     reverseSwap: ReverseSwap,
   ) => {
-    this.logger.error("swapnursery rlockuperc20");
+    this.logger.error('swapnursery rlockuperc20');
     try {
       const walletProvider = wallet.walletProvider as ERC20WalletProvider;
 
@@ -984,7 +1179,7 @@ class SwapNursery extends EventEmitter {
       this.stacksNursery!.listenStacksContractTransaction(reverseSwap, contractTransaction);
       this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Stx for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
-      this.logger.error("swapnursery.943 TODO: add stacks tx fee calculation to setLockupTransaction")
+      this.logger.error('swapnursery.943 TODO: add stacks tx fee calculation to setLockupTransaction');
       this.emit(
         'coins.sent',
         await this.reverseSwapRepository.setLockupTransaction(
@@ -997,6 +1192,93 @@ class SwapNursery extends EventEmitter {
       );
     } catch (error) {
       await this.handleReverseSwapSendFailed(reverseSwap, wallet.symbol, lndClient, error);
+    }
+  }
+
+  // for chain-to-chain atomic swap
+  private lockupStxSwap = async (
+    wallet: Wallet,
+    reverseSwap: Swap,
+    lndClient?: LndClient,
+  ) => {
+    try {
+      // let oldcontractTransaction: ContractTransaction;
+      let contractTransaction: TxBroadcastResult;
+
+      // console.log('sn.1034 ', reverseSwap);
+      // if (reverseSwap.minerFeeOnchainAmount) {
+      //   oldcontractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
+      //     getHexBuffer(reverseSwap.preimageHash),
+      //     BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
+      //     BigNumber.from(reverseSwap.minerFeeOnchainAmount).mul(etherDecimals),
+      //     reverseSwap.claimAddress!,
+      //     reverseSwap.timeoutBlockHeight,
+      //   );
+      // } else {
+        if (reverseSwap.asRequestedAmount && reverseSwap.asTimeoutBlockHeight && reverseSwap.onchainAmount && reverseSwap.rate) {
+          // nope - it has to be = requestedAmount BUT
+          // TODO: check to make sure it's within acceptable range!!!
+          const requestedAmount = reverseSwap.asRequestedAmount * 100;
+          const calcrequestedAmount = Math.floor(reverseSwap.onchainAmount * 1/reverseSwap.rate);
+
+          // need to map reverseSwap.timeoutBlockHeigh too
+          // added asTimeoutBlockHeight to the swap
+
+          // lockupstxswap FOR  8224 200048649 2000547
+
+          if(reverseSwap.tokenAddress) {
+            console.log('swapnursery.1220 lockupsip10swap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
+            const walletProvider = wallet.walletProvider as SIP10WalletProvider;
+
+            contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupToken(
+              walletProvider,
+              getHexBuffer(reverseSwap.preimageHash),
+              BigNumber.from(requestedAmount).mul(etherDecimals),
+              // reverseSwap.claimAddress!,
+              reverseSwap.claimAddress!,
+              reverseSwap.asTimeoutBlockHeight,
+            );
+          } else {
+            console.log('swapnursery.1239 lockupstxswap FOR ', reverseSwap.onchainAmount, calcrequestedAmount, requestedAmount);
+            contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
+              getHexBuffer(reverseSwap.preimageHash),
+              BigNumber.from(requestedAmount).mul(etherDecimals),
+              // reverseSwap.claimAddress!,
+              reverseSwap.claimAddress!,
+              reverseSwap.asTimeoutBlockHeight,
+            );
+          }
+
+          // listenContractTransaction
+          this.stacksNursery!.listenStacksContractTransactionSwap(reverseSwap, contractTransaction);
+          this.logger.verbose(`lockupStxSwap up ${requestedAmount} Stx/sip10 for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
+
+          this.logger.error('swapnursery.943 lockupStxSwap TODO: add stacks tx fee calculation to setLockupTransaction');
+          this.emit(
+            'coins.sent',
+            await this.swapRepository.setASTransactionConfirmed(
+              reverseSwap,
+              false,
+              undefined,
+              undefined,
+              contractTransaction.txid,
+              // reverseSwap.onchainAmount,
+              // requestedAmount,
+              // false,
+              // calculateEthereumTransactionFee(contractTransaction),
+              // 1
+            ),
+            contractTransaction.txid,
+          );
+        }
+
+      // }
+
+
+    } catch (error) {
+      // lndClient
+      console.log('no lndclient needed here ', lndClient);
+      await this.handleSwapSendFailed(reverseSwap, wallet.symbol, error, );
     }
   }
 
@@ -1034,7 +1316,7 @@ class SwapNursery extends EventEmitter {
       this.stacksNursery!.listenStacksContractTransaction(reverseSwap, contractTransaction);
       this.logger.verbose(`Locked up ${reverseSwap.onchainAmount} Token for Reverse Swap ${reverseSwap.id}: ${contractTransaction.txid}`);
 
-      this.logger.error("swapnursery.1023 TODO: add stacks tx fee calculation to setLockupTransaction")
+      this.logger.error('swapnursery.1023 TODO: add stacks tx fee calculation to setLockupTransaction');
       this.emit(
         'coins.sent',
         await this.reverseSwapRepository.setLockupTransaction(
@@ -1077,6 +1359,17 @@ class SwapNursery extends EventEmitter {
 
     const output = transaction.outs[swap.lockupTransactionVout!];
 
+    console.log('constructing claimutxo: ',  {
+      preimage,
+      vout: swap.lockupTransactionVout!,
+      value: output.value,
+      script: output.script,
+      type: this.swapOutputType,
+      txHash: transaction.getHash(),
+      keys: wallet.getKeysByIndex(swap.keyIndex!),
+      redeemScript: getHexBuffer(swap.redeemScript!),
+    });
+
     const claimTransaction = await constructClaimTransaction(
       [
         {
@@ -1095,10 +1388,89 @@ class SwapNursery extends EventEmitter {
       true,
     );
     const claimTransactionFee = await calculateUtxoTransactionFee(chainClient, claimTransaction);
+    console.log('claim claimtx ', claimTransaction, claimTransaction.toHex());
 
     await chainClient.sendRawTransaction(claimTransaction.toHex());
 
     this.logger.info(`Claimed ${wallet.symbol} of Swap ${swap.id} in: ${claimTransaction.getId()}`);
+
+    this.emit(
+      'claim',
+      await this.swapRepository.setMinerFee(swap, claimTransactionFee),
+      channelCreation || undefined,
+    );
+  }
+
+  // atomic swap
+  private asClaimUtxo = async (
+    chainClient: ChainClient,
+    wallet: Wallet,
+    swap: Swap,
+    transaction: Transaction,
+    preimage: Buffer,
+    // outgoingChannelId?: string,
+  ) => {
+    const channelCreation = await this.channelCreationRepository.getChannelCreation({
+      swapId: {
+        [Op.eq]: swap.id,
+      },
+    });
+    // const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    if (!preimage) {
+      return;
+    }
+
+    const destinationAddress = await wallet.getAddress();
+    console.log('asclaimutxo destinationAddress ', destinationAddress);
+
+    // Compatibility mode with database schema version 0 in which this column didn't exist
+    if (swap.lockupTransactionVout === undefined) {
+      swap.lockupTransactionVout = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!.vout;
+    } else {
+      const test = detectSwap(getHexBuffer(swap.redeemScript!), transaction)!.vout;
+      console.log('vout is there but just confirming ', swap.lockupTransactionVout, test);
+    }
+
+    console.log('detectswap: redeemscript inside transaction ', swap.redeemScript,  detectSwap(getHexBuffer(swap.redeemScript!), transaction));
+    const output = transaction.outs[swap.lockupTransactionVout!];
+
+    console.log('constructing asclaimutxo: ',  {
+      preimage,
+      // vout: swap.lockupTransactionVout!,
+      vout: 0,
+      value: output.value,
+      script: output.script,
+      type: this.swapOutputType,
+      txHash: transaction.getHash(),
+      keys: wallet.getKeysByIndex(swap.keyIndex!),
+      redeemScript: getHexBuffer(swap.redeemScript!),
+    });
+
+    const claimTransaction = await constructClaimTransaction(
+      [
+        {
+          preimage,
+          vout: swap.lockupTransactionVout!,
+          value: output.value,
+          script: output.script,
+          type: this.swapOutputType,
+          txHash: transaction.getHash(),
+          keys: wallet.getKeysByIndex(swap.keyIndex!),
+          redeemScript: getHexBuffer(swap.redeemScript!),
+        }
+      ],
+      wallet.decodeAddress(destinationAddress),
+      await chainClient.estimateFee(),
+      true,
+    );
+    console.log('asclaim claimtx ', claimTransaction, claimTransaction.toHex());
+
+    const claimTransactionFee = await calculateUtxoTransactionFee(chainClient, claimTransaction);
+
+    await chainClient.sendRawTransaction(claimTransaction.toHex());
+
+    this.logger.info(`asClaimUtxo'ed ${wallet.symbol} of Swap ${swap.id} in: ${claimTransaction.getId()}`);
 
     this.emit(
       'claim',
@@ -1161,7 +1533,7 @@ class SwapNursery extends EventEmitter {
 
 
   private claimRbtc = async (contractHandler: RskContractHandler, swap: Swap, etherSwapValues: EtherSwapValues, outgoingChannelId?: string) => {
-    this.logger.error(`claimRbtc triggered`);
+    this.logger.error('claimRbtc triggered');
     const channelCreation = await this.channelCreationRepository.getChannelCreation({
       swapId: {
         [Op.eq]: swap.id,
@@ -1213,8 +1585,8 @@ class SwapNursery extends EventEmitter {
     this.emit('claim', await this.swapRepository.setMinerFee(swap, calculateRskTransactionFee(contractTransaction)), channelCreation || undefined);
   }
 
-  private claimStx = async (contractHandler: StacksContractHandler, swap: Swap, etherSwapValues: EtherSwapValues, outgoingChannelId?: string) => {
-    this.logger.error(`swapnursery.1040 claimStx triggered`);
+  private claimStx = async (contractHandler: StacksContractHandler, swap: Swap, etherSwapValues?: EtherSwapValues, outgoingChannelId?: string, detectedPreimage?: string) => {
+    this.logger.error('swapnursery.1040 claimStx triggered detectedPreimage? '+ detectedPreimage);
     // add additional check to see if swap expired before paying the invoice
     // happens when app is restarted on mocknet
     const queriedSwap = await this.swapRepository.getSwap({
@@ -1222,27 +1594,43 @@ class SwapNursery extends EventEmitter {
         [Op.eq]: swap.id,
       },
     });
-    let latestBlockHeight = (await getInfo()).stacks_tip_height;
+    const latestBlockHeight = (await getInfo()).stacks_tip_height;
     if (queriedSwap!.timeoutBlockHeight <= latestBlockHeight) {
+      console.log('can NOT claim, timeout passed!!!');
       return;
     }
-    
+
     const channelCreation = await this.channelCreationRepository.getChannelCreation({
       swapId: {
         [Op.eq]: swap.id,
       },
     });
-    const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    let preimage, amount, refundAddress, timelock;
+    if(!detectedPreimage && etherSwapValues) {
+      preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+      amount = etherSwapValues.amount;
+      refundAddress = etherSwapValues.refundAddress;
+      timelock = etherSwapValues.timelock;
+    } else {
+      preimage = detectedPreimage;
+      amount = (swap.baseAmount! * 1000000).toString(16).padStart(32, '0');
+      refundAddress = 'dummyrefundaddress';
+      timelock = swap.timeoutBlockHeight;
+    }
 
     if (!preimage) {
+      console.log('can NOT claim, no preimage!!!');
       return;
     }
 
+    console.log('swapnursery.1559 triggerin claimStx with preimage, amount, refundAddress, timelock ', preimage, amount, refundAddress, timelock);
     const contractTransaction = await contractHandler.claimEther(
-      preimage,
-      etherSwapValues.amount,
-      etherSwapValues.refundAddress,
-      etherSwapValues.timelock,
+      getHexBuffer(preimage),
+      // etherSwapValues.amount,
+      amount,
+      refundAddress,
+      timelock,
     );
 
     if(contractTransaction.error) {
@@ -1251,14 +1639,14 @@ class SwapNursery extends EventEmitter {
       incrementNonce();
     }
     this.logger.info(`Claimed Stx of Swap ${swap.id} in: ${contractTransaction.txid}`);
-    this.logger.error("swapnursery.1139 TODO: setminerfee in swaprepository when stacks tx fee calc is available.")
+    this.logger.error('swapnursery.1139 TODO: setminerfee in swaprepository when stacks tx fee calc is available.');
     // calculateRskTransactionFee(contractTransaction)
     this.emit('claim', await this.swapRepository.setMinerFee(swap, 1), channelCreation || undefined);
   }
 
-  private claimSip10 = async (contractHandler: StacksContractHandler, swap: Swap, erc20SwapValues: ERC20SwapValues, outgoingChannelId?: string) => {
+  private claimSip10 = async (contractHandler: StacksContractHandler, swap: Swap, erc20SwapValues?: ERC20SwapValues, outgoingChannelId?: string, detectedPreimage?: string) => {
     this.logger.error('swapnursery.1240 claimSip10 triggered');
-    
+
     // add additional check to see if swap expired before paying the invoice
     // happens when app is restarted on mocknet
     const queriedSwap = await this.swapRepository.getSwap({
@@ -1266,19 +1654,32 @@ class SwapNursery extends EventEmitter {
         [Op.eq]: swap.id,
       },
     });
-    let latestBlockHeight = (await getInfo()).stacks_tip_height;
+    const latestBlockHeight = (await getInfo()).stacks_tip_height;
     if (queriedSwap!.timeoutBlockHeight <= latestBlockHeight) {
       return;
     }
-    
+
     const channelCreation = await this.channelCreationRepository.getChannelCreation({
       swapId: {
         [Op.eq]: swap.id,
       },
     });
-    const preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+
+    let preimage, amount, refundAddress, timelock;
+    if(!detectedPreimage && erc20SwapValues) {
+      preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
+      amount = erc20SwapValues.amount;
+      refundAddress = erc20SwapValues.refundAddress;
+      timelock = erc20SwapValues.timelock;
+    } else {
+      preimage = getHexBuffer(detectedPreimage!);
+      amount = (swap.baseAmount! * 1000000).toString(16).padStart(32, '0');
+      refundAddress = 'dummyrefundaddress';
+      timelock = swap.timeoutBlockHeight;
+    }
 
     if (!preimage) {
+      console.log('swapn.1649 no preimage, not claiming sip10');
       return;
     }
 
@@ -1290,9 +1691,9 @@ class SwapNursery extends EventEmitter {
     const contractTransaction = await contractHandler.claimToken(
       wallet.walletProvider as SIP10WalletProvider,
       preimage,
-      erc20SwapValues.amount,
-      erc20SwapValues.refundAddress,
-      erc20SwapValues.timelock,
+      amount,
+      refundAddress,
+      timelock,
     );
 
     if(contractTransaction.error) {
@@ -1301,7 +1702,7 @@ class SwapNursery extends EventEmitter {
       incrementNonce();
     }
     this.logger.info(`Claimed sip10 of Swap ${swap.id} in: ${contractTransaction.txid}`);
-    this.logger.error("swapnursery.1279 TODO: setminerfee in swaprepository when stacks tx fee calc is available.")
+    this.logger.error('swapnursery.1279 TODO: setminerfee in swaprepository when stacks tx fee calc is available.');
     // calculateRskTransactionFee(contractTransaction)
     this.emit('claim', await this.swapRepository.setMinerFee(swap, 1), channelCreation || undefined);
   }
@@ -1420,6 +1821,18 @@ class SwapNursery extends EventEmitter {
     ));
   }
 
+  private handleSwapSendFailed = async (reverseSwap: Swap, chainSymbol: string, error: unknown,) => {
+    // lndClient?: LndClient,
+    // await lndClient.cancelInvoice(getHexBuffer(reverseSwap.preimageHash));
+    console.log('sn.1697 handleswap failed ', error);
+    this.logger.warn(`Failed to lockup ${reverseSwap.onchainAmount} ${chainSymbol} for Reverse Swap ${reverseSwap.id}: ${formatError(error)}`);
+    this.emit('coins.failedToSend', await this.swapRepository.setSwapStatus(
+      reverseSwap,
+      SwapUpdateEvent.TransactionFailed,
+      Errors.COINS_COULD_NOT_BE_SENT().message,
+    ));
+  }
+
   private lockupFailed = async (swap: Swap, reason: string) => {
     this.logger.warn(`Lockup of Swap ${swap.id} failed: ${reason}`);
     this.emit('lockup.failed', await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.TransactionLockupFailed, reason));
@@ -1433,11 +1846,30 @@ class SwapNursery extends EventEmitter {
       },
     });
 
-    if (queriedSwap!.status === SwapUpdateEvent.SwapExpired) {
+    if (queriedSwap!.status === SwapUpdateEvent.SwapExpired || queriedSwap!.status === SwapUpdateEvent.TransactionRefunded ) {
+      // refunded added to avoid 2 x refundutxoAS
       return;
     }
 
-    this.logger.error("swapnursery expireSwap");
+    this.logger.verbose('swapnursery expireSwap');
+
+    // check if there's any atomic swap refund to be done
+    if (swap.asLockupTransactionId) {
+      if(swap.contractAddress) {
+        if(swap.tokenAddress) {
+          console.log('swapn.1854 refund expired sip10 swap ', swap.id);
+          this.refundSip10AS(swap, 'USDA');
+        } else {
+          console.log('swapn.1863 refund expired STX swap ', swap.id);
+          this.refundStxAS(swap);
+        }
+      } else {
+        console.log('swapn.1867 refund expired BTC swap ', swap.id);
+        this.refundUtxoAS(swap, 'BTC');
+      }
+
+    }
+
     this.emit(
       'expiration',
       await this.swapRepository.setSwapStatus(swap, SwapUpdateEvent.SwapExpired, Errors.ONCHAIN_HTLC_TIMED_OUT().message),
@@ -1468,7 +1900,7 @@ class SwapNursery extends EventEmitter {
 
     // added to avoid refunding lock txns stuck in mempool - stacks issue
     if (reverseSwap.transactionId && queriedReverseSwap!.status !== SwapUpdateEvent.TransactionMempool) {
-      this.logger.error("swapnursery.1336 reverseSwap.transactionId " + chainCurrency.type + ", " + chainSymbol);
+      this.logger.error('swapnursery.1336 reverseSwap.transactionId ' + chainCurrency.type + ', ' + chainSymbol);
       switch (chainCurrency.type) {
         case CurrencyType.BitcoinLike:
           await this.refundUtxo(reverseSwap, chainSymbol);
@@ -1479,8 +1911,8 @@ class SwapNursery extends EventEmitter {
           break;
 
         case CurrencyType.ERC20:
-          this.logger.error("refunderc20 for " + chainSymbol);
-          if(chainSymbol == "SOV") {
+          this.logger.error('refunderc20 for ' + chainSymbol);
+          if(chainSymbol == 'SOV') {
             await this.rrefundERC20(reverseSwap, chainSymbol);
           } else {
             await this.refundERC20(reverseSwap, chainSymbol);
@@ -1496,7 +1928,7 @@ class SwapNursery extends EventEmitter {
           break;
       }
     } else {
-      this.logger.error("swapnursery emitting htlc timeout");
+      this.logger.error('swapnursery emitting htlc timeout');
       this.emit(
         'expiration',
         await this.reverseSwapRepository.setReverseSwapStatus(
@@ -1548,6 +1980,44 @@ class SwapNursery extends EventEmitter {
       await this.reverseSwapRepository.setTransactionRefunded(reverseSwap, minerFee, Errors.REFUNDED_COINS(reverseSwap.transactionId!).message),
       refundTransaction.getId(),
     );
+  }
+
+  private refundUtxoAS = async (reverseSwap: Swap, chainSymbol: string) => {
+    const chainCurrency = this.currencies.get(chainSymbol)!;
+    const wallet = this.walletManager.wallets.get(chainSymbol)!;
+
+    const rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.asLockupTransactionId!);
+    const lockupTransaction = Transaction.fromHex(rawLockupTransaction);
+
+    const lockupOutput = lockupTransaction.outs[reverseSwap.lockupTransactionVout!];
+
+    const destinationAddress = await wallet.getAddress();
+    console.log('swapn.1983 refundUtxoAS ', reverseSwap.asLockupTransactionId!, lockupOutput, reverseSwap.keyIndex!, )
+    const refundTransaction = constructRefundTransaction(
+      [{
+        ...lockupOutput,
+        type: ReverseSwapOutputType,
+        vout: reverseSwap.lockupTransactionVout!,
+        txHash: lockupTransaction.getHash(),
+        keys: wallet.getKeysByIndex(reverseSwap.keyIndex!),
+        redeemScript: getHexBuffer(reverseSwap.redeemScript!),
+      }],
+      wallet.decodeAddress(destinationAddress),
+      // reverseSwap.timeoutBlockHeight,
+      reverseSwap.asTimeoutBlockHeight!,
+      await chainCurrency.chainClient!.estimateFee(),
+    );
+    // const minerFee = await calculateUtxoTransactionFee(chainCurrency.chainClient!, refundTransaction);
+
+    await chainCurrency.chainClient!.sendRawTransaction(refundTransaction.toHex());
+
+    this.logger.info(`Refunded ${chainSymbol} of Reverse Swap ${reverseSwap.id} in: ${refundTransaction.getId()}`);
+    this.emit(
+      'refund',
+      await this.swapRepository.setTransactionRefunded(reverseSwap, Errors.REFUNDED_COINS(reverseSwap.asLockupTransactionId!).message),
+      refundTransaction.getId(),
+    );
+    // minerFee
   }
 
   private refundEther = async (reverseSwap: ReverseSwap) => {
@@ -1605,6 +2075,38 @@ class SwapNursery extends EventEmitter {
     );
   }
 
+  private refundStxAS = async (reverseSwap: Swap) => {
+    const stacksManager = this.walletManager.stacksManager!;
+
+    // const etherSwapValues = await queryEtherSwapValuesFromLock(ethereumManager.etherSwap, reverseSwap.transactionId!);
+    const etherSwapValues = await querySwapValuesFromTx(reverseSwap.asLockupTransactionId!);
+    const contractTransaction:TxBroadcastResult = await stacksManager.contractHandler.refundStx(
+      getHexBuffer(reverseSwap.preimageHash),
+      etherSwapValues.amount,
+      etherSwapValues.claimAddress,
+      etherSwapValues.timelock,
+    );
+
+    if(!contractTransaction.error) {
+      incrementNonce();
+    }
+
+    // this tx contractTransaction may fail in the future - need to handle somehow
+    // for instance it failed because claimstx got in first
+
+    this.logger.info(`Refunded STX of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
+    this.emit(
+      'refund',
+      await this.swapRepository.setTransactionRefunded(
+        reverseSwap,
+        // calculateEthereumTransactionFee(contractTransaction),
+        // 0,
+        Errors.REFUNDED_COINS(reverseSwap.asLockupTransactionId!).message,
+      ),
+      contractTransaction.txid,
+    );
+  }
+
   private refundSip10 = async (reverseSwap: ReverseSwap, chainSymbol: string) => {
     const stacksManager = this.walletManager.stacksManager!;
     const walletProvider = this.walletManager.wallets.get(chainSymbol)!.walletProvider as SIP10WalletProvider;
@@ -1639,8 +2141,42 @@ class SwapNursery extends EventEmitter {
     );
   }
 
+  private refundSip10AS = async (reverseSwap: Swap, chainSymbol: string) => {
+    const stacksManager = this.walletManager.stacksManager!;
+    const walletProvider = this.walletManager.wallets.get(chainSymbol)!.walletProvider as SIP10WalletProvider;
+
+    // const etherSwapValues = await queryEtherSwapValuesFromLock(ethereumManager.etherSwap, reverseSwap.transactionId!);
+    const etherSwapValues = await querySip10SwapValuesFromTx(reverseSwap.asLockupTransactionId!);
+    const contractTransaction:TxBroadcastResult = await stacksManager.contractHandler.refundToken(
+      walletProvider,
+      getHexBuffer(reverseSwap.preimageHash),
+      etherSwapValues.amount,
+      etherSwapValues.claimAddress,
+      etherSwapValues.timelock,
+    );
+
+    if(!contractTransaction.error) {
+      incrementNonce();
+    }
+
+    // this tx contractTransaction may fail in the future - need to handle somehow
+    // for instance it failed because claimstx got in first
+
+    this.logger.info(`Refunded Sip10 of Reverse Swap ${reverseSwap.id} in: ${contractTransaction.txid}`);
+    this.emit(
+      'refund',
+      await this.swapRepository.setTransactionRefunded(
+        reverseSwap,
+        // calculateEthereumTransactionFee(contractTransaction),
+        // 0,
+        Errors.REFUNDED_COINS(reverseSwap.asLockupTransactionId!).message,
+      ),
+      contractTransaction.txid,
+    );
+  }
+
   private refundERC20 = async (reverseSwap: ReverseSwap, chainSymbol: string) => {
-    this.logger.error("eth refundERC20");
+    this.logger.error('eth refundERC20');
     const ethereumManager = this.walletManager.ethereumManager!;
     const walletProvider = this.walletManager.wallets.get(chainSymbol)!.walletProvider as ERC20WalletProvider;
 
@@ -1666,7 +2202,7 @@ class SwapNursery extends EventEmitter {
   }
 
   private rrefundERC20 = async (reverseSwap: ReverseSwap, chainSymbol: string) => {
-    this.logger.error("rsk refundERC20");
+    this.logger.error('rsk refundERC20');
     const ethereumManager = this.walletManager.rskManager!;
     const walletProvider = this.walletManager.wallets.get(chainSymbol)!.walletProvider as ERC20WalletProvider;
 
@@ -1689,7 +2225,7 @@ class SwapNursery extends EventEmitter {
       ),
       contractTransaction.hash,
     );
-  }  
+  }
 }
 
 export default SwapNursery;

@@ -8,9 +8,9 @@ import ERC20WalletProvider from '../providers/ERC20WalletProvider';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit } from '../../consts/Consts';
 
 // makeContractCall, , broadcastTransaction, makeStandardSTXPostCondition
-import { bufferCV, standardPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
+import { bufferCV, standardPrincipalCV, contractPrincipalCV, AnchorMode, FungibleConditionCode, makeContractSTXPostCondition, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult } from '@stacks/transactions';
 import SIP10WalletProvider from '../providers/SIP10WalletProvider';
-import { contractPrincipalCV } from '@blockstack/stacks-transactions';
+// import { contractPrincipalCV } from '@blockstack/stacks-transactions';
 // import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 
 const BigNum = require('bn.js');
@@ -37,11 +37,11 @@ class ContractHandler {
 
   // etherSwap: EtherSwap, erc20Swap: ERC20Swap
   public init = (contract:string, sip10Contract: string): void => {
-    this.contractAddress = contract.split(".")[0];
-    this.contractName = contract.split(".")[1];
+    this.contractAddress = contract.split('.')[0];
+    this.contractName = contract.split('.')[1];
 
-    this.sip10contractAddress = sip10Contract.split(".")[0];
-    this.sip10contractName = sip10Contract.split(".")[1];
+    this.sip10contractAddress = sip10Contract.split('.')[0];
+    this.sip10contractName = sip10Contract.split('.')[1];
     // this.etherSwap = etherSwap;
     // this.erc20Swap = erc20Swap;
   }
@@ -68,11 +68,12 @@ class ContractHandler {
     this.logger.debug(`Locking ${amount} Stx with preimage hash: ${getHexString(preimageHash)} with claimaddress ${claimAddress}`);
     // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
-    amount = amount.div(etherDecimals).div(100)
-    let decimalamount = parseInt(amount.toString(),10) + 1
-    this.logger.verbose("contracthandler.65 smaller amount: "+ amount + ", "+ decimalamount)
+    amount = amount.div(etherDecimals).div(100);
 
-    
+    // this is wrong we should never add + 1 to anything
+    const decimalamount = parseInt(amount.toString(),10);
+    this.logger.verbose('contracthandler.65 smaller amount: '+ amount + ', '+ decimalamount);
+
 
     // Add an optional post condition
     // See below for details on constructing post conditions
@@ -94,18 +95,18 @@ class ContractHandler {
       )
     ];
 
-    console.log("contracthandler.85: ",this.contractAddress, this.contractName, postConditionCode, postConditionAmount)
+    console.log('contracthandler.85: ',this.contractAddress, this.contractName, postConditionCode, postConditionAmount);
 
     
-    let swapamount = decimalamount.toString(16).split(".")[0] + "";
-    let paddedamount = swapamount.padStart(32, "0");
-    let tl1 = timeLock.toString(16);
-    let tl2 = tl1.padStart(32, "0");
-    let tl3 = tl2 // dont slice it?!
+    const swapamount = decimalamount.toString(16).split('.')[0] + '';
+    const paddedamount = swapamount.padStart(32, '0');
+    const tl1 = timeLock.toString(16);
+    const tl2 = tl1.padStart(32, '0');
+    const tl3 = tl2; // dont slice it?!
     // .slice(2);
 
-    console.log("contracthandler.94: amounts",decimalamount,swapamount,paddedamount)
-    console.log("contracthandler.95: timelocks ",timeLock,tl1, tl2, tl3)
+    console.log('contracthandler.94: amounts',decimalamount,swapamount,paddedamount);
+    console.log('contracthandler.95: timelocks ',timeLock,tl1, tl2, tl3);
 
     // (lockStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16))
     const functionArgs = [
@@ -126,7 +127,7 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
-    this.logger.verbose(`broadcasting with nonce: ` + getStacksNetwork().nonce);
+    this.logger.verbose('broadcasting with nonce: ' + getStacksNetwork().nonce);
     const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.contractAddress,
@@ -166,9 +167,9 @@ class ContractHandler {
   ): Promise<TxBroadcastResult> => {
     this.logger.debug(`Claiming ${amount} Stx with preimage ${getHexString(preimage)} and timelock ${timeLock}`);
 
-    let decimalamount = parseInt(amount.toString(),16)
-    this.logger.error("decimalamount: " + decimalamount)
-    let smallamount = decimalamount
+    const decimalamount = parseInt(amount.toString(),16);
+    this.logger.error('decimalamount: ' + decimalamount);
+    const smallamount = decimalamount;
     // let smallamount = amount.div(etherDecimals).toNumber();
     // this.logger.error("smallamount: " + smallamount)
 
@@ -177,7 +178,7 @@ class ContractHandler {
     // const postConditionAddress = this.contractAddress;
     const postConditionCode = FungibleConditionCode.GreaterEqual;
     // new BigNum(1000000);
-    const postConditionAmount = new BigNum(100000);
+    const postConditionAmount = new BigNum(decimalamount);
     // const postConditions = [
     //   makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
     // ];
@@ -191,16 +192,19 @@ class ContractHandler {
       )
     ];
 
-    console.log("contracthandler.129 postConditions: " + postConditions, claimAddress)
+    console.log('contracthandler.129 postConditions: ' + postConditions, claimAddress);
 
-    let swapamount = smallamount.toString(16).split(".")[0] + "";
-    let paddedamount = swapamount.padStart(32, "0");
-    let tl1 = timeLock.toString(16);
-    let tl2 = tl1.padStart(32, "0");
-    let tl3 = tl2.slice(2);
-    let paddedtimelock = timeLock.toString(16).padStart(32, "0");
-    console.log("contracthandler.135 ", smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
-    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162 
+    const swapamount = smallamount.toString(16).split('.')[0] + '';
+    const paddedamount = swapamount.padStart(32, '0');
+    const tl1 = timeLock.toString(16);
+    const tl2 = tl1.padStart(32, '0');
+
+    const tl3 = tl2;
+    // const tl3 = tl2.slice(2);
+    console.log('TODO:::: SHOULD NOT BE SLICING THE TIMELOCK!!!!');
+    const paddedtimelock = timeLock.toString(16).padStart(32, '0');
+    console.log('contracthandler.135 ', smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
+    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162
     // 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea
     // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
     const functionArgs = [
@@ -211,7 +215,7 @@ class ContractHandler {
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from(tl3,'hex')),
     ];
-    this.logger.verbose("stacks contracthandler.198 functionargs: " + stringify(functionArgs));
+    this.logger.verbose('stacks contracthandler.198 functionargs: ' + stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),
@@ -231,7 +235,7 @@ class ContractHandler {
       validateWithAbi: true,
       network: stacksNetworkData.stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
-      postConditions,
+      // postConditions,
       anchorMode: AnchorMode.Any,
       nonce: new BigNum(stacksNetworkData.nonce),
       fee: new BigNum(150000),
@@ -267,11 +271,11 @@ class ContractHandler {
     this.logger.debug(`Refunding ${amount} Stx with preimage hash: ${getHexString(preimageHash)} with claimaddress ${claimAddress}`);
     // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
-    amount = amount.div(etherDecimals).div(100)
+    amount = amount.div(etherDecimals).div(100);
     // this +1 causes issues when 49 -> 50
     // removed  + 1
-    let decimalamount = parseInt(amount.toString(),10)
-    this.logger.verbose("contracthandler.263 smaller amount: "+ amount + ", "+ decimalamount)
+    const decimalamount = parseInt(amount.toString(),10);
+    this.logger.verbose('contracthandler.263 smaller amount: '+ amount + ', '+ decimalamount);
 
     // Add an optional post condition
     // See below for details on constructing post conditions
@@ -293,17 +297,17 @@ class ContractHandler {
       )
     ];
 
-    console.log("contracthandler.285: ",this.contractAddress, this.contractName, postConditionCode, postConditionAmount)
+    console.log('contracthandler.285: ',this.contractAddress, this.contractName, postConditionCode, postConditionAmount);
 
-    let swapamount = decimalamount.toString(16).split(".")[0] + "";
-    let paddedamount = swapamount.padStart(32, "0");
-    let tl1 = timeLock.toString(16);
-    let tl2 = tl1.padStart(32, "0");
-    let tl3 = tl2 // dont slice it?!
+    const swapamount = decimalamount.toString(16).split('.')[0] + '';
+    const paddedamount = swapamount.padStart(32, '0');
+    const tl1 = timeLock.toString(16);
+    const tl2 = tl1.padStart(32, '0');
+    const tl3 = tl2; // dont slice it?!
     // .slice(2);
 
-    console.log("contracthandler.294: amounts",decimalamount,swapamount,paddedamount)
-    console.log("contracthandler.295: timelocks ",timeLock,tl1, tl2, tl3)
+    console.log('contracthandler.294: amounts',decimalamount,swapamount,paddedamount);
+    console.log('contracthandler.295: timelocks ',timeLock,tl1, tl2, tl3);
 
     // (refundStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16))
     const functionArgs = [
@@ -313,7 +317,7 @@ class ContractHandler {
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from(tl3,'hex')),
     ];
-    this.logger.verbose("stacks contracthandler.306 functionargs: "+stringify(functionArgs));
+    this.logger.verbose('stacks contracthandler.306 functionargs: '+stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),
@@ -358,10 +362,10 @@ class ContractHandler {
   public toObject = (data) => {
     // JSON.parse(
     return JSON.stringify(data, (key, value) => {
-        console.log("key, value: ", key, value)
+        console.log('key, value: ', key, value);
         typeof value === 'bigint'
             ? value.toString()
-            : value // return everything else unchanged
+            : value; // return everything else unchanged
           }
     );
   }
@@ -377,9 +381,10 @@ class ContractHandler {
     // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
     amount = amount.div(etherDecimals).div(100);
-    let decimalamount = parseInt(amount.toString(),10) + 1;
-    this.logger.verbose("contracthandler.380 smaller amount: "+ amount + ", "+ decimalamount + ', ' + JSON.stringify(token) + ', ' + this.sip10contractAddress);
-
+    const decimalamount = parseInt(amount.toString(),10);
+    // stop doing this  + 1;
+    this.logger.verbose('contracthandler.380 smaller amount: '+ amount + ', '+ decimalamount + ', '+ this.sip10contractAddress);
+    //  + ', ' JSON.stringify(token) +
 
     // Add an optional post condition
     // See below for details on constructing post conditions
@@ -401,18 +406,19 @@ class ContractHandler {
       )
     ];
 
-    console.log("contracthandler.403: ",this.contractAddress, this.contractName, postConditionCode, postConditionAmount)
+    console.log('contracthandler.403: ',this.contractAddress, this.contractName, postConditionCode, postConditionAmount);
 
     
-    let swapamount = decimalamount.toString(16).split(".")[0] + "";
-    let paddedamount = swapamount.padStart(32, "0");
-    let tl1 = timeLock.toString(16);
-    let tl2 = tl1.padStart(32, "0");
-    let tl3 = tl2 // dont slice it?!
+    const swapamount = decimalamount.toString(16).split('.')[0] + '';
+    const paddedamount = swapamount.padStart(32, '0');
+    const tl1 = timeLock.toString(16);
+    const tl2 = tl1.padStart(32, '0');
+    const tl3 = tl2; // dont slice it?!
     // .slice(2);
 
-    console.log("contracthandler.413: amounts",decimalamount,swapamount,paddedamount)
-    console.log("contracthandler.414: timelocks ",timeLock,tl1, tl2, tl3)
+    console.log('contracthandler.413: amounts',decimalamount,swapamount,paddedamount);
+    console.log('contracthandler.414: timelocks ',timeLock,tl1, tl2, tl3);
+    // console.log('ch.420 token itself ', token);
 
     // lockStx (preimageHash (buff 32)) (amount (buff 16)) (tokenAddress (buff 42)) (claimAddress (buff 42)) (timelock (buff 16)) (claimPrincipal principal) (tokenPrincipal <ft-trait>)
   const functionArgs = [
@@ -434,7 +440,7 @@ class ContractHandler {
     //   bufferCV(Buffer.from('000000000000000000000000000012b3','hex')),
     // ];
 
-    this.logger.verbose(`ch.436 broadcasting with nonce: ` + getStacksNetwork().nonce);
+    this.logger.verbose('ch.436 broadcasting with nonce: ' + getStacksNetwork().nonce);
     const stacksNetworkData = getStacksNetwork();
     const txOptions = {
       contractAddress: this.sip10contractAddress,
@@ -475,9 +481,9 @@ class ContractHandler {
   ): Promise<TxBroadcastResult> => {
     this.logger.debug(`Claiming ${amount} sip10 with preimage ${getHexString(preimage)} and timelock ${timeLock}`);
 
-    let decimalamount = parseInt(amount.toString(),16)
-    this.logger.error("decimalamount: " + decimalamount)
-    let smallamount = decimalamount
+    const decimalamount = parseInt(amount.toString(),16);
+    this.logger.error('decimalamount: ' + decimalamount);
+    const smallamount = decimalamount;
     // let smallamount = amount.div(etherDecimals).toNumber();
     // this.logger.error("smallamount: " + smallamount)
 
@@ -486,7 +492,7 @@ class ContractHandler {
     // const postConditionAddress = this.contractAddress;
     const postConditionCode = FungibleConditionCode.GreaterEqual;
     // new BigNum(1000000);
-    const postConditionAmount = new BigNum(100000);
+    const postConditionAmount = new BigNum(decimalamount);
     // const postConditions = [
     //   makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
     // ];
@@ -500,16 +506,18 @@ class ContractHandler {
       )
     ];
 
-    console.log("contracthandler.129 postConditions: " + postConditions, claimAddress)
+    console.log('contracthandler.129 postConditions: ', postConditions, claimAddress);
 
-    let swapamount = smallamount.toString(16).split(".")[0] + "";
-    let paddedamount = swapamount.padStart(32, "0");
-    let tl1 = timeLock.toString(16);
-    let tl2 = tl1.padStart(32, "0");
-    let tl3 = tl2.slice(2);
-    let paddedtimelock = timeLock.toString(16).padStart(32, "0");
-    console.log("contracthandler.135 ", smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
-    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162 
+    const swapamount = smallamount.toString(16).split('.')[0] + '';
+    const paddedamount = swapamount.padStart(32, '0');
+    const tl1 = timeLock.toString(16);
+    const tl2 = tl1.padStart(32, '0');
+    // why slice it?! dont slice it
+    // const tl3 = tl2.slice(2);
+    const tl3 = tl2;
+    const paddedtimelock = timeLock.toString(16).padStart(32, '0');
+    console.log('contracthandler.135 ', smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
+    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162
     // 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea
     // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
     const functionArgs = [
@@ -521,7 +529,7 @@ class ContractHandler {
       bufferCV(Buffer.from(tl3,'hex')),
       contractPrincipalCV(token.getTokenContractAddress(), token.getTokenContractName()),
     ];
-    this.logger.verbose("stacks contracthandler.523 functionargs: " + stringify(functionArgs));
+    this.logger.verbose('stacks contracthandler.523 functionargs: ' + stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),
@@ -538,7 +546,7 @@ class ContractHandler {
       functionName: 'claimToken',
       functionArgs: functionArgs,
       senderKey: stacksNetworkData.privateKey,
-      validateWithAbi: true,
+      // validateWithAbi: true,
       network: stacksNetworkData.stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
       // postConditions,
@@ -578,8 +586,8 @@ class ContractHandler {
       amount = amount.div(etherDecimals).div(100);
       // this +1 causes issues when 49 -> 50
       // removed  + 1
-      let decimalamount = parseInt(amount.toString(),10);
-      this.logger.verbose("contracthandler.581 smaller amount: "+ amount + ", "+ decimalamount);
+      const decimalamount = parseInt(amount.toString(),10);
+      this.logger.verbose('contracthandler.581 smaller amount: '+ amount + ', '+ decimalamount);
 
       // Add an optional post condition
       // See below for details on constructing post conditions
@@ -603,15 +611,15 @@ class ContractHandler {
 
       // console.log("contracthandler.603: ",this.contractAddress, this.contractName, postConditionCode, postConditionAmount);
 
-      let swapamount = decimalamount.toString(16).split(".")[0] + "";
-      let paddedamount = swapamount.padStart(32, "0");
-      let tl1 = timeLock.toString(16);
-      let tl2 = tl1.padStart(32, "0");
-      let tl3 = tl2 // dont slice it?!
+      const swapamount = decimalamount.toString(16).split('.')[0] + '';
+      const paddedamount = swapamount.padStart(32, '0');
+      const tl1 = timeLock.toString(16);
+      const tl2 = tl1.padStart(32, '0');
+      const tl3 = tl2; // dont slice it?!
       // .slice(2);
 
-      console.log("contracthandler.612: amounts",decimalamount,swapamount,paddedamount)
-      console.log("contracthandler.613: timelocks ",timeLock,tl1, tl2, tl3)
+      console.log('contracthandler.612: amounts',decimalamount,swapamount,paddedamount);
+      console.log('contracthandler.613: timelocks ',timeLock,tl1, tl2, tl3);
 
       // (refundStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)) (tokenPrincipal <ft-trait>))
       const functionArgs = [
@@ -622,7 +630,7 @@ class ContractHandler {
         bufferCV(Buffer.from(tl3,'hex')),
         contractPrincipalCV(token.getTokenContractAddress(), token.getTokenContractName())
       ];
-      this.logger.verbose("stacks contracthandler.624 functionargs: "+stringify(functionArgs));
+      this.logger.verbose('stacks contracthandler.624 functionargs: '+stringify(functionArgs));
 
       // const functionArgs = [
       //   bufferCV(preimageHash),
@@ -704,8 +712,8 @@ class ContractHandler {
     refundAddress: string,
     timelock: number,
   ): Promise<TxBroadcastResult> => {
-    this.logger.debug(`Claiming Stx with preimage: ${getHexString(preimage)}`);
-    this.logger.error("contracthandler.151 claim data refundAddress: " + refundAddress);
+    this.logger.debug(`ch.711 Claiming Stx with preimage: ${getHexString(preimage)}`);
+    this.logger.error('contracthandler.151 claim data refundAddress: ' + refundAddress);
 
     return this.claimStx(preimage, amount, refundAddress, timelock);
 

@@ -115,4 +115,12 @@ export default {
     message: `${input} is not a whole number`,
     code: concatErrorCode(ErrorCodePrefix.Service, 30),
   }),
+  WRONG_RATE: (): Error => ({
+    message: `Exchange rate validation failed`,
+    code: concatErrorCode(ErrorCodePrefix.Service, 31),
+  }),
+  INVALID_PARAMETER: (): Error => ({
+    message: `Invalid parameter received`,
+    code: concatErrorCode(ErrorCodePrefix.Service, 32),
+  }),
 };

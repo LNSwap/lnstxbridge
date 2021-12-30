@@ -86,7 +86,7 @@ class Service {
     this.pairRepository = new PairRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
 
-    console.log("service.ts 88")
+    console.log('service.ts 88');
     this.rateProvider = new RateProvider(
       this.logger,
       config.rates.interval,
@@ -96,7 +96,7 @@ class Service {
 
     this.logger.debug(`Using ${config.swapwitnessaddress ? 'P2WSH' : 'P2SH nested P2WSH'} addresses for Submarine Swaps`);
 
-    this.logger.error(`starting swapmanager inside service from Boltz`);
+    // this.logger.error('starting swapmanager inside service from Boltz');
     this.swapManager = new SwapManager(
       this.logger,
       this.walletManager,
@@ -106,7 +106,7 @@ class Service {
       config.retryInterval,
     );
 
-    this.logger.error(`starting EventHandler inside service from Boltz for ${this.currencies}` + JSON.stringify(Array.from(this.currencies)) + " " + currencies);
+    // this.logger.error(`starting EventHandler inside service from Boltz for ${this.currencies}` + JSON.stringify(Array.from(this.currencies)) + " " + currencies);
     this.eventHandler = new EventHandler(
       this.logger,
       this.currencies,
@@ -157,13 +157,13 @@ class Service {
    * Gets general information about this Boltz instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<GetInfoResponse> => {
-    this.logger.error("service.160 STARTED")
+    this.logger.error('service.160 STARTED');
     const response = new GetInfoResponse();
     const map = response.getChainsMap();
 
     response.setVersion(getVersion());
 
-    this.logger.error("service.165 - " + JSON.stringify(this.currencies))
+    this.logger.error('service.165 - ' + JSON.stringify(this.currencies));
     for (const [symbol, currency] of this.currencies) {
       const chain = new ChainInfo();
       const lnd = new LndInfo();
@@ -191,9 +191,9 @@ class Service {
           chain.setError(formatError(error));
         }
       } else if (currency.stacksClient) {
-        this.logger.error("service.ts 192 TODO");
+        this.logger.error('service.ts 192 TODO');
         const blockNumber = await getInfo();
-        this.logger.error("blockNumber: " + blockNumber);
+        this.logger.error('blockNumber: ' + blockNumber);
       }
 
       if (currency.lndClient) {
@@ -383,7 +383,7 @@ class Service {
         // this.logger.error("service.383 gettransaction ")
         return await getStacksRawTransaction(transactionHash);
       } else {
-        console.log("service.381 NOT_SUPPORTED_BY_SYMBOL");
+        console.log('service.381 NOT_SUPPORTED_BY_SYMBOL');
         throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
       }
     }
@@ -419,7 +419,7 @@ class Service {
     const currency = this.getCurrency(chainCurrency);
 
     if (currency.chainClient === undefined) {
-      console.log("service.ts 408 NOT_SUPPORTED_BY_SYMBOL")
+      console.log('service.ts 408 NOT_SUPPORTED_BY_SYMBOL');
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(currency.symbol);
     }
 
@@ -443,7 +443,7 @@ class Service {
     const wallet = this.walletManager.wallets.get(symbol.toUpperCase());
 
     if (wallet === undefined) {
-      console.log("service.ts line 411");
+      console.log('service.ts line 411');
       throw Errors.CURRENCY_NOT_FOUND(symbol);
     }
 
@@ -466,7 +466,7 @@ class Service {
     if (wallet !== undefined) {
       return wallet.getAddress();
     }
-    console.log("service.ts line 434");
+    console.log('service.ts line 434');
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
@@ -489,7 +489,7 @@ class Service {
         return gasPrice.div(gweiDecimals).toNumber();
       } else if (currency.stacksClient) {
         // STACKS I do it manually differently.
-        let fee = await getFee();
+        const fee = await getFee();
         // this.logger.error("service.485 got fee: " + fee + ", gweiDecimals " + gweiDecimals)
         // // fee = fee / BigInt(gweiDecimals)
         // // fee = new BigNumber(fee).toNumber().div(gweiDecimals).toNumber()
@@ -502,7 +502,7 @@ class Service {
         return fee.div(gweiDecimals).toNumber();
 
       } else {
-        console.log("service.ts 475 NOT_SUPPORTED_BY_SYMBOL")
+        console.log('service.ts 475 NOT_SUPPORTED_BY_SYMBOL');
         throw Errors.NOT_SUPPORTED_BY_SYMBOL(currency.symbol);
       }
     };
@@ -527,13 +527,13 @@ class Service {
       for (const [symbol, currency] of this.currencies) {
         if (currency.type === CurrencyType.ERC20) {
           if (!map.has('ETH')) {
-            console.log("service.ts 507 estimateFee", currency)
+            console.log('service.ts 507 estimateFee', currency);
             map.set('ETH', await estimateFee(currency));
           }
 
           continue;
         }
-        console.log("service.ts 513 estimateFee ", currency.symbol)
+        console.log('service.ts 513 estimateFee ', currency.symbol);
         map.set(symbol, await estimateFee(currency));
       }
     }
@@ -548,7 +548,7 @@ class Service {
     const currency = this.getCurrency(symbol);
 
     if (currency.chainClient === undefined) {
-      console.log("service.ts 518 NOT_SUPPORTED_BY_SYMBOL")
+      console.log('service.ts 518 NOT_SUPPORTED_BY_SYMBOL');
       throw Errors.NOT_SUPPORTED_BY_SYMBOL(symbol);
     }
 
@@ -614,6 +614,12 @@ class Service {
 
     // Only required for UTXO based chains
     refundPublicKey?: Buffer,
+
+    requestedAmount?: number,
+    claimAddress?: string,
+    quoteAmount?: number,
+    baseAmount?: number,
+    claimPublicKey?: string,
   }): Promise<{
     id: string,
     address: string,
@@ -624,7 +630,19 @@ class Service {
 
     // Is undefined when Bitcoin or Litecoin is swapped to Lightning
     claimAddress?: string,
+
+    // // for onchain swaps
+    bip21?: string,
+    expectedAmount?: number,
+    acceptZeroConf?: boolean,
+    contractAddress?: string,
+    asTimeoutBlockHeight?: number,
+    quoteAmount?: number,
+    baseAmount?: number,
+    tokenAddress?: string,
+    origBlockHeight?: number,
   }> => {
+    // console.log('Service.641 ARGS ', args);
     const swap = await this.swapManager.swapRepository.getSwap({
       preimageHash: {
         [Op.eq]: getHexString(args.preimageHash),
@@ -658,12 +676,17 @@ class Service {
 
     const timeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, orderSide, false);
 
+    const side = this.getOrderSide(args.orderSide);
+    const onchainTimeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, side, true);
+
     const {
       id,
       address,
       redeemScript,
       claimAddress,
       timeoutBlockHeight,
+      asTimeoutBlockHeight,
+      tokenAddress,
     } = await this.swapManager.createSwap({
       orderSide,
       timeoutBlockDelta,
@@ -673,16 +696,121 @@ class Service {
       channel: args.channel,
       preimageHash: args.preimageHash,
       refundPublicKey: args.refundPublicKey,
+      claimAddress: args.claimAddress,
+
+      requestedAmount: args.requestedAmount,
+      quoteAmount: args.quoteAmount,
+      baseAmount: args.baseAmount,
+
+      onchainTimeoutBlockDelta,
+      // claimPublicKey: args.claimPublicKey, // this is keys.publickey coming from user = refundPublicKey
+      // bip21,
+      // expectedAmount,
+      // acceptZeroConf,
     });
+
+    let acceptZeroConf = true;
+    let bip21 = '';
+    let expectedAmount = 0;
+    let contractAddress = '';
+    let finalTimeoutBlockheight = timeoutBlockHeight;
+    if (args.requestedAmount && args.orderSide == 'sell') {
+      const response = await this.getManualRates(id, args.requestedAmount);
+      console.log('service.688 getManualRates requestedAmount vs response ', args.requestedAmount, response);
+      if(base !== 'BTC') {
+        expectedAmount = response.onchainAmount || 0;
+        console.log('base is NOT BTC so set expected = onchainamount ', expectedAmount);
+      } else {
+        expectedAmount = args.baseAmount || 0;
+        console.log('base is BTC so set expected = args.baseAmount ', expectedAmount);
+      }
+
+      // verify client-side input
+      if (args.quoteAmount && (args.requestedAmount != Math.floor(args.quoteAmount*10**6))) {
+        console.log('s.730 VERIFICATION FAILED requestedAmount vs quoteAmount', args.requestedAmount, args.quoteAmount*10**6, args.requestedAmount !== args.quoteAmount*10**6);
+        throw Errors.INVALID_PARAMETER()
+      }
+      if (expectedAmount < response.submarineSwap.invoiceAmount/10**8) {
+        console.log('s.733 VERIFICATION FAILED expectedAmount (user will lock) vs invoiceAmount (operator will pay) ', expectedAmount, response.submarineSwap.invoiceAmount/10**8);
+        throw Errors.WRONG_RATE()
+      }      
+
+      // acceptZeroConf = true;
+      bip21 = encodeBip21(
+        base,
+        address,
+        // expectedAmount,
+        expectedAmount*10**8,
+        'onchain swap',
+        // getSwapMemo(quote, false),
+      ) || '';
+
+      acceptZeroConf = this.rateProvider.acceptZeroConf(base, expectedAmount);
+      const swap = await this.swapManager.swapRepository.getSwap({
+        id: {
+          [Op.eq]: id,
+        },
+      });
+      if (swap)
+        await this.swapManager.swapRepository.setAcceptZeroConf(swap, acceptZeroConf);
+
+      console.log('updated swap acceptZeroConf', base, expectedAmount, acceptZeroConf);
+
+      contractAddress = swap?.contractAddress || '';
+
+      // console.log('TODO:: validate base/quote amount!!!');//done
+
+      // set timeout = astimeout for atomic swaps
+      console.log('s.743 setting timeout=asTimeoutBlockHeight: ', asTimeoutBlockHeight);
+      finalTimeoutBlockheight = asTimeoutBlockHeight!;
+    } else if(args.baseAmount) {
+      // verify client-side input
+      const response = await this.getManualRates(id, args.baseAmount, true);
+      console.log('s.770 response ', response);
+
+      // console.log('TODO: more validation NEEDED'); //done
+      if (response.onchainAmount && args.quoteAmount && (args.quoteAmount > response.onchainAmount/100)) {
+        throw Errors.WRONG_RATE()
+      }
+
+    } else {
+      console.log('s.777 no validation done');
+    }
 
     this.eventHandler.emitSwapCreation(id);
 
-    return {
+    console.log('s.782 end returning this ', {
+      bip21,
+      expectedAmount,
+      acceptZeroConf,
       id,
       address,
       redeemScript,
       claimAddress,
-      timeoutBlockHeight,
+      timeoutBlockHeight: finalTimeoutBlockheight,
+      contractAddress,
+      asTimeoutBlockHeight,
+      baseAmount: args.baseAmount,
+      quoteAmount: args.quoteAmount,
+      tokenAddress,
+      origBlockHeight: timeoutBlockHeight
+    });
+
+    return {
+      bip21,
+      expectedAmount,
+      acceptZeroConf,
+      id,
+      address,
+      redeemScript,
+      claimAddress,
+      timeoutBlockHeight: finalTimeoutBlockheight,
+      contractAddress,
+      asTimeoutBlockHeight,
+      baseAmount: args.baseAmount,
+      quoteAmount: args.quoteAmount,
+      tokenAddress,
+      origBlockHeight: timeoutBlockHeight
     };
   }
 
@@ -721,6 +849,12 @@ class Service {
 
     this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
 
+    console.log('service.733 getswaprates: ', {
+      onchainAmount: swap.onchainAmount,
+      submarineSwap: {
+        invoiceAmount,
+      }});
+
     return {
       onchainAmount: swap.onchainAmount,
       submarineSwap: {
@@ -728,6 +862,157 @@ class Service {
       },
     };
   }
+
+  /**
+   * Sets the rate for a Swap that doesn't have an invoice yet
+   */
+    private setSwapRate = async (swap: Swap) => {
+    if (!swap.rate) {
+      const rate = getRate(
+        this.rateProvider.pairs.get(swap.pair)!.rate,
+        swap.orderSide,
+        false
+      );
+
+      await this.setRate(swap, rate);
+    }
+  }
+  public setRate = (swap: Swap, rate: number): Promise<Swap> => {
+    return swap.update({
+      rate,
+    });
+  }
+
+  /**
+   * Gets/Sets the rates for an Atomic Swap that user requested
+   */
+   public getManualRates = async (id: string, requestedAmount: number, skipVerify?: boolean): Promise<{
+    requestedAmount?: number,
+    onchainAmount?: number,
+    submarineSwap: {
+      invoiceAmount: number,
+    },
+    atomicSwap: {
+      invoiceAmountAS: number,
+    }
+  }> => {
+    const swap = await this.swapManager.swapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    if (!swap) {
+      throw Errors.SWAP_NOT_FOUND(id);
+    }
+
+    await this.setSwapRate(swap);
+    // if (!swap.onchainAmount) {
+    //   throw Errors.SWAP_NO_LOCKUP();
+    // }
+
+    const { base, quote } = splitPairId(swap.pair);
+    const onchainCurrency = getChainCurrency(base, quote, swap.orderSide, false);
+    console.log('s.838 swap.rate swap.orderSide, base, quote', swap.rate, swap.orderSide, base, quote);
+
+    const rate = getRate(swap.rate!, swap.orderSide, true);
+    console.log('s.876 rate ', rate);
+
+    const percentageFee = this.rateProvider.feeProvider.getPercentageFee(swap.pair);
+    const baseFee = this.rateProvider.feeProvider.getBaseFee(onchainCurrency, BaseFeeType.NormalClaim);
+    console.log('s.781 onchainCurrency, percentageFee, baseFee', onchainCurrency, percentageFee, baseFee);
+
+    let onchainAmount, invoiceAmount, invoiceAmountAS;
+    if ((swap.pair === 'BTC/STX' || swap.pair === 'BTC/USDA') && swap.orderSide === 1) {
+      // requested amount is already in mstx
+      onchainAmount = requestedAmount*100; //go from mstx -> boltz (10^8)
+      invoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      console.log('s.872 onchainAmount=requestedAmount ', requestedAmount);
+      console.log('s.873 invoiceAmount ', invoiceAmount);
+      console.log('s.874 invoiceAmountAS ', invoiceAmountAS);
+
+      this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
+
+      // check that rate is acceptable
+      if (this.catchRates((requestedAmount*rate)/10**6, invoiceAmountAS/10**8)) {
+        throw Errors.WRONG_RATE();
+      }
+
+      console.log('s.899 ', 'user requested ', requestedAmount, ' stx/usda for ',  )
+
+    } else {
+      // requested amount in mstx
+      onchainAmount = ((requestedAmount/1000000) * rate) * 100000000;
+      console.log('s.810 requestedAmount, onchainAmount, swap.orderSide: ', requestedAmount, onchainAmount, swap.orderSide);
+
+      invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      console.log('s.784 requestedAmount, onchainAmount, invoiceAmount', requestedAmount, onchainAmount, invoiceAmount);
+
+      
+
+      // let originvoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      // invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
+      // console.log('s.940 originvoiceAmount, invoiceAmountAS', originvoiceAmount, invoiceAmountAS)
+
+      if(!skipVerify) {
+        console.log('s.899 verifyAmount pair,rate,invoiceamount,orderside: ', swap.pair, 'rate', rate, 'invoiceamount', invoiceAmount, 'orderside', swap.orderSide);
+        this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
+      }
+
+      // this is done in service.ts
+      // // check that rate is acceptable should be within %1
+      // if (this.catchRates((requestedAmount*rate)/10**6, invoiceAmount/10**8)){
+      //   throw Errors.WRONG_RATE();
+      // }
+      
+      console.log('s.902 getManualRates: ', {
+        onchainAmount: swap.onchainAmount,
+        submarineSwap: {
+          invoiceAmount,
+        },
+        atomicSwap: {
+          invoiceAmountAS,
+        }});
+    }
+
+    return {
+      requestedAmount,
+      onchainAmount,
+      submarineSwap: {
+        invoiceAmount,
+      },
+      atomicSwap: {
+        invoiceAmountAS,
+      }
+    };
+  }
+
+  /**
+   * Validates exchange rates for atomic swaps because client-side data
+   */
+   public catchRates = (operatorSide: number, userSide: number): boolean => {
+    // operatorSide = requestedAmount*rate - lnswap is sending this
+    // userSide = invoiceAmount calculated in backend - lnswap is receiving this
+    
+    // Accept spread due to fees
+    if (operatorSide*1.01 > userSide ) {
+      console.log('s.940 caught rate issue');
+      // 
+      // || amountOne < amountTwo*0.97
+      // throw Errors.WRONG_RATE();
+      return true;
+    } else {
+      console.log('s.951 validateRates OK not bad rates ', operatorSide, userSide, operatorSide > userSide);
+      return false;
+    }
+
+    // if (amountTwo > amountOne*1.03 || amountTwo < amountOne*0.97) {
+    //   // throw Errors.WRONG_RATE();
+    //   return false;
+    // }
+
+  };
 
   /**
    * Sets the invoice of Submarine Swap
@@ -839,6 +1124,8 @@ class Service {
 
     // Is undefined when Bitcoin or Litecoin is swapped to Lightning
     claimAddress?: string,
+
+    tokenAddress?: string,
   }> => {
     let swap = await this.swapManager.swapRepository.getSwap({
       invoice: {
@@ -851,6 +1138,7 @@ class Service {
     }
 
     const preimageHash = getHexBuffer(decodeInvoice(invoice).paymentHash!);
+    console.log('s.1010 createswapwithinvoice preimageHash = ', decodeInvoice(invoice).paymentHash!);
 
     const {
       id,
@@ -858,6 +1146,7 @@ class Service {
       claimAddress,
       redeemScript,
       timeoutBlockHeight,
+      tokenAddress,
     } = await this.createSwap({
       pairId,
       channel,
@@ -882,6 +1171,7 @@ class Service {
         acceptZeroConf,
         expectedAmount,
         timeoutBlockHeight,
+        tokenAddress,
       };
     } catch (error) {
       const channelCreation = await this.swapManager.channelCreationRepository.getChannelCreation({
@@ -1165,7 +1455,7 @@ class Service {
         vout: vout!,
       };
     }
-    console.log("service.ts line 1096");
+    console.log('service.ts line 1096');
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
@@ -1179,10 +1469,15 @@ class Service {
       ) {
       // tslint:disable-next-line:no-parameter-reassignment
       amount = Math.floor(amount * rate);
+      console.log('s.1320 amount ', amount);
+    } else {
+      // convert amount for atomic swaps
+      amount = Math.floor(amount * 1/rate);
+      console.log('s.1343 amount ', amount, rate);
     }
 
     const { limits } = this.getPair(pairId);
-
+    console.log('s.1324 amount vs limits ', amount, limits);
     // check if amount is greater than what's available in account
 
     if (limits) {
@@ -1201,9 +1496,31 @@ class Service {
     if (orderSide === OrderSide.BUY) {
       rate = 1 / rate;
     }
-
+    console.log('s.1425 calculateInvoiceAmount: ', onchainAmount, baseFee, rate, percentageFee);
     return Math.floor(
       ((onchainAmount - baseFee) * rate) / (1 + percentageFee),
+    );
+  }
+
+  private calculateInvoiceAmountAS = (orderSide: number, rate: number, onchainAmount: number, baseFee: number, percentageFee: number) => {
+    if (orderSide === OrderSide.BUY) {
+      rate = 1 / rate;
+    }
+    console.log('s.1435 calculateInvoiceAmountAS: ', onchainAmount, baseFee, rate, percentageFee);
+    return Math.floor(
+      ((onchainAmount - baseFee) * rate) * (1 + percentageFee),
+    );
+  }
+
+  private calculateOnchainAmount = (orderSide: number, rate: number, onchainAmount: number, baseFee: number, percentageFee: number) => {
+    if (orderSide === OrderSide.BUY) {
+      rate = 1 / rate;
+    }
+
+    // stx -> btcln calculateOnchainAmount:  0.4007220000000001 87025 21710.811984368214 0.05
+    console.log('s.1437 calculateOnchainAmount, baseFee, rate, percentageFee: ', onchainAmount, baseFee, rate, percentageFee);
+    return Math.floor(
+      (onchainAmount - baseFee) / (1 + percentageFee),
     );
   }
 
@@ -1227,7 +1544,7 @@ class Service {
     const currency = this.currencies.get(symbol);
 
     if (!currency) {
-      console.log("service.ts line 1155");
+      console.log('service.ts line 1155');
       throw Errors.CURRENCY_NOT_FOUND(symbol);
     }
 
