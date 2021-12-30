@@ -177,6 +177,10 @@ class ChainClient extends BaseClient {
     return this.client.request<RawTransaction>('getrawtransaction', [id, 1]);
   }
 
+  public getRawTransactionVerboseBlockHash = (id: string, blockhash: string): Promise<RawTransaction> => {
+    return this.client.request<RawTransaction>('getrawtransaction', [id, 1, blockhash]);
+  }
+
   public estimateFee = async (confTarget = 2): Promise<number> => {
     const chainClientFee = await this.estimateFeeChainClient(confTarget);
 

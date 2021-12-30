@@ -51,8 +51,13 @@ import {
 } from '../Utils';
 import InvoiceState = Invoice.InvoiceState;
 import { TxBroadcastResult } from '@stacks/transactions';
-import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
+import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx, getStacksNetwork } from '../wallet/stacks/StacksUtils';
 import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
+
+import mempoolJS from "@mempool/mempool.js";
+const { bitcoin: { transactions } } = mempoolJS({
+  hostname: 'mempool.space'
+});
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -911,10 +916,24 @@ class SwapNursery extends EventEmitter {
         const wallet = this.walletManager.wallets.get(chainSymbol)!;
 
         if (chainClient) {
-          const rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
-          const tx = Transaction.fromHex(rawTx.hex);
-          console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
-          await this.asClaimUtxo(chainClient!, wallet, swap, tx, preimage);
+          try {
+            let rawTx;
+            // need blockhash because we're running a pruned node with no -txindex
+            if((await getInfo()).network_id === 1) {
+              const mempoolTx = await transactions.getTx({ txid: transactionHash });
+              rawTx = await chainClient.getRawTransactionVerboseBlockHash(transactionHash, mempoolTx.status.block_hash);
+            } else {
+              // regtest
+              rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
+            }
+               
+            const tx = Transaction.fromHex(rawTx.hex);
+            console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
+            await this.asClaimUtxo(chainClient!, wallet, swap, tx, preimage);
+          } catch (err) {
+            console.log('as.claimed caugh err ', err);
+          }
+
         }
 
       });
