@@ -9,6 +9,11 @@ import packageJson from '../package.json';
 import { OrderSide } from './consts/Enums';
 import ChainClient from './chain/ChainClient';
 import { etherDecimals } from './consts/Consts';
+import { getInfo } from './wallet/stacks/StacksUtils';
+import mempoolJS from "@mempool/mempool.js";
+const { bitcoin: { transactions } } = mempoolJS({
+  hostname: 'mempool.space'
+});
 
 const {
   p2shOutput,
@@ -423,7 +428,18 @@ export const calculateUtxoTransactionFee = async (chainClient: ChainClient, tran
 
   for (const input of transaction.ins) {
     const inputId = transactionHashToId(input.hash);
-    const rawInputTransaction = await chainClient.getRawTransaction(inputId);
+
+    let rawInputTransaction:string;
+    // need blockhash because we're running a pruned node with no -txindex
+    if((await getInfo()).network_id === 1) {
+      const mempoolTx = await transactions.getTx({ txid: inputId });
+      rawInputTransaction = await chainClient.getRawTransactionBlockHash(inputId, mempoolTx.status.block_hash);
+    } else {
+      // regtest
+      rawInputTransaction = await chainClient.getRawTransaction(inputId);
+    }
+
+    // const rawInputTransaction = await chainClient.getRawTransaction(inputId);
     const inputTransaction = Transaction.fromHex(rawInputTransaction);
 
     const spentOutput = inputTransaction.outs[input.index];
