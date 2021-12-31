@@ -52,6 +52,11 @@ import {
   splitPairId,
 } from '../Utils';
 
+import mempoolJS from "@mempool/mempool.js";
+const { bitcoin: { transactions } } = mempoolJS({
+  hostname: 'mempool.space'
+});
+
 type LndNodeInfo = {
   nodeKey: string,
   uris: string[],
@@ -388,7 +393,16 @@ class Service {
       }
     }
 
-    return await currency.chainClient.getRawTransaction(transactionHash);
+    // need blockhash because we're running a pruned node with no -txindex
+    if((await getInfo()).network_id === 1) {
+      const mempoolTx = await transactions.getTx({ txid: transactionHash });
+      return await currency.chainClient.getRawTransactionBlockHash(transactionHash, mempoolTx.status.block_hash);
+    } else {
+      // regtest
+      return await currency.chainClient.getRawTransaction(transactionHash);
+    }
+    
+    // return await currency.chainClient.getRawTransaction(transactionHash);
   }
 
   /**
