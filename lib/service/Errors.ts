@@ -123,4 +123,8 @@ export default {
     message: `Invalid parameter received`,
     code: concatErrorCode(ErrorCodePrefix.Service, 32),
   }),
+  MINT_COST_MISMATCH: (): Error => ({
+    message: `Mint cost does not match`,
+    code: concatErrorCode(ErrorCodePrefix.Service, 33),
+  }),
 };

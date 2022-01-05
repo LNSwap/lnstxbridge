@@ -19,8 +19,7 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-// calculateStxOutTx
-import { getFee, getInfo, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
+import { calculateStxOutTx, getFee, getInfo, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
@@ -1478,17 +1477,21 @@ class Service {
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
-  public mintNFT = async (nftAddress: string, userAddress: string, contractSignature?: string): Promise<{
+  public mintNFT = async (nftAddress: string, userAddress: string, stxAmount: number, contractSignature?: string): Promise<{
     id: string,
     invoice: string,
   }> => {
-    this.logger.verbose(`s.1481 mintNFT with ${nftAddress}, ${userAddress} and ${contractSignature}`);
+    this.logger.verbose(`s.1481 mintNFT with ${nftAddress}, ${userAddress}, ${stxAmount} and ${contractSignature}`);
 
     // check contract signature to see how much it would cost to mint
     // find a previous call of the same function and add up stx transfers of that call
-    // const mintCostStx = await calculateStxOutTx(nftAddress);
-    const mintCostStx = 10000000;
-    this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
+    const mintCostStx = stxAmount * 10**6; // 10000000;
+    const calcMintCostStx = await calculateStxOutTx(nftAddress);
+    if(calcMintCostStx && calcMintCostStx > mintCostStx) {
+      this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);  
+      throw Errors.MINT_COST_MISMATCH();
+    } 
+    // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
 
     // convert to BTC + fees + generate LN invoice
     const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');

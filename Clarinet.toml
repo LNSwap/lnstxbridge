@@ -1,16 +1,25 @@
 [project]
 name = "lnstxbridge"
+requirements = []
+costs_version = 1
+[contracts.nft]
+path = "contracts/nft.clar"
+depends_on = ["nft-trait"]
+
+[contracts.nft-trait]
+path = "contracts/nft-trait.clar"
+depends_on = []
 
 [contracts.sip-010-trait]
 path = "contracts/sip-010-trait.clar"
 depends_on = []
 
-[contracts.stxswap]
-path = "contracts/stxswap_v8.clar"
-depends_on = []
-
 [contracts.sip10swap]
 path = "contracts/sip10swap_v1.clar"
+depends_on = []
+
+[contracts.stxswap]
+path = "contracts/stxswap_v8.clar"
 depends_on = []
 
 [contracts.usda-token]

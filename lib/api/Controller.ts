@@ -438,13 +438,14 @@ class Controller {
   // new endpoint to mint NFTs upon LN invoice payment
   public mintNFT = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { nftAddress, userAddress, contractSignature } = this.validateRequest(req.body, [
+      const { nftAddress, userAddress, contractSignature, stxAmount } = this.validateRequest(req.body, [
         { name: 'nftAddress', type: 'string' },
         { name: 'userAddress', type: 'string' },
         { name: 'contractSignature', type: 'string', optional: true },
+        { name: 'stxAmount', type: 'number' },
       ]);
 
-      const response = await this.service.mintNFT(nftAddress, userAddress, contractSignature);
+      const response = await this.service.mintNFT(nftAddress, userAddress, stxAmount, contractSignature);
       this.successResponse(res, response);
     } catch (error) {
       this.errorResponse(req, res, error);

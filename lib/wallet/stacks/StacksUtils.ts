@@ -295,6 +295,10 @@ export const calculateStxOutTx = async (nftContract:string) => {
     }
   }
 
+  if(!claimtx) {
+    return;
+  }
+  
   const txurl = `${coreApiUrl}/extended/v1/tx/${claimtx.tx_id}`;
   const response = await axios.get(txurl)
   const events = response.data.events;
@@ -649,15 +653,10 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
   let contractAddress = contract.split(".")[0];
   let contractName = contract.split(".")[1];
 
-  const postConditionCode = FungibleConditionCode.GreaterEqual;
+  const postConditionCode = FungibleConditionCode.LessEqual;
   const postConditionAmount = new BigNum(mintCost);
   const postConditions = [
-    makeContractSTXPostCondition(
-      contractAddress,
-      contractName,
-      postConditionCode,
-      postConditionAmount
-    )
+    createSTXPostCondition(signerAddress, postConditionCode, postConditionAmount),
   ];
 
   let functionArgs = [
