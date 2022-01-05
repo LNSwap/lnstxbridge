@@ -1473,6 +1473,24 @@ class Service {
     throw Errors.CURRENCY_NOT_FOUND(symbol);
   }
 
+  public mintNFT = async (nftAddress: string, userAddress: string, contractSignature?: string): Promise<{
+    invoice: string,
+  }> => {
+    this.logger.verbose(`s.1481 mintNFT with ${nftAddress}, ${userAddress} and ${contractSignature}`);
+
+    // check contract signature to see how much it would cost to mint
+
+    // convert to BTC + fees + generate LN invoice
+
+    // create swap + enter info in db in a new table
+
+    // listen to invoice payment + call contract so user gets NFT upon LN payment
+    return {
+      invoice: ''
+    }
+  }
+
+
   /**
    * Verifies that the requested amount is neither above the maximal nor beneath the minimal
    */

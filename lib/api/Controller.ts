@@ -435,6 +435,22 @@ class Controller {
     }
   }
 
+  // new endpoint to mint NFTs upon LN invoice payment
+  public mintNFT = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { nftAddress, userAddress, contractSignature } = this.validateRequest(req.body, [
+        { name: 'nftAddress', type: 'string' },
+        { name: 'userAddress', type: 'string' },
+        { name: 'contractSignature', type: 'string', optional: true },
+      ]);
+
+      const response = await this.service.mintNFT(nftAddress, userAddress, contractSignature);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   // EventSource streams
   public streamSwapStatus = (req: Request, res: Response): void => {
     try {
