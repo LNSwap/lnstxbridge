@@ -1493,6 +1493,8 @@ class Service {
     } 
     // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
 
+    // TODO: add a check to make sure lnswap signer has enough funds before creating swap
+
     // convert to BTC + fees + generate LN invoice
     const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');
     this.logger.verbose(`s.1488 sendingAmountRate ${sendingAmountRate}`); //18878.610534264677
