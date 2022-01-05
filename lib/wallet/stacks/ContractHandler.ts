@@ -166,6 +166,7 @@ class ContractHandler {
     timeLock: number,
   ): Promise<TxBroadcastResult> => {
     this.logger.debug(`Claiming ${amount} Stx with preimage ${getHexString(preimage)} and timelock ${timeLock}`);
+    // Claiming 0x000000000000000000000000001e81a1 Stx with preimage 6dbd24b9e7d350d13eae95c218eba735e4a87e3a7ec205b9bd83805a37b4be39 and timelock 0x0000000000000000000000000000abe5
 
     const decimalamount = parseInt(amount.toString(),16);
     this.logger.error('decimalamount: ' + decimalamount);
@@ -198,14 +199,20 @@ class ContractHandler {
     const paddedamount = swapamount.padStart(32, '0');
     const tl1 = timeLock.toString(16);
     const tl2 = tl1.padStart(32, '0');
+    let tl3;
+    if(tl2.includes('0x')) {
+      tl3 = tl2.slice(2);
+    } else {
+      tl3 = tl2;
+    }
+    // console.log('TODO:::: SHOULD NOT BE SLICING THE TIMELOCK!!!!');
+    // wrong should be slicing!!!
 
-    const tl3 = tl2;
-    // const tl3 = tl2.slice(2);
-    console.log('TODO:::: SHOULD NOT BE SLICING THE TIMELOCK!!!!');
     const paddedtimelock = timeLock.toString(16).padStart(32, '0');
     console.log('contracthandler.135 ', smallamount, swapamount, paddedamount, timeLock, paddedtimelock, tl1, tl2, tl3);
-    // ontracthandler.135  1995106 1e7162 000000000000000000000000001e7162
-    // 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea 0x000000000000000000000000000012ea
+    // contracthandler.135  1999265 1e81a1 000000000000000000000000001e81a1 0x0000000000000000000000000000abe5 0x0000000000000000000000000000abe5 0x0000000000000000000000000000abe5 0x0000000000000000000000000000abe5 0x0000000000000000000000000000abe5
+
+    this.logger.debug(`ch.209 claimStx functionArgs preimage ${getHexString(preimage)} amount ${paddedamount} timelock ${tl3}`);
     // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
     const functionArgs = [
       // bufferCV(Buffer.from('4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', 'hex')),
