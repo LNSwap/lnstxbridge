@@ -11,6 +11,7 @@ import { ConfigType } from '../Config';
 import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
+import DirectSwapRepository from '../db/DirectSwapRepository';
 import { encodeBip21 } from './PaymentRequestUtils';
 import InvoiceExpiryHelper from './InvoiceExpiryHelper';
 import { Payment, RouteHint } from '../proto/lnd/rpc_pb';
@@ -18,7 +19,8 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-import { getFee, getInfo, getStacksRawTransaction } from '../wallet/stacks/StacksUtils';
+// calculateStxOutTx
+import { getFee, getInfo, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
@@ -38,6 +40,7 @@ import {
 import {
   decodeInvoice,
   formatError,
+  generateId,
   getChainCurrency,
   getHexBuffer,
   getHexString,
@@ -71,6 +74,7 @@ class Service {
   private prepayMinerFee: boolean;
 
   private pairRepository: PairRepository;
+  private directSwapRepository: DirectSwapRepository;
 
   private timeoutDeltaProvider: TimeoutDeltaProvider;
 
@@ -89,6 +93,7 @@ class Service {
     this.logger.debug(`Prepay miner fee for Reverse Swaps is ${this.prepayMinerFee ? 'enabled' : 'disabled' }`);
 
     this.pairRepository = new PairRepository();
+    this.directSwapRepository = new DirectSwapRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
 
     console.log('service.ts 88');
@@ -1474,19 +1479,65 @@ class Service {
   }
 
   public mintNFT = async (nftAddress: string, userAddress: string, contractSignature?: string): Promise<{
+    id: string,
     invoice: string,
   }> => {
     this.logger.verbose(`s.1481 mintNFT with ${nftAddress}, ${userAddress} and ${contractSignature}`);
 
     // check contract signature to see how much it would cost to mint
+    // find a previous call of the same function and add up stx transfers of that call
+    // const mintCostStx = await calculateStxOutTx(nftAddress);
+    const mintCostStx = 10000000;
+    this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
 
     // convert to BTC + fees + generate LN invoice
+    const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');
+    this.logger.verbose(`s.1488 sendingAmountRate ${sendingAmountRate}`); //18878.610534264677
+
+    const percentageFee = this.rateProvider.feeProvider.getPercentageFee('BTC/STX');
+    const baseFee = this.rateProvider.feeProvider.getBaseFee('STX', BaseFeeType.NormalClaim);
+    this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
+
+    // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
+    const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
+    // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
+    this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
+
+    const currency = this.getCurrency('BTC');
+    const invoice = await currency.lndClient?.addInvoice(invoiceAmount);
+    this.logger.verbose(`s.1499 mintNFT invoice ${invoice?.paymentRequest}`);
 
     // create swap + enter info in db in a new table
+    const id = generateId();
+    this.directSwapRepository.addDirectSwap({
+      id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, status: 'swap.created'
+    })
 
-    // listen to invoice payment + call contract so user gets NFT upon LN payment
+    // listen to invoice payment
+    this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
+    currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
+
+    // call contract so user gets NFT upon LN payment
+    currency.lndClient!.on('invoice.settled', async (settledInvoice: string) => {
+      this.logger.verbose(`s.1522 got invoice.settled from lndclient for invoice ${settledInvoice}`);
+      if (settledInvoice === invoice!.paymentRequest) {
+        const txId = await mintNFTforUser(nftAddress, contractSignature!, userAddress, mintCostStx)
+        const directSwap = await this.directSwapRepository.getSwap({
+          id: {
+            [Op.eq]: id,
+          }
+        });
+
+        if (directSwap) {
+          await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
+          this.logger.verbose(`s.1533 directSwap updated with txId ${txId}`);
+        }
+      }
+    });
+
     return {
-      invoice: ''
+      id,
+      invoice: invoice!.paymentRequest
     }
   }
 

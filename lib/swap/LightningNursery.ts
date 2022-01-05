@@ -28,12 +28,14 @@ class LightningNursery extends EventEmitter {
   public bindCurrencies = (currencies: Currency[]): void => {
     currencies.forEach((currency) => {
       if (currency.lndClient) {
+        console.log('lnursery.31 bindCurrencies listenInvoices');
         this.listenInvoices(currency.lndClient);
       }
     });
   }
 
   private listenInvoices = (lndClient: LndClient) => {
+    console.log('lnursery.37 listenInvoices');
     lndClient.on('htlc.accepted', async (invoice: string) => {
       let reverseSwap = await this.reverseSwapRepository.getReverseSwap({
         [Op.or]: [
@@ -51,6 +53,7 @@ class LightningNursery extends EventEmitter {
       });
 
       if (!reverseSwap) {
+        console.log('lnursery.54 not reverseswap');
         return;
       }
 
