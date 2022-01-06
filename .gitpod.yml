@@ -64,7 +64,9 @@ tasks:
     command: clarinet test
   - init: |
         echo 'npm run compile:watch'
-    command: echo 'npm run compile:watch'
+    command: |
+        xxd -p -c2000 docker/regtest/data/lnd/macaroons/admin.macaroon
+        echo 'npm run compile:watch'
   # gitpod might have issue with archive.ubuntu.com
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i

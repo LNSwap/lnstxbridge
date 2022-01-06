@@ -710,47 +710,54 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
   let contractAddress = contract.split(".")[0];
   let contractName = contract.split(".")[1];
 
-  const postConditionCode = FungibleConditionCode.LessEqual;
-  const postConditionAmount = new BigNum(mintCost);
-  const postConditions = [
-    createSTXPostCondition(signerAddress, postConditionCode, postConditionAmount),
-  ];
-
-  let functionArgs = [
-    standardPrincipalCV(userAddress),
-  ];
-
-  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
-  const mintFee = await calculateMintFee(contract, functionName, userAddress, mintCost);
-  console.log('stacksutils.725 mintFee: ', mintFee);
-
-  const txOptions = {
-    contractAddress,
-    contractName,
-    functionName,
-    functionArgs: functionArgs,
-    senderKey: getStacksNetwork().privateKey,
-    validateWithAbi: true,
-    network: stacksNetwork,
-    postConditionMode: PostConditionMode.Deny,
-    postConditions,
-    fee: mintFee,
-    nonce,
-    anchorMode: AnchorMode.Any,
-    onFinish: data => {
-      console.log('Stacks nftMint Transaction:', JSON.stringify(data));
+  try {
+    const postConditionCode = FungibleConditionCode.LessEqual;
+    const postConditionAmount = new BigNum(mintCost);
+    const postConditions = [
+      createSTXPostCondition(signerAddress, postConditionCode, postConditionAmount),
+    ];
+  
+    let functionArgs = [
+      standardPrincipalCV(userAddress),
+    ];
+  
+    // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+    const mintFee = await calculateMintFee(contract, functionName, userAddress, mintCost);
+    console.log('stacksutils.725 mintFee: ', mintFee);
+  
+    const txOptions = {
+      contractAddress,
+      contractName,
+      functionName,
+      functionArgs: functionArgs,
+      senderKey: getStacksNetwork().privateKey,
+      validateWithAbi: true,
+      network: stacksNetwork,
+      postConditionMode: PostConditionMode.Deny,
+      postConditions,
+      fee: mintFee,
+      nonce,
+      anchorMode: AnchorMode.Any,
+      onFinish: data => {
+        console.log('Stacks nftMint Transaction:', JSON.stringify(data));
+      }
+    };
+  
+    const transaction = await makeContractCall(txOptions);
+    const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
+    if(broadcastResponse.error) {
+      console.log(`stacksutils.748 mintNFTforUser error: ${broadcastResponse.error}`);
+      return 'error: ' + broadcastResponse.error;
+    } else {
+      incrementNonce();
+      const txId = broadcastResponse.txid;
+      console.log("stacksutil.690 mintnft txId: ", txId)
+      return txId;
     }
-  };
-
-  const transaction = await makeContractCall(txOptions);
-  const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
-  if(broadcastResponse.error) {
-    console.log(`stacksutils.748 mintNFTforUser error: ${broadcastResponse.error}`);
-    return 'error';
-  } else {
-    incrementNonce();
-    const txId = broadcastResponse.txid;
-    console.log("stacksutil.690 mintnft txId: ", txId)
-    return txId;
+  } catch(error) {
+    let errormsg = 'error: ';
+    if(error.message) errormsg += error.message;
+    console.log("stacksutil.690 mintnft caught error: ", errormsg, error);
+    return errormsg;
   }
 }

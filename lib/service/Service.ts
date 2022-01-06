@@ -23,7 +23,7 @@ import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksRaw
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
-import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning } from '../consts/Enums';
+import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapUpdateEvent } from '../consts/Enums';
 import {
   Balance,
   ChainInfo,
@@ -68,6 +68,7 @@ type LndNodeInfo = {
 };
 
 class Service {
+
   public allowReverseSwaps = true;
 
   public swapManager: SwapManager;
@@ -84,6 +85,8 @@ class Service {
 
   private static MinInboundLiquidity = 10;
   private static MaxInboundLiquidity = 50;
+
+  private serviceInvoiceListener;
 
   constructor(
     private logger: Logger,
@@ -156,13 +159,15 @@ class Service {
         this.logger.silly(`Added pair to database: ${id}`);
       }
     }
-
+    
     this.logger.verbose('Updated pairs in the database');
 
     this.timeoutDeltaProvider.init(configPairs);
 
     this.rateProvider.feeProvider.init(configPairs);
     await this.rateProvider.init(configPairs);
+
+    this.startNFTListener();
   }
 
   /**
@@ -1529,36 +1534,17 @@ class Service {
     // create swap + enter info in db in a new table
     const id = generateId();
     this.directSwapRepository.addDirectSwap({
-      id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, status: 'swap.created'
+      id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
     })
     this.eventHandler.emitSwapCreation(id);
 
     // listen to invoice payment
     this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
-    currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
+    // dont subscribe to each invoice separately - subscribing to all in lndclient
+    // currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
 
     // call contract so user gets NFT upon LN payment
-    currency.lndClient!.on('invoice.settled', async (settledInvoice: string) => {
-      this.logger.verbose(`s.1522 got invoice.settled from lndclient for invoice ${settledInvoice}`);
-      if (settledInvoice === invoice!.paymentRequest) {
-        const txId = await mintNFTforUser(nftAddress, contractSignature!, userAddress, mintCostStx)
-        if(txId == 'error') {
-          this.logger.error(`s.1546 mintNFTforUser errored and stopped`);
-          return;
-        }
-        const directSwap = await this.directSwapRepository.getSwap({
-          id: {
-            [Op.eq]: id,
-          }
-        });
-
-        if (directSwap) {
-          await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
-          this.logger.verbose(`s.1533 directSwap ${id} updated with txId ${txId}`);
-          this.eventHandler.emitSwapNftMinted(id, txId);
-        }
-      }
-    });
+    // listener is started at the beginning which will handle this.
 
     return {
       id,
@@ -1683,6 +1669,72 @@ class Service {
       throw Errors.NOT_WHOLE_NUMBER(input);
     }
   }
+
+  private startNFTListener = () => {
+    if(!this.serviceInvoiceListener) {
+      this.logger.verbose(`s.1675 startNFTListener starting serviceInvoiceListener`);
+
+      const currency = this.getCurrency('BTC');
+      this.serviceInvoiceListener = currency.lndClient!.on('invoice.settled', async (settledInvoice: string) => {
+        this.logger.verbose(`s.1522 got invoice.settled from lndclient for invoice ${settledInvoice}`);
+
+        const directSwap = await this.directSwapRepository.getSwap({
+          invoice: {
+            [Op.eq]: settledInvoice,
+          },
+          status: {
+            [Op.eq]: SwapUpdateEvent.SwapCreated,
+          },
+        });
+
+        if(directSwap) {
+          console.log('s.1555 found directSwap id ', directSwap.id);
+          const txId = await mintNFTforUser(directSwap.nftAddress, directSwap.contractSignature!, directSwap.userAddress, directSwap.mintCostStx!);
+          if (!txId.includes('error')) {
+            await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
+            this.logger.verbose(`s.1533 directSwap ${directSwap.id} updated with txId ${txId}`);
+            this.eventHandler.emitSwapNftMinted(directSwap.id, txId);
+          } 
+          if (txId.includes('error')) {
+            this.logger.error(`s.1561 directSwap ${directSwap.id} failed with error ${txId}`);
+            await this.directSwapRepository.setSwapStatus(directSwap, 'transaction.failed', txId, txId);
+            this.eventHandler.emitSwapNftMintFailed(directSwap.id, txId);
+          }
+
+        }
+        //  else {
+        //   console.log(`s.1557 no directSwap found for ${settledInvoice}`);
+        // }
+
+        // old method
+        // if (settledInvoice === invoice!.paymentRequest) {
+        //   const txId = await mintNFTforUser(nftAddress, contractSignature!, userAddress, mintCostStx)
+        //   if(txId == 'error') {
+        //     this.logger.error(`s.1546 mintNFTforUser errored and stopped`);
+        //     // return;
+        //   }
+        //   const directSwap = await this.directSwapRepository.getSwap({
+        //     id: {
+        //       [Op.eq]: id,
+        //     }
+        //   });
+
+        //   if (directSwap && !txId.includes('error')) {
+        //     await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
+        //     this.logger.verbose(`s.1533 directSwap ${id} updated with txId ${txId}`);
+        //     this.eventHandler.emitSwapNftMinted(id, txId);
+        //   } 
+        //   if (directSwap && txId.includes('error')) {
+        //     this.logger.error(`s.1561 directSwap ${id} failed with error ${txId}`);
+        //     await this.directSwapRepository.setSwapStatus(directSwap, 'transaction.failed', txId, txId);
+        //     this.eventHandler.emitSwapNftMintFailed(id, txId);
+        //   }
+        // }
+      });
+    }
+  }
+
+
 }
 
 export default Service;

@@ -8,6 +8,7 @@ type DirectSwapType = {
   invoice?: string;
   status: string;
   txId?: string;
+  mintCostStx?: number,
 };
 
 class DirectSwap extends Model implements DirectSwapType {
@@ -18,6 +19,7 @@ class DirectSwap extends Model implements DirectSwapType {
   public invoice?: string;
   public status!: string;
   public txId?: string;
+  public mintCostStx?: number;
 
   public createdAt!: Date;
   public updatedAt!: Date;
@@ -31,6 +33,7 @@ class DirectSwap extends Model implements DirectSwapType {
       invoice: { type: new DataTypes.STRING(255), allowNull: true, unique: true },
       status: { type: new DataTypes.STRING(255), allowNull: true },
       txId: { type: new DataTypes.STRING(255), allowNull: true },
+      mintCostStx: { type: new DataTypes.INTEGER(), allowNull: true },
     }, {
       sequelize,
       tableName: 'directSwaps',
@@ -39,6 +42,10 @@ class DirectSwap extends Model implements DirectSwapType {
         {
           unique: true,
           fields: ['id'],
+        },
+        {
+          unique: true,
+          fields: ['invoice'],
         },
       ]
     });
