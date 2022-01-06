@@ -65,6 +65,10 @@ class EventHandler extends EventEmitter {
     this.emit('swap.update', id, { status: SwapUpdateEvent.InvoiceSet });
   }
 
+  public emitSwapNftMinted = (id: string, txId: string): void => {
+    this.emit('swap.update', id, { status: SwapUpdateEvent.NftMinted, transaction: { id: txId }, });
+  }
+
   /**
    * Subscribes transaction related swap events
    */

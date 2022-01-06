@@ -1,6 +1,7 @@
 import Sequelize from 'sequelize';
 import Logger from '../Logger';
 import Pair from './models/Pair';
+import DirectSwap from './models/DirectSwap';
 import Swap from './models/Swap';
 import Migration from './Migration';
 import ChainTip from './models/ChainTip';
@@ -43,6 +44,7 @@ class Db {
 
     await Promise.all([
       Pair.sync(),
+      DirectSwap.sync(),
       ChainTip.sync(),
       KeyProvider.sync(),
       DatabaseVersion.sync(),
@@ -67,6 +69,7 @@ class Db {
 
   private loadModels = () => {
     Pair.load(this.sequelize);
+    DirectSwap.load(this.sequelize);
     Swap.load(this.sequelize);
     ChainTip.load(this.sequelize);
     ReverseSwap.load(this.sequelize);

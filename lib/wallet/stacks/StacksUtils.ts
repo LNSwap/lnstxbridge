@@ -7,7 +7,7 @@ import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { estimateContractFunctionCall } from '@stacks/transactions';
+import { broadcastTransaction, estimateContractFunctionCall } from '@stacks/transactions';
 
 import { bufferCV, 
   standardPrincipalCV, 
@@ -280,6 +280,40 @@ export const getTransaction = async (txid:string): Promise<Transaction> => {
   const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
   const response = await axios.get(url)
   return response.data;
+}
+
+// Find claim call for an NFT and calculate stx cost of minting
+export const calculateStxOutTx = async (nftContract:string, contractSignature:string) => {
+  if(contractSignature === '') contractSignature = 'claim-for';
+  
+  const nfturl = `${coreApiUrl}/extended/v1/address/${nftContract}/transactions`;
+  const txnresponse = await axios.get(nfturl)
+  let claimtx;
+  for (let index = 0; index < txnresponse.data.results.length; index++) {
+    const element = txnresponse.data.results[index];
+    if(element.tx_status === 'success' && element.contract_call && element.contract_call.function_name == contractSignature){
+      claimtx = element;
+      break;
+    }
+  }
+
+  if(!claimtx) {
+    return;
+  }
+  
+  const txurl = `${coreApiUrl}/extended/v1/tx/${claimtx.tx_id}`;
+  const response = await axios.get(txurl)
+  const events = response.data.events;
+  let totalStx = 0;
+  for (let index = 0; index < events.length; index++) {
+    const event = events[index];
+    if(event.event_type == 'stx_asset' && event.asset.asset_event_type === 'transfer') {
+      totalStx += parseInt(event.asset.amount);
+    }
+  }
+
+  console.log('stacksutils.313 calculateStxOutTx ', totalStx);
+  return totalStx;
 }
 
 export const getStacksRawTransaction = async (txid:string) => {
@@ -616,3 +650,43 @@ export const calculateStxClaimFee = async (contract:string, preimage: string, am
 //   console.log("getNewFee: ", fee)
 //   return fee;
 // }
+
+
+export const mintNFTforUser = async (contract:string, functionName:string, userAddress:string, mintCost:number) => {
+  let contractAddress = contract.split(".")[0];
+  let contractName = contract.split(".")[1];
+
+  const postConditionCode = FungibleConditionCode.LessEqual;
+  const postConditionAmount = new BigNum(mintCost);
+  const postConditions = [
+    createSTXPostCondition(signerAddress, postConditionCode, postConditionAmount),
+  ];
+
+  let functionArgs = [
+    standardPrincipalCV(userAddress),
+  ];
+
+  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+
+  const txOptions = {
+    contractAddress,
+    contractName,
+    functionName,
+    functionArgs: functionArgs,
+    senderKey: getStacksNetwork().privateKey,
+    validateWithAbi: true,
+    network: stacksNetwork,
+    postConditionMode: PostConditionMode.Deny,
+    postConditions,
+    anchorMode: AnchorMode.Any,
+    onFinish: data => {
+      console.log('Stacks nftMint Transaction:', JSON.stringify(data));
+    }
+  };
+
+  const transaction = await makeContractCall(txOptions);
+  const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
+  const txId = broadcastResponse.txid;
+  console.log("stacksutil.690 mintnft txId: ", txId)
+  return txId;
+}
