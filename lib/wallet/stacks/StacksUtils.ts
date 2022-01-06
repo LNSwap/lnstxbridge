@@ -501,6 +501,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
   return Number(totalfee);
 }
 
+// NOT USED
 export const calculateStxLockFee = async (contract:string, preimageHash: string) => {
   // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
   let contractAddress = contract.split(".")[0];
@@ -566,6 +567,7 @@ export const calculateStxLockFee = async (contract:string, preimageHash: string)
   return Number(totalfee);
 }
 
+// NOT USED
 export const calculateStxClaimFee = async (contract:string, preimage: string, amount: string, timelock: string) => {
   // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
   let contractAddress = contract.split(".")[0];
@@ -651,8 +653,7 @@ export const calculateStxClaimFee = async (contract:string, preimage: string, am
 //   return fee;
 // }
 
-
-export const mintNFTforUser = async (contract:string, functionName:string, userAddress:string, mintCost:number) => {
+export const calculateMintFee = async (contract:string, functionName:string, userAddress:string, mintCost:number) => {
   let contractAddress = contract.split(".")[0];
   let contractName = contract.split(".")[1];
 
@@ -676,8 +677,65 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
     senderKey: getStacksNetwork().privateKey,
     validateWithAbi: true,
     network: stacksNetwork,
+    postConditionMode: PostConditionMode.Allow,
+    postConditions,
+    anchorMode: AnchorMode.Any,
+    onFinish: data => {
+      console.log('Stacks claim Transaction:', JSON.stringify(data));
+    }
+  };
+
+  // this.toObject(txOptions)
+  // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
+
+  const transaction = await makeContractCall(txOptions);
+  // console.log("stacksutil.209 transaction: ", transaction)
+
+  // to see the raw serialized tx
+  const serializedTx = transaction.serialize();
+  // .toString('hex');
+  // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+
+  // resolves to number of microstacks per byte!!!
+  const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+  
+  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+  console.log("calculateMintFee estimatedFee, totalfee: ", estimateFee, totalfee);
+  return Number(totalfee);
+}
+
+export const mintNFTforUser = async (contract:string, functionName:string, userAddress:string, mintCost:number) => {
+  let contractAddress = contract.split(".")[0];
+  let contractName = contract.split(".")[1];
+
+  const postConditionCode = FungibleConditionCode.LessEqual;
+  const postConditionAmount = new BigNum(mintCost);
+  const postConditions = [
+    createSTXPostCondition(signerAddress, postConditionCode, postConditionAmount),
+  ];
+
+  let functionArgs = [
+    standardPrincipalCV(userAddress),
+  ];
+
+  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+  const mintFee = await calculateMintFee(contract, functionName, userAddress, mintCost);
+  console.log('stacksutils.725 mintFee: ', mintFee);
+
+  const txOptions = {
+    contractAddress,
+    contractName,
+    functionName,
+    functionArgs: functionArgs,
+    senderKey: getStacksNetwork().privateKey,
+    validateWithAbi: true,
+    network: stacksNetwork,
     postConditionMode: PostConditionMode.Deny,
     postConditions,
+    fee: mintFee,
+    nonce,
     anchorMode: AnchorMode.Any,
     onFinish: data => {
       console.log('Stacks nftMint Transaction:', JSON.stringify(data));
@@ -686,7 +744,13 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
 
   const transaction = await makeContractCall(txOptions);
   const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
-  const txId = broadcastResponse.txid;
-  console.log("stacksutil.690 mintnft txId: ", txId)
-  return txId;
+  if(broadcastResponse.error) {
+    console.log(`stacksutils.748 mintNFTforUser error: ${broadcastResponse.error}`);
+    return 'error';
+  } else {
+    incrementNonce();
+    const txId = broadcastResponse.txid;
+    console.log("stacksutil.690 mintnft txId: ", txId)
+    return txId;
+  }
 }

@@ -1542,6 +1542,10 @@ class Service {
       this.logger.verbose(`s.1522 got invoice.settled from lndclient for invoice ${settledInvoice}`);
       if (settledInvoice === invoice!.paymentRequest) {
         const txId = await mintNFTforUser(nftAddress, contractSignature!, userAddress, mintCostStx)
+        if(txId == 'error') {
+          this.logger.error(`s.1546 mintNFTforUser errored and stopped`);
+          return;
+        }
         const directSwap = await this.directSwapRepository.getSwap({
           id: {
             [Op.eq]: id,
