@@ -621,7 +621,8 @@ class LndClient extends BaseClient implements LndClient {
         } else if (invoice.getState() === lndrpc.Invoice.InvoiceState.SETTLED) {
           this.logger.debug(`${LndClient.serviceName} ${this.symbol} invoice settled: ${invoice.getPaymentRequest()}`);
           this.emit('invoice.settled', invoice.getPaymentRequest());
-
+          
+          this.logger.debug(`${LndClient.serviceName} ${this.symbol} invoice subscription deleted for ${invoice.getPaymentRequest()}`);
           deleteSubscription();
         }
       })

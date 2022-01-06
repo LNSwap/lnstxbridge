@@ -59,6 +59,9 @@ const { bitcoin: { transactions } } = mempoolJS({
   hostname: 'mempool.space'
 });
 
+// increase listenerlimit
+require('events').EventEmitter.defaultMaxListeners = 100;
+
 type LndNodeInfo = {
   nodeKey: string,
   uris: string[],
