@@ -283,13 +283,15 @@ export const getTransaction = async (txid:string): Promise<Transaction> => {
 }
 
 // Find claim call for an NFT and calculate stx cost of minting
-export const calculateStxOutTx = async (nftContract:string) => {
+export const calculateStxOutTx = async (nftContract:string, contractSignature:string) => {
+  if(contractSignature === '') contractSignature = 'claim-for';
+  
   const nfturl = `${coreApiUrl}/extended/v1/address/${nftContract}/transactions`;
   const txnresponse = await axios.get(nfturl)
   let claimtx;
   for (let index = 0; index < txnresponse.data.results.length; index++) {
     const element = txnresponse.data.results[index];
-    if(element.tx_status === 'success' && element.contract_call && element.contract_call.function_name == 'claim'){
+    if(element.tx_status === 'success' && element.contract_call && element.contract_call.function_name == contractSignature){
       claimtx = element;
       break;
     }
@@ -310,6 +312,7 @@ export const calculateStxOutTx = async (nftContract:string) => {
     }
   }
 
+  console.log('stacksutils.313 calculateStxOutTx ', totalStx);
   return totalStx;
 }
 

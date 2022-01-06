@@ -127,4 +127,8 @@ export default {
     message: `Mint cost does not match`,
     code: concatErrorCode(ErrorCodePrefix.Service, 33),
   }),
+  EXCEEDS_SWAP_LIMIT: (): Error => ({
+    message: `Exceeds swap limit`,
+    code: concatErrorCode(ErrorCodePrefix.Service, 34),
+  }),
 };
