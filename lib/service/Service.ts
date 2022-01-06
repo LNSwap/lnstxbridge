@@ -1517,6 +1517,7 @@ class Service {
     this.directSwapRepository.addDirectSwap({
       id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, status: 'swap.created'
     })
+    this.eventHandler.emitSwapCreation(id);
 
     // listen to invoice payment
     this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
@@ -1535,7 +1536,8 @@ class Service {
 
         if (directSwap) {
           await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
-          this.logger.verbose(`s.1533 directSwap updated with txId ${txId}`);
+          this.logger.verbose(`s.1533 directSwap ${id} updated with txId ${txId}`);
+          this.eventHandler.emitSwapNftMinted(id, txId);
         }
       }
     });

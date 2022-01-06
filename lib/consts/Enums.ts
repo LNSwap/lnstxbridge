@@ -57,6 +57,9 @@ export enum SwapUpdateEvent {
   ASTransactionRefunded = 'astransaction.refunded',
   ASTransactionConfirmed = 'astransaction.confirmed',
   ASTransactionLockupFailed = 'astransaction.lockupFailed',
+
+  // direct swap events
+  NftMinted = 'nft.minted',
 }
 
 export enum ChannelCreationType {
