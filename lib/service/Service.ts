@@ -1310,7 +1310,7 @@ class Service {
     );
 
     // Add 3 blocks to the delta for same currency swaps and 10% for cross chain ones as buffer
-    lightningTimeoutBlockDelta += sending === receiving ? 3 : Math.ceil(lightningTimeoutBlockDelta * 0.3);
+    lightningTimeoutBlockDelta += sending === receiving ? 3 : Math.ceil(lightningTimeoutBlockDelta * 0.4);
     this.logger.verbose('lightningTimeoutBlockDelta vs added: ' + lightningTimeoutBlockDelta + ', ' + Math.ceil(lightningTimeoutBlockDelta * 0.4));
 
     const rate = getRate(pairRate, side, true);
@@ -1528,7 +1528,7 @@ class Service {
     this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
 
     const currency = this.getCurrency('BTC');
-    const invoice = await currency.lndClient?.addInvoice(invoiceAmount);
+    const invoice = await currency.lndClient?.addInvoice(invoiceAmount, undefined, `Mint NFT for ${nftAddress}`);
     this.logger.verbose(`s.1499 mintNFT invoice ${invoice?.paymentRequest}`);
 
     // create swap + enter info in db in a new table

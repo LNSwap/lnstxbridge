@@ -726,7 +726,8 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
     // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
     const mintFee = await calculateMintFee(contract, functionName, userAddress, mintCost);
     console.log('stacksutils.725 mintFee: ', mintFee);
-  
+    console.log('stacksutils.729 manual nonce: ', nonce, new BigNum(nonce));
+
     const txOptions = {
       contractAddress,
       contractName,
