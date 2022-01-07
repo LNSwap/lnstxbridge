@@ -679,6 +679,8 @@ export const calculateMintFee = async (contract:string, functionName:string, use
     network: stacksNetwork,
     postConditionMode: PostConditionMode.Allow,
     postConditions,
+    fee: new BigNum(100000),
+    nonce: new BigNum(nonce),
     anchorMode: AnchorMode.Any,
     onFinish: data => {
       console.log('Stacks claim Transaction:', JSON.stringify(data));
@@ -735,8 +737,8 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
       network: stacksNetwork,
       postConditionMode: PostConditionMode.Deny,
       postConditions,
-      fee: mintFee,
-      nonce,
+      fee: new BigNum(mintFee),
+      nonce: new BigNum(nonce),
       anchorMode: AnchorMode.Any,
       onFinish: data => {
         console.log('Stacks nftMint Transaction:', JSON.stringify(data));
