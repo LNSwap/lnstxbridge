@@ -788,7 +788,7 @@ class StacksNursery extends EventEmitter {
       const wallet = this.getStacksWallet(chainCurrency);
 
       if (wallet) {
-        console.log('stacksn.758 throw swap.expired at height ', height, expirableSwap);
+        console.log('stacksn.758 throw swap.expired at height ', height, expirableSwap.id);
         this.emit('swap.expired', expirableSwap, wallet.symbol === 'STX');
       }
     }

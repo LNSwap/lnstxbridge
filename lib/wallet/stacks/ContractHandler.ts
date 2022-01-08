@@ -165,11 +165,29 @@ class ContractHandler {
     claimAddress: string,
     timeLock: number,
   ): Promise<TxBroadcastResult> => {
-    this.logger.debug(`Claiming ${amount} Stx with preimage ${getHexString(preimage)} and timelock ${timeLock}`);
-    // Claiming 0x000000000000000000000000001e81a1 Stx with preimage 6dbd24b9e7d350d13eae95c218eba735e4a87e3a7ec205b9bd83805a37b4be39 and timelock 0x0000000000000000000000000000abe5
+    this.logger.debug(`ch.168 Claiming ${amount} Stx with preimage ${getHexString(preimage)} and timelock ${timeLock}`);
+    let decimalamount;
+    let theTimelock;
 
-    const decimalamount = parseInt(amount.toString(),16);
-    this.logger.error('decimalamount: ' + decimalamount);
+    // from atomic swap
+    // Claiming 000000000000000000000000004c4b40 Stx with preimage cdf07179b2ece93ccb76cd4f6fb2ab1c65621c4988bae4f4de8503e64c1eaf0f and timelock 1123
+    
+    // need to add a way to handle this as well - happens when coming from attemptsettleswap - invoice.pending
+    // Claiming 26101488000000000000 Stx with preimage 7a5227e168a41dc5d311e3eacaa8c9a19de070ab5e258134a02b2cdbaa6e00ee and timelock 44337
+    if(!amount.toString().includes('0x') && !amount.toString().includes('.') && amount.toString().length < 32) {
+      decimalamount = amount.div(10**12).toNumber();
+    } else {
+      // Claiming 0x000000000000000000000000001e81a1 Stx with preimage 6dbd24b9e7d350d13eae95c218eba735e4a87e3a7ec205b9bd83805a37b4be39 and timelock 0x0000000000000000000000000000abe5
+      decimalamount = parseInt(amount.toString(),16);
+    }
+    if(!timeLock.toString().includes('0x')) {
+      theTimelock = timeLock.toString(16).padStart(32, '0')
+    } else {
+      theTimelock = timeLock;
+    }
+    this.logger.verbose('theTimelock: ' + theTimelock);
+
+    this.logger.verbose('decimalamount: ' + decimalamount);
     const smallamount = decimalamount;
     // let smallamount = amount.div(etherDecimals).toNumber();
     // this.logger.error("smallamount: " + smallamount)

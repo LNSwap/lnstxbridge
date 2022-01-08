@@ -134,7 +134,7 @@ class UtxoNursery extends EventEmitter {
         transaction.getId(),
       );
 
-      const expectedAmount = swap.quoteAmount! * 100000000;
+      const expectedAmount = Math.round(swap.quoteAmount! * 10**8);
       if (expectedAmount) {
         // swapOutput.value
         if (expectedAmount > output.value) {

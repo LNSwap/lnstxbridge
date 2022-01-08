@@ -1627,6 +1627,7 @@ class SwapNursery extends EventEmitter {
 
     let preimage, amount, refundAddress, timelock;
     if(!detectedPreimage && etherSwapValues) {
+      console.log('swapnursery.1630 paySwapInvoice starting');
       preimage = await this.paySwapInvoice(swap, channelCreation, outgoingChannelId);
       amount = etherSwapValues.amount;
       refundAddress = etherSwapValues.refundAddress;
@@ -1867,10 +1868,11 @@ class SwapNursery extends EventEmitter {
 
     if (queriedSwap!.status === SwapUpdateEvent.SwapExpired || queriedSwap!.status === SwapUpdateEvent.TransactionRefunded ) {
       // refunded added to avoid 2 x refundutxoAS
+      this.logger.verbose('swapnursery expireSwap returning without refunding '+ swap.id);
       return;
     }
 
-    this.logger.verbose('swapnursery expireSwap');
+    this.logger.verbose('swapnursery expireSwap continues'+ swap.id);
 
     // check if there's any atomic swap refund to be done
     if (swap.asLockupTransactionId) {
