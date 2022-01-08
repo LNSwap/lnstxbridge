@@ -46,7 +46,7 @@ class LndWalletProvider implements WalletProviderInterface {
     let vout = 0;
 
     for (const output of rawTransaction.vout) {
-      if (output.scriptPubKey.addresses.includes(address)) {
+      if (output.scriptPubKey && output.scriptPubKey.addresses && output.scriptPubKey.addresses.includes(address)) {
         vout = output.n;
       }
     }
