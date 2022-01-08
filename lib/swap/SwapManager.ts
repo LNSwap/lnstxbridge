@@ -519,6 +519,14 @@ class SwapManager {
       throw Errors.INVOICE_EXPIRED_ALREADY();
     }
 
+    // check to see if invoice is from this node!
+    // some people tried to do this - and we dont allow selfpayment yet.
+    const selfNodeId = (await sendingCurrency.lndClient!.getInfo()).identityPubkey;
+    // console.log('sm.525 selfNodeId ', selfNodeId);
+    if(selfNodeId == decodedInvoice.payeeNodeKey) {
+      throw new Error('Self payment is not allowed!');
+    }
+
     const channelCreation = await this.channelCreationRepository.getChannelCreation({
       swapId: {
         [Op.eq]: swap.id,
@@ -535,7 +543,7 @@ class SwapManager {
             blockTime: TimeoutDeltaProvider.blockTimes.get(currency.symbol)!,
           };
 
-        // TODO if RBTC -> channel
+        // TODO if STX -> channel
         // All currencies that are not Bitcoin-like are either Ether or an ERC20 token on the Ethereum chain
         } else {
           return {
