@@ -270,7 +270,7 @@ class RateProvider {
       // this.logger.error('rateprovider.267 signerBalances '+ JSON.stringify(signerBalances) + ', ' + signerBalances[quote]);
 
       maximalLimit = Math.floor(Math.min(maximalLimit, (signerBalances[quote] || 0) * 100));
-      console.log('maximalLimit based on available balance: ', maximalLimit);
+      // console.log('maximalLimit based on available balance: ', maximalLimit);
 
       // // TODO: Fix this before production to optimize it!!!
       // // btc limits
@@ -279,7 +279,7 @@ class RateProvider {
       //   minimalLimit = 10000;
       // }
 
-      this.logger.error('RATEPROVIDER base, quote, minimal, maximal: ' + base + ', ' + quote + ', ' + minimalLimit + ', ' + maximalLimit);
+      this.logger.verbose('RATEPROVIDER base, quote, minimal, maximal: ' + base + ', ' + quote + ', ' + minimalLimit + ', ' + maximalLimit);
       return {
         maximal: maximalLimit,
         // minimal: Math.ceil(minimalLimit), // no idea why this comes out 332115576

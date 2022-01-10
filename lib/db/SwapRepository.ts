@@ -70,7 +70,7 @@ class SwapRepository {
     confirmed: boolean,
     lockupTransactionVout?: number,
   ): Promise<Swap> => {
-    console.log('setLockupTransaction ', swap.id, lockupTransactionId, confirmed);
+    console.log('swaprepo.73 setLockupTransaction ', swap.id, lockupTransactionId, confirmed);
     return swap.update({
       onchainAmount,
       lockupTransactionId,
