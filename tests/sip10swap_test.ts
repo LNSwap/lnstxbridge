@@ -66,8 +66,8 @@ function convertBufferInt(account: Account, amount: number) {
       let assetMaps = chain.getAssetsMaps();
       const stxbalance = assetMaps.assets['STX'][deployer.address];
       const usdabalance = assetMaps.assets[".usda-token.usda"][deployer.address];
-      console.log(`assetMaps: `, assetMaps);
-      console.log(`deployer balances: `, stxbalance, usdabalance);
+      // console.log(`assetMaps: `, assetMaps);
+      // console.log(`deployer balances: `, stxbalance, usdabalance);
 
       let sip10contract = deployer.address + '.usda-token';
 
@@ -89,9 +89,9 @@ function convertBufferInt(account: Account, amount: number) {
           deployer.address
         ),
       ]);
-      console.log(`block `, block);
+      // console.log(`block `, block);
       block.receipts[0].result.expectOk().expectBool(true);
-      console.log(`lock ok `, block, block.receipts[0].events);
+      // console.log(`lock ok `, block, block.receipts[0].events);
 
       block = chain.mineBlock([
         Tx.contractCall(
