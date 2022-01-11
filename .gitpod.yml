@@ -70,6 +70,13 @@ tasks:
   # gitpod might have issue with archive.ubuntu.com
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i
+  - init: |
+        git clone https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
+        cd /workspace/lnswap-widget
+        npm i
+        sed -i 's#apiUrl: "https://api.lnswap#// apiUrl: "https://api.lnswap#g' /workspace/lnswap-widget/src/config.js
+        sed -i 's#// apiUrl: "http://localhost#apiUrl: "http://localhost#g' /workspace/lnswap-widget/src/config.js
+    command: npm run start
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
@@ -82,4 +89,7 @@ ports:
     visibility: public
   - port: 8888
     onOpen: open-browser
+    visibility: public
+  - port: 8080
+    onOpen: ignore
     visibility: public
