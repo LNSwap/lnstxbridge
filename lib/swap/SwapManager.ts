@@ -639,6 +639,9 @@ class SwapManager {
     // Only required for Swaps to Ether and ERC20 tokens
     // Address of the user to which the coins will be sent after a successful claim transaction
     claimAddress?: string,
+
+    // required for triggerstx
+    swapType?: string,
   }): Promise<{
     id: string,
     timeoutBlockHeight: number,
@@ -748,6 +751,7 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         minerFeeInvoicePreimage: minerFeeInvoicePreimage,
         minerFeeOnchainAmount: args.prepayMinerFeeOnchainAmount,
+        swapType: args.swapType,
       });
 
     } else {
@@ -789,6 +793,7 @@ class SwapManager {
         preimageHash: getHexString(args.preimageHash),
         minerFeeInvoicePreimage: minerFeeInvoicePreimage,
         minerFeeOnchainAmount: args.prepayMinerFeeOnchainAmount,
+        swapType: args.swapType,
       });
     }
 

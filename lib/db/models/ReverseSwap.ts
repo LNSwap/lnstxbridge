@@ -35,6 +35,8 @@ type ReverseSwapType = {
   onchainAmount: number;
   transactionId?: string;
   transactionVout?: number;
+
+  swapType?: string;
 };
 
 class ReverseSwap extends Model implements ReverseSwapType {
@@ -75,6 +77,8 @@ class ReverseSwap extends Model implements ReverseSwapType {
   public createdAt!: Date;
   public updatedAt!: Date;
 
+  public swapType?: string;
+
   public static load = (sequelize: Sequelize): void => {
     ReverseSwap.init({
       id: { type: new DataTypes.STRING(255), primaryKey: true, allowNull: false },
@@ -98,6 +102,7 @@ class ReverseSwap extends Model implements ReverseSwapType {
       onchainAmount: { type: new DataTypes.INTEGER(), allowNull: false },
       transactionId: { type: new DataTypes.STRING(255), allowNull: true },
       transactionVout: { type: new DataTypes.INTEGER(), allowNull: true },
+      swapType: { type: new DataTypes.STRING(255), allowNull: true },
     }, {
       sequelize,
       tableName: 'reverseSwaps',

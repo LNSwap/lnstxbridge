@@ -1241,6 +1241,9 @@ class Service {
 
     // Whether the Ethereum prepay miner fee should be enabled for the Reverse Swap
     prepayMinerFee?: boolean,
+
+    // for triggerStx
+    swapType?: string,
   }): Promise<{
     id: string,
     invoice: string,
@@ -1410,6 +1413,7 @@ class Service {
       claimAddress: args.claimAddress,
       preimageHash: args.preimageHash,
       claimPublicKey: args.claimPublicKey,
+      swapType: args.swapType,
     });
 
     this.eventHandler.emitSwapCreation(id);
