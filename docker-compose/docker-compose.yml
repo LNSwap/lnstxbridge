@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  lnstxbridge_api:
+    image: pseudozach/lnstxbridge:latest
+    ports:
+      - "9002:9002"
+    volumes:
+      - ./lnstx/:/root/.lnstx/
+  lnstxbridge_frontend:
+    image: pseudozach/lnstxbridge-frontend:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/.env:/usr/src/app/.env
+    depends_on:
+      - lnstxbridge_api
+    
