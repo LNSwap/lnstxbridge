@@ -19,10 +19,11 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
+import { calculateStacksTxFee, calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksNetwork, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
-import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
+// etherDecimals, ethereumPrepayMinerFeeGasLimit,
+import { gweiDecimals } from '../consts/Consts';
 import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapUpdateEvent } from '../consts/Enums';
 import {
   Balance,
@@ -1300,8 +1301,10 @@ class Service {
 
       case CurrencyType.Sip10:
         this.logger.verbose('Sip10 swap args ' +  JSON.stringify(args));
+        if (args.prepayMinerFee === true) {
+          throw ApiErrors.UNSUPPORTED_PARAMETER(sending, 'prepayMinerFee');
+        }
         break;
-
     }
 
     const onchainTimeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, side, true);
@@ -1364,24 +1367,44 @@ class Service {
 
     const swapIsPrepayMinerFee = this.prepayMinerFee || args.prepayMinerFee === true;
 
+    console.log('s.1369 swapIsPrepayMinerFee ', swapIsPrepayMinerFee);
     if (swapIsPrepayMinerFee) {
       if (sendingCurrency.type === CurrencyType.BitcoinLike) {
         prepayMinerFeeInvoiceAmount = Math.ceil(baseFee / rate);
         holdInvoiceAmount = Math.floor(holdInvoiceAmount - prepayMinerFeeInvoiceAmount);
       } else {
-        const gasPrice = await getGasPrice(sendingCurrency.provider!);
-        prepayMinerFeeOnchainAmount = ethereumPrepayMinerFeeGasLimit.mul(gasPrice).div(etherDecimals).toNumber();
 
-        const sendingAmountRate = sending === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', sending);
+        // // old version
+        // const gasPrice = await getGasPrice(sendingCurrency.provider!);
+        // prepayMinerFeeOnchainAmount = ethereumPrepayMinerFeeGasLimit.mul(gasPrice).div(etherDecimals).toNumber();
 
-        const receivingAmountRate = receiving === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', receiving);
-        prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate);
+        // const sendingAmountRate = sending === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', sending);
 
+        // const receivingAmountRate = receiving === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', receiving);
+        // prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate);
+
+        // // If the invoice amount was specified, the onchain and hold invoice amounts need to be adjusted
+        // if (invoiceAmountDefined) {
+        //   onchainAmount -= Math.ceil(prepayMinerFeeOnchainAmount * sendingAmountRate);
+        //   holdInvoiceAmount = Math.floor(holdInvoiceAmount - prepayMinerFeeInvoiceAmount);
+        // }
+
+        // calculate stx claim fee
+        const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx'); // in mstx
+        const prepayMinerFeeOnchainAmount = Math.max(claimCost * 10**-6, 0.5); // stx tx fee in stx
+
+        const sendingAmountRate = sending === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', sending);
+        const receivingAmountRate = receiving === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', receiving);
+        prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate * 10**8); //convert to sats
+        // service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate 87025 5 0.00005008000000000001 1
+        console.log('service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate', prepayMinerFeeOnchainAmount, prepayMinerFeeInvoiceAmount, receivingAmountRate, sendingAmountRate);
+        
         // If the invoice amount was specified, the onchain and hold invoice amounts need to be adjusted
         if (invoiceAmountDefined) {
           onchainAmount -= Math.ceil(prepayMinerFeeOnchainAmount * sendingAmountRate);
           holdInvoiceAmount = Math.floor(holdInvoiceAmount - prepayMinerFeeInvoiceAmount);
         }
+
       }
     }
 

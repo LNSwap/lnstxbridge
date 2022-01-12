@@ -53,9 +53,10 @@ tasks:
         cd /workspace/lnstxbridge-frontend
         sed -i 's/HTTPS=true/HTTPS=false/g' .env
         sed -i 's/PORT=443/PORT=8888/g' .env
-        sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
+        export REACT_APP_STACKS_NETWORK_TYPE=mocknet
         sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9002#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
         npm i    
+      # sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
       # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
       # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
       # git stash
