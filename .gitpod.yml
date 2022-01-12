@@ -42,6 +42,7 @@ tasks:
       sleep 5
       SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP npm run stacks:fund:signer
       sleep 10
+      sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v1.clar
       npm run stacks:deploy
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
@@ -61,7 +62,9 @@ tasks:
       # git update-index --assume-unchanged .env
     command: npm run start
   - init: brew install clarinet
-    command: clarinet test
+    command: |
+        sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v1.clar
+        clarinet test
   - init: |
         echo 'npm run compile:watch'
     command: |
@@ -71,7 +74,7 @@ tasks:
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i
   - init: |
-        git clone https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
+        git clone -b triggerswap https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
         cd /workspace/lnswap-widget
         npm i
         sed -i 's#apiUrl: "https://api.lnswap#// apiUrl: "https://api.lnswap#g' /workspace/lnswap-widget/src/config.js
