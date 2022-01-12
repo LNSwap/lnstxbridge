@@ -386,6 +386,7 @@ class Controller {
       onchainAmount,
       claimPublicKey,
       prepayMinerFee,
+      swapType,
     } = this.validateRequest(req.body, [
       { name: 'pairId', type: 'string' },
       { name: 'orderSide', type: 'string' },
@@ -397,6 +398,7 @@ class Controller {
       { name: 'onchainAmount', type: 'number', optional: true },
       { name: 'prepayMinerFee', type: 'boolean', optional: true },
       { name: 'claimPublicKey', type: 'string', hex: true, optional: true },
+      { name: 'swapType', type: 'string', optional: true },
     ]);
 
     this.checkPreimageHashLength(preimageHash);
@@ -412,6 +414,7 @@ class Controller {
       onchainAmount,
       claimPublicKey,
       prepayMinerFee,
+      swapType,
     });
 
     this.logger.verbose(`Created Reverse Swap with id: ${response.id}`);

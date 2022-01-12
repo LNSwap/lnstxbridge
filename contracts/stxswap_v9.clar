@@ -1,12 +1,11 @@
-;; stxswap - a Submarine Swap implementation in Clarity 
-;; Built as part of https://github.com/stacksgov/Stacks-Grants/issues/172 to enable swaps STX <-> BTC on Lightning Network 
+;; LNSwap - a Submarine Swap implementation in Clarity 
 
 ;; constants
-(define-constant err-swap-not-found (err u1000))
-(define-constant err-refund-blockheight-not-reached (err u1001))
-(define-constant err-invalid-claimer (err u1002))
-(define-constant err-claim-blockheight-passed (err u1003))
-(define-constant ok-success (err u1008))
+(define-constant err-swap-not-found u1000)
+(define-constant err-refund-blockheight-not-reached u1001)
+(define-constant err-invalid-claimer u1002)
+(define-constant err-claim-blockheight-passed u1003)
+(define-constant ok-success u1008)
 
 ;; map that holds all swaps
 (define-map swaps {hash: (buff 32)} {locked: bool, initiator: principal, claimPrincipal: principal})
@@ -39,17 +38,17 @@
   (let (
     (claimer tx-sender)
     (calculatedHash (hashValuesbuf (sha256 preimage) amount timelock))
-    (swap (unwrap! (map-get? swaps {hash: calculatedHash}) (err u1000)))
+    (swap (unwrap! (map-get? swaps {hash: calculatedHash}) (err err-swap-not-found)))
     )
   (begin
     ;; (asserts! (<= block-height (buff-to-uint-le timelock)) (err u1003))
-    (asserts! (is-eq (checkSwapIsLocked calculatedHash) true) (err u1000))
-    (asserts! (is-eq claimer (get claimPrincipal swap)) (err u1002))
+    (asserts! (is-eq (checkSwapIsLocked calculatedHash) true) (err err-swap-not-found))
+    (asserts! (is-eq claimer (get claimPrincipal swap)) (err err-invalid-claimer))
     (map-delete swaps {hash: calculatedHash})
     (try! (as-contract (stx-transfer? (buff-to-uint-le amount) tx-sender claimer)))
     (print "claim")
     (print calculatedHash)
-    (ok u1008)
+    (ok ok-success)
   ))
 )
 
@@ -63,17 +62,17 @@
   (let (
     (claimer tx-sender)
     (calculatedHash (hashValuesbuf preimageHash amount timelock))
-    (swap (unwrap! (map-get? swaps {hash: calculatedHash}) (err u1000)))
+    (swap (unwrap! (map-get? swaps {hash: calculatedHash}) (err err-swap-not-found)))
     )
   (begin
-    (asserts! (> block-height (buff-to-uint-le timelock)) (err u1001))
-    (asserts! (checkSwapIsLocked calculatedHash) (err u1000))
-    (asserts! (is-eq claimer (get initiator swap)) (err u1002))
+    (asserts! (> block-height (buff-to-uint-le timelock)) (err err-refund-blockheight-not-reached))
+    (asserts! (checkSwapIsLocked calculatedHash) (err err-swap-not-found))
+    (asserts! (is-eq claimer (get initiator swap)) (err err-invalid-claimer))
     (map-delete swaps {hash: calculatedHash})
     (try! (as-contract (stx-transfer? (buff-to-uint-le amount) tx-sender claimer)))
     (print "refund")
     (print calculatedHash)
-    (ok u1008)
+    (ok ok-success)
   ))
 )
 

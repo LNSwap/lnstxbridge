@@ -2,6 +2,11 @@
 name = "lnstxbridge"
 requirements = []
 costs_version = 1
+
+[contracts.claim-for-trait]
+path = "contracts/claim-for-trait.clar"
+depends_on = []
+
 [contracts.nft]
 path = "contracts/nft.clar"
 depends_on = ["nft-trait"]
@@ -19,7 +24,11 @@ path = "contracts/sip10swap_v1.clar"
 depends_on = []
 
 [contracts.stxswap]
-path = "contracts/stxswap_v8.clar"
+path = "contracts/stxswap_v9.clar"
+depends_on = []
+
+[contracts.triggerswap]
+path = "contracts/triggerswap_v1.clar"
 depends_on = []
 
 [contracts.usda-token]

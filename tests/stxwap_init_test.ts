@@ -16,7 +16,7 @@ function convertBufferInt(account: Account, amount: number) {
     ],
     account.address
   );
-  console.log(call);
+  // console.log(call);
   return call;
 }
 
@@ -29,7 +29,7 @@ function convertBufferIntString(account: Account, amount: string) {
     ],
     account.address
   );
-  console.log(call);
+  // console.log(call);
   return call;
 }
 
@@ -52,7 +52,7 @@ Clarinet.test({
       convertBufferIntString(deployer, "".padStart(32, "f")),
     ]);
     assertEquals(block.height, 4);
-    console.log(block);
+    // console.log(block);
     assertEquals(
       block.receipts[0].result,
       "u340282366920938463463374607431768211455"

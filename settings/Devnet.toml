@@ -19,7 +19,7 @@ balance = 1_000_000
 
 [accounts.wallet_4]
 mnemonic = "pulp when detect fun unaware reduce promote tank success lecture cool cheese object amazing hunt plug wing month hello tunnel detect connect floor brush"
-balance = 1_000_000
+balance = 0
 
 [accounts.wallet_5]
 mnemonic = "replace swing shove congress smoke banana tired term blanket nominee leave club myself swing egg virus answer bulk useful start decrease family energy february"
