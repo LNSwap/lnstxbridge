@@ -15,5 +15,5 @@ COPY . ./
 RUN npm install
 RUN npm run compile
 
-EXPOSE 9001
+EXPOSE 9002
 CMD [ "npm", "run", "start" ]
