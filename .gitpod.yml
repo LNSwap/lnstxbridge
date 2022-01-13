@@ -75,7 +75,7 @@ tasks:
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i
   - init: |
-        git clone -b triggerswap https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
+        git clone -b sponsoredtx https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
         cd /workspace/lnswap-widget
         npm i
         sed -i 's#apiUrl: "https://api.lnswap#// apiUrl: "https://api.lnswap#g' /workspace/lnswap-widget/src/config.js
