@@ -7,7 +7,7 @@ import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { broadcastTransaction, estimateContractFunctionCall } from '@stacks/transactions';
+import { broadcastTransaction, BufferReader, deserializeTransaction, estimateContractFunctionCall, sponsorTransaction } from '@stacks/transactions';
 
 import { bufferCV, 
   standardPrincipalCV, 
@@ -763,4 +763,30 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
     console.log("stacksutil.690 mintnft caught error: ", errormsg, error);
     return errormsg;
   }
+}
+
+export const sponsorTx = async (tx:string, minerfee:number) => {
+  let txId = ''
+  try {
+    const bufferReader = new BufferReader(Buffer.from(tx, 'hex'));
+    const deserializedTx = deserializeTransaction(bufferReader);
+    const sponsorKey = getStacksNetwork().privateKey;
+    const fee = new BigNum(minerfee*10**6);
+    
+    const sponsorOptions = {
+      transaction: deserializedTx,
+      sponsorPrivateKey: sponsorKey,
+      fee,
+    };
+    
+    const sponsoredTx = await sponsorTransaction(sponsorOptions);  
+    const broadcastResponse = await broadcastTransaction(sponsoredTx, stacksNetwork);
+    txId = broadcastResponse.txid;
+    console.log('stacksutils.784 sponsorTx txId', txId, minerfee);
+  } catch(err) {
+    console.log('catch err sponsorTx ', err);
+  }
+
+
+  return txId;
 }

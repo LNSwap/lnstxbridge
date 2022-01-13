@@ -19,7 +19,7 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-import { calculateStacksTxFee, calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksNetwork, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
+import { calculateStacksTxFee, calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksNetwork, getStacksRawTransaction, mintNFTforUser, sponsorTx } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 // etherDecimals, ethereumPrepayMinerFeeGasLimit,
@@ -654,10 +654,11 @@ class Service {
 
     // sponsor and broadcast tx
     console.log('s.652 sponsoring and broadcasting id, tx ', id, tx);
+    const txResult = await sponsorTx(tx, reverseSwap.minerFeeOnchainAmount!);
+    console.log('s.658 txResult ', txResult);
 
     // mark it sponsored - claimtx?
-
-    return 'txid';
+    return txResult;
   }
 
   /**
@@ -1430,7 +1431,7 @@ class Service {
 
         // calculate stx claim fee
         const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx'); // in mstx
-        const prepayMinerFeeOnchainAmount = Math.max(claimCost * 10**-6, 0.5); // stx tx fee in stx
+        prepayMinerFeeOnchainAmount = Math.max(claimCost * 10**-6, 0.5); // stx tx fee in stx
 
         const sendingAmountRate = sending === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', sending);
         const receivingAmountRate = receiving === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', receiving);
