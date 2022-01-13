@@ -778,15 +778,15 @@ export const sponsorTx = async (tx:string, minerfee:number) => {
       sponsorPrivateKey: sponsorKey,
       fee,
     };
+
+    console.log('sponsorTx sponsorOptions ', sponsorOptions)
     
     const sponsoredTx = await sponsorTransaction(sponsorOptions);  
     const broadcastResponse = await broadcastTransaction(sponsoredTx, stacksNetwork);
     txId = broadcastResponse.txid;
-    console.log('stacksutils.784 sponsorTx txId', txId, minerfee);
+    console.log('stacksutils.784 sponsorTx txId', broadcastResponse, txId, minerfee, stacksNetwork);
   } catch(err) {
     console.log('catch err sponsorTx ', err);
   }
-
-
   return txId;
 }
