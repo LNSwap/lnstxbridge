@@ -56,6 +56,7 @@ import {
 } from '../Utils';
 
 import mempoolJS from "@mempool/mempool.js";
+import ReverseSwap from 'lib/db/models/ReverseSwap';
 const { bitcoin: { transactions } } = mempoolJS({
   hostname: 'mempool.space'
 });
@@ -619,6 +620,44 @@ class Service {
         throw error;
       }
     }
+  }
+
+
+  /**
+   * Broadcast a sponsored tx on Stacks for prepaid reverseswaps
+   */
+   public broadcastSponsoredTx = async (id: string, tx: string): Promise<string> => {
+    const currency = this.getCurrency('STX');
+
+    if (currency.stacksClient === undefined) {
+      throw new Error('stacksClient not found')
+    }
+
+    let reverseSwap: ReverseSwap | null | undefined;
+    reverseSwap = await this.swapManager.reverseSwapRepository.getReverseSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    if (!reverseSwap) {
+      throw new Error(`Reverse swap ${id} not found`);
+    }
+
+    if(!reverseSwap.minerFeeInvoice) {
+      throw new Error(`Reverse swap is not prepaid`);
+    }
+
+    if(reverseSwap.status !== SwapUpdateEvent.TransactionConfirmed) {
+      throw new Error(`Reverse swap is not in correct status`);
+    }
+
+    // sponsor and broadcast tx
+    console.log('s.652 sponsoring and broadcasting id, tx ', id, tx);
+
+    // mark it sponsored - claimtx?
+
+    return 'txid';
   }
 
   /**
