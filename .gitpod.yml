@@ -46,7 +46,7 @@ tasks:
       npm run stacks:deploy
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
-        git clone -b sponsoredtx https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
+        git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
         export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API
@@ -75,7 +75,7 @@ tasks:
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i
   - init: |
-        git clone -b sponsoredtx https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
+        git clone https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
         cd /workspace/lnswap-widget
         npm i
         sed -i 's#apiUrl: "https://api.lnswap#// apiUrl: "https://api.lnswap#g' /workspace/lnswap-widget/src/config.js
