@@ -80,6 +80,7 @@ class Api {
     this.app.route('/setinvoice').post(controller.setInvoice);
 
     this.app.route('/mintnft').post(controller.mintNFT);
+    this.app.route('/broadcastsponsoredtx').post(controller.broadcastSponsoredTx);
 
     // EventSource streams
     this.app.route('/streamswapstatus').get(controller.streamSwapStatus);

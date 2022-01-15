@@ -46,16 +46,17 @@ tasks:
       npm run stacks:deploy
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
-        git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
+        git clone -b sponsoredtx https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
         export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API
         cd /workspace/lnstxbridge-frontend
         sed -i 's/HTTPS=true/HTTPS=false/g' .env
         sed -i 's/PORT=443/PORT=8888/g' .env
-        sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
+        export REACT_APP_STACKS_NETWORK_TYPE=mocknet
         sed -i 's#REACT_APP_BOLTZ_API=https://lnswap.org:9002#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
         npm i    
+      # sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
       # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
       # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
       # git stash
@@ -74,7 +75,7 @@ tasks:
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i
   - init: |
-        git clone -b triggerswap https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
+        git clone -b sponsoredtx https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
         cd /workspace/lnswap-widget
         npm i
         sed -i 's#apiUrl: "https://api.lnswap#// apiUrl: "https://api.lnswap#g' /workspace/lnswap-widget/src/config.js

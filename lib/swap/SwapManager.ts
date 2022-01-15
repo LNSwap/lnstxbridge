@@ -777,6 +777,7 @@ class SwapManager {
         redeemScript = tokenAddressHolder;
       }
 
+      console.log('swapmanager.780 adding minerFeeOnchainAmount ', args.prepayMinerFeeOnchainAmount);
       await this.reverseSwapRepository.addReverseSwap({
         id,
         pair,
