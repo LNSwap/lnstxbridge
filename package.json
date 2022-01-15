@@ -100,9 +100,6 @@
   },
   "devDependencies": {
     "@boltz/bitcoin-ops": "^2.0.0",
-    "@nomiclabs/hardhat-ethers": "^2.0.2",
-    "@nomiclabs/hardhat-etherscan": "^2.1.2",
-    "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@stacks/blockchain-api-client": "^0.63.0",
     "@types/async-lock": "^1.1.2",
     "@types/cors": "^2.8.10",
