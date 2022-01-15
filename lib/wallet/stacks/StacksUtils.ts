@@ -195,7 +195,6 @@ export const getFee = async () => {
 }
 
 export const getFeev2 = async (transaction_payload: string) => {
-  
   try {
     // console.log("stacksutils.95 getFee ", coreApiUrl);
     let reqobj = {

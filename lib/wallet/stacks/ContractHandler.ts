@@ -140,7 +140,7 @@ class ContractHandler {
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
-      fee: new BigNum(150000),
+      fee: new BigNum(500000),
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks lock Transaction:', JSON.stringify(data));
