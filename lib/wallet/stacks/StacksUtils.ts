@@ -771,20 +771,29 @@ export const sponsorTx = async (tx:string, minerfee:number) => {
     const bufferReader = new BufferReader(Buffer.from(tx, 'hex'));
     const deserializedTx = deserializeTransaction(bufferReader);
     const sponsorKey = getStacksNetwork().privateKey;
-    const fee = new BigNum(minerfee*10**6);
-    
+    const fee = new BigNum(minerfee*10**6);   
+    // console.log('deserializedTx ', deserializedTx);
+
     const sponsorOptions = {
       transaction: deserializedTx,
       sponsorPrivateKey: sponsorKey,
+      sponsorNonce: new BigNum(nonce),
+      network: stacksNetwork,
       fee,
     };
-
-    console.log('sponsorTx sponsorOptions ', sponsorOptions)
+    // console.log('sponsorTx sponsorOptions ', sponsorOptions);
     
     const sponsoredTx = await sponsorTransaction(sponsorOptions);  
     const broadcastResponse = await broadcastTransaction(sponsoredTx, stacksNetwork);
-    txId = broadcastResponse.txid;
-    console.log('stacksutils.784 sponsorTx txId', broadcastResponse, txId, minerfee, stacksNetwork);
+    if(broadcastResponse.error) {
+      console.log(`stacksutils.788 sponsorTx error: ${broadcastResponse.error} `, broadcastResponse);
+      return 'error: ' + broadcastResponse.error;
+    } else {
+      incrementNonce();
+      const txId = broadcastResponse.txid;
+      console.log('stacksutils.793 sponsorTx txId, minerfee', txId, minerfee);
+      return txId;
+    }    
   } catch(err) {
     console.log('catch err sponsorTx ', err);
   }
