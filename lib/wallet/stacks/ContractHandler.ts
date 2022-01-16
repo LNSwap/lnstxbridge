@@ -140,7 +140,7 @@ class ContractHandler {
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
-      fee: new BigNum(500000),
+      // fee: new BigNum(500000),
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks lock Transaction:', JSON.stringify(data));
@@ -263,7 +263,7 @@ class ContractHandler {
       // postConditions,
       anchorMode: AnchorMode.Any,
       nonce: new BigNum(stacksNetworkData.nonce),
-      fee: new BigNum(150000),
+      // fee: new BigNum(150000),
       // onFinish: data => {
       //   console.log('Stacks claim Transaction:', JSON.stringify(data));
       //   incrementNonce();
@@ -364,7 +364,7 @@ class ContractHandler {
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
-      fee: new BigNum(150000),
+      // fee: new BigNum(150000),
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks refund Transaction:', JSON.stringify(data));
@@ -478,7 +478,7 @@ class ContractHandler {
       postConditions,
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
-      fee: new BigNum(120000),
+      // fee: new BigNum(120000),
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks lock Transaction:', JSON.stringify(data));
@@ -677,7 +677,7 @@ class ContractHandler {
         postConditions,
         postConditionMode: PostConditionMode.Allow,
         anchorMode: AnchorMode.Any,
-        fee: new BigNum(100000),
+        // fee: new BigNum(100000),
         nonce: new BigNum(stacksNetworkData.nonce),
         // onFinish: data => {
         //   console.log('Stacks refund Transaction:', JSON.stringify(data));
