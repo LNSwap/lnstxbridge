@@ -43,6 +43,7 @@ class CoreWalletProvider implements WalletProviderInterface {
   }
 
   private handleCoreTransaction = async (transactionId: string, address: string): Promise<SentTransaction> => {
+    this.logger.info('corewalletprovider.46 handleCoreTransaction getRawTransactionVerbose');
     const rawTransactionVerbose = await this.chainClient.getRawTransactionVerbose(transactionId);
     const rawTransaction = Transaction.fromHex(rawTransactionVerbose.hex);
 
@@ -62,6 +63,7 @@ class CoreWalletProvider implements WalletProviderInterface {
 
     for (const input of rawTransactionVerbose.vin) {
       if (!fetchedTransaction.has(input.txid)) {
+        this.logger.info('corewalletprovider.65 handleCoreTransaction getRawTransaction');
         fetchedTransaction.set(input.txid, await this.chainClient.getRawTransaction(input.txid));
       }
     }

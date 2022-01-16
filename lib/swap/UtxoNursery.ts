@@ -388,6 +388,7 @@ class UtxoNursery extends EventEmitter {
       });
 
       for (const reverseSwap of mempoolReverseSwaps) {
+        this.logger.info('utxonursery.391 checkReverseSwapMempoolTransactions getRawTransactionVerbose');
         const transaction = await chainClient.getRawTransactionVerbose(reverseSwap.transactionId!);
 
         if (transaction.confirmations && transaction.confirmations !== 0) {
@@ -457,6 +458,7 @@ class UtxoNursery extends EventEmitter {
     // Check for inherited signalling from unconfirmed inputs
     for (const input of transaction.ins) {
       const inputId = transactionHashToId(input.hash);
+      this.logger.info('utxonursery.461 transactionSignalsRbf getRawTransactionVerbose');
       const inputTransaction = await chainClient.getRawTransactionVerbose(inputId);
 
       if (!inputTransaction.confirmations) {

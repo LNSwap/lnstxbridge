@@ -452,7 +452,17 @@ class Service {
     }
 
     const { blocks } = await currency.chainClient.getBlockchainInfo();
-    const transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
+    this.logger.info('service.455 getSwapTransaction getRawTransaction which will fail due to pruned node.');
+    // const transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
+    let transactionHex;
+    // need blockhash because we're running a pruned node with no -txindex
+    if((await getInfo()).network_id === 1) {
+      const mempoolTx = await transactions.getTx({ txid: swap.lockupTransactionId! });
+      transactionHex = await currency.chainClient.getRawTransactionBlockHash(swap.lockupTransactionId, mempoolTx.status.block_hash);
+    } else {
+      // regtest
+      transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
+    }
 
     const response: any = {
       transactionHex,
