@@ -249,13 +249,13 @@ export const getAccountNonce = async (initAddress?: string) => {
     const response = await axios.get(url)
     // console.log("stacksutils getAccountNonce", response.data);
     if (response.data.possible_next_nonce > nonce) {
-      console.log('getAccountNonce updating nonce: ', response.data.possible_next_nonce);
+      console.log('stacksutils.252 getAccountNonce updating nonce: ', response.data.possible_next_nonce);
       nonce = response.data.possible_next_nonce;
     }
     if(response.data.detected_missing_nonces.length > 0) {
       // set nonce to min of missing nonces
       const min = Math.min(...response.data.detected_missing_nonces);
-      console.log(`found missing nonces setting to min `, min);
+      console.log(`stacksutils.258 getAccountNonce found missing nonces setting to min `, min);
       nonce = min;
     }
     return response.data;
