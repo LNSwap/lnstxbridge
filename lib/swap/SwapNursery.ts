@@ -374,7 +374,8 @@ class SwapNursery extends EventEmitter {
         const { lndClient } = this.currencies.get(lightningSymbol)!;
 
         const wallet = this.walletManager.wallets.get(chainSymbol)!;
-        this.logger.verbose('swapnursery.291 invoice.paid wallet ' + JSON.stringify(wallet));
+        this.logger.verbose('swapnursery.291 invoice.paid wallet ');
+        // + JSON.stringify(wallet)
 
           switch (chainCurrency.type) {
           case CurrencyType.BitcoinLike:

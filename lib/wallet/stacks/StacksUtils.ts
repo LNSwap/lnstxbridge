@@ -414,90 +414,96 @@ export const listenContract = async (address:string) => {
 }
 
 export const calculateStacksTxFee = async (contract:string, functionName:string) => {
-  // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
-  let contractAddress = contract.split(".")[0];
-  let contractName = contract.split(".")[1];
+  try {
+    // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
+    let contractAddress = contract.split(".")[0];
+    let contractName = contract.split(".")[1];
 
-  const postConditionCode = FungibleConditionCode.GreaterEqual;
-  const postConditionAmount = new BigNum(100000);
-  const postConditions = [
-    makeContractSTXPostCondition(
+    const postConditionCode = FungibleConditionCode.GreaterEqual;
+    const postConditionAmount = new BigNum(100000);
+    const postConditions = [
+      makeContractSTXPostCondition(
+        contractAddress,
+        contractName,
+        postConditionCode,
+        postConditionAmount
+      )
+    ];
+
+    // Successful claim tx
+    // 0xfcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec
+    // amount
+    // 0x0000000000000000000000000018b1df
+    // claimAddress
+    // 0x01
+    // refundAddress
+    // 0x01
+    // timelock
+    // 0x0000000000000000000000000000405a
+
+    let functionArgs: any[] = [];
+    if(functionName.includes("lockStx")) {
+      functionArgs = [
+        bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+        bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+        standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
+      ];
+    } else {
+      // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+      functionArgs = [
+        bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+        bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+      ];
+    }
+
+    // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+
+    const txOptions = {
       contractAddress,
       contractName,
-      postConditionCode,
-      postConditionAmount
-    )
-  ];
+      functionName,
+      functionArgs: functionArgs,
+      senderKey: getStacksNetwork().privateKey,
+      validateWithAbi: true,
+      network: stacksNetwork,
+      postConditionMode: PostConditionMode.Allow,
+      postConditions,
+      anchorMode: AnchorMode.Any,
+      onFinish: data => {
+        console.log('Stacks claim Transaction:', JSON.stringify(data));
+      }
+    };
 
-  // Successful claim tx
-  // 0xfcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec
-  // amount
-  // 0x0000000000000000000000000018b1df
-  // claimAddress
-  // 0x01
-  // refundAddress
-  // 0x01
-  // timelock
-  // 0x0000000000000000000000000000405a
+    // this.toObject(txOptions)
+    // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
 
-  let functionArgs: any[] = [];
-  if(functionName.includes("lockStx")) {
-    functionArgs = [
-      bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-      bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-      standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
-    ];
-  } else {
-    // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
-    functionArgs = [
-      bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-      bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-    ];
+    const transaction = await makeContractCall(txOptions);
+    // console.log("stacksutil.209 transaction: ", transaction)
+
+    // to see the raw serialized tx
+    const serializedTx = transaction.serialize();
+    // .toString('hex');
+    // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+
+    // resolves to number of microstacks per byte!!!
+    const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+    
+    // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+    const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+    // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
+    return Number(totalfee);
+  } catch (err) {
+    console.log('stacksutils.503 calculateStacksTxFee err ', err.message);
+    return 500000;
   }
 
-  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
-
-  const txOptions = {
-    contractAddress,
-    contractName,
-    functionName,
-    functionArgs: functionArgs,
-    senderKey: getStacksNetwork().privateKey,
-    validateWithAbi: true,
-    network: stacksNetwork,
-    postConditionMode: PostConditionMode.Allow,
-    postConditions,
-    anchorMode: AnchorMode.Any,
-    onFinish: data => {
-      console.log('Stacks claim Transaction:', JSON.stringify(data));
-    }
-  };
-
-  // this.toObject(txOptions)
-  // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
-
-  const transaction = await makeContractCall(txOptions);
-  // console.log("stacksutil.209 transaction: ", transaction)
-
-  // to see the raw serialized tx
-  const serializedTx = transaction.serialize();
-  // .toString('hex');
-  // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
-
-  // resolves to number of microstacks per byte!!!
-  const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
-  
-  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
-  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
-
-  // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
-  return Number(totalfee);
 }
 
 // NOT USED
