@@ -141,6 +141,7 @@ class ContractHandler {
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
       // fee: new BigNum(500000),
+      fee: new BigNum(stacksNetworkData.lockStxCost),
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks lock Transaction:', JSON.stringify(data));
@@ -264,6 +265,7 @@ class ContractHandler {
       anchorMode: AnchorMode.Any,
       nonce: new BigNum(stacksNetworkData.nonce),
       // fee: new BigNum(150000),
+      fee: new BigNum(stacksNetworkData.claimStxCost),
       // onFinish: data => {
       //   console.log('Stacks claim Transaction:', JSON.stringify(data));
       //   incrementNonce();

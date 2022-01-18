@@ -37,6 +37,10 @@ let signerAddress = 'SP13R6D5P5TYE71D81GZQWSD9PGQMQQN54A2YT3BY';
 let nonce = 0;
 let blockHeight = 0;
 let tokens;
+let lockStxCost = 500000;
+let claimStxCost = 500000;
+const maxStacksTxFee = 1000000;
+console.log('stacksutils.43 setting default lockStxCost, claimStxCost, maxStacksTxFee ', lockStxCost, claimStxCost, maxStacksTxFee);
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -179,7 +183,7 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
 }
 
 export const getStacksNetwork = () => {
-  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight};
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight, 'lockStxCost': lockStxCost, 'claimStxCost': claimStxCost};
 }
 
 export const getFee = async () => {
@@ -497,10 +501,19 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
     // I think we need to serialize and get the length in bytes and multiply with base fee rate.
     const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
 
-    // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
-    return Number(totalfee);
+    const normalizedFee = Math.min(Number(totalfee), maxStacksTxFee);
+    if(functionName.includes('lockStx')) {
+      lockStxCost = normalizedFee;
+    } else {
+      claimStxCost = normalizedFee;
+    }
+    console.log("stacksutils.503 estimatedFee, totalfee, normalizedFee: ", estimateFee, totalfee, normalizedFee);
+    return Number(normalizedFee);
   } catch (err) {
-    console.log('stacksutils.503 calculateStacksTxFee err ', err.message);
+    // console.log('stacksutils.511 calculateStacksTxFee err ', err.message);
+    console.log('stacksutils.512 err setting lock and claim costs to default ', 500000);
+    lockStxCost = 500000
+    claimStxCost = 500000
     return 500000;
   }
 
