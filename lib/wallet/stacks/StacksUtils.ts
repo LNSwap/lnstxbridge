@@ -510,10 +510,13 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
     console.log("stacksutils.503 estimatedFee, totalfee, normalizedFee: ", estimateFee, totalfee, normalizedFee);
     return Number(normalizedFee);
   } catch (err) {
-    // console.log('stacksutils.511 calculateStacksTxFee err ', err.message);
+    console.log('stacksutils.511 calculateStacksTxFee err ', functionName, err.message);
     console.log('stacksutils.512 err setting lock and claim costs to default ', 500000);
-    lockStxCost = 500000
-    claimStxCost = 500000
+    if(functionName.includes('lockStx')) {
+      lockStxCost = 500000;
+    } else {
+      claimStxCost = 500000;
+    }
     return 500000;
   }
 
