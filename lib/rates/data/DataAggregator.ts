@@ -37,7 +37,7 @@ class DataAggregator {
     const queryRate = async (base: string, quote: string) => {
       const pairId = getPairId({ base, quote });
       const rate = await this.getRate(base, quote);
-      console.log('dataaggregator.38 getRate base-quote ', base, quote, rate);
+      // console.log('dataaggregator.38 getRate base-quote ', base, quote, rate);
 
       if (rate && !isNaN(rate)) {
         rateMap.set(pairId, rate);
