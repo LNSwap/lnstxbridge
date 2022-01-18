@@ -23,6 +23,11 @@ import {
   transactionSignalsRbfExplicitly,
   getHexString
 } from '../Utils';
+import { getInfo } from '../wallet/stacks/StacksUtils';
+import mempoolJS from "@mempool/mempool.js";
+const { bitcoin: { transactions } } = mempoolJS({
+  hostname: 'mempool.space'
+});
 
 interface UtxoNursery {
   // Swap
@@ -388,8 +393,18 @@ class UtxoNursery extends EventEmitter {
       });
 
       for (const reverseSwap of mempoolReverseSwaps) {
-        this.logger.info('utxonursery.391 checkReverseSwapMempoolTransactions getRawTransactionVerbose');
-        const transaction = await chainClient.getRawTransactionVerbose(reverseSwap.transactionId!);
+        // this.logger.info('utxonursery.391 checkReverseSwapMempoolTransactions getRawTransactionVerbose');
+        // const transaction = await chainClient.getRawTransactionVerbose(reverseSwap.transactionId!);
+
+        let transaction;
+        // need blockhash because we're running a pruned node with no -txindex
+        if((await getInfo()).network_id === 1) {
+          const mempoolTx = await transactions.getTx({ txid: reverseSwap.transactionId! });
+          transaction = await chainClient.getRawTransactionVerboseBlockHash(reverseSwap.transactionId!, mempoolTx.status.block_hash);
+        } else {
+          // regtest
+          transaction = await chainClient.getRawTransactionVerbose(reverseSwap.transactionId!);
+        }
 
         if (transaction.confirmations && transaction.confirmations !== 0) {
           await this.reverseSwapLockupConfirmed(chainClient, wallet, reverseSwap, Transaction.fromHex(transaction.hex));
