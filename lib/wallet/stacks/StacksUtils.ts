@@ -20,6 +20,7 @@ import { bufferCV,
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
 import { EtherSwapValues, Sip10SwapValues } from 'lib/consts/Types';
+import { serializePayload } from '@stacks/transactions/dist/payload';
 
 const BigNum = require('bn.js');
 
@@ -40,7 +41,7 @@ let tokens;
 let lockStxCost = 760000;
 let claimStxCost = 760000;
 let refundStxCost = 760000;
-const maxStacksTxFee = 1000000;
+const maxStacksTxFee = 751000;
 console.log('stacksutils.43 setting default lockStxCost, claimStxCost, maxStacksTxFee ', lockStxCost, claimStxCost, maxStacksTxFee);
 
 // const apiConfig = new Configuration({
@@ -207,8 +208,9 @@ export const getFeev2 = async (estimated_len: number, transaction_payload: strin
       transaction_payload,
     };
     const url = `${coreApiUrl}/v2/fees/transaction`;
+    // console.log("stacksutils 1.getFeev2", url, reqobj);
     const response = await axios.post(url, reqobj);
-    console.log("stacksutils getFeev2", response.data);
+    // console.log("stacksutils 2.getFeev2", response.data);
     return response.data.estimations[0].fee;
   } catch (err) {
     console.log('getFeev2 err ', err.message)
@@ -502,7 +504,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
       functionName,
       functionArgs: functionArgs,
       senderKey: getStacksNetwork().privateKey,
-      validateWithAbi: true,
+      // validateWithAbi: true,
       network: stacksNetwork,
       postConditionMode: PostConditionMode.Allow,
       postConditions,
@@ -516,12 +518,12 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
 
     const transaction = await makeContractCall(txOptions);
-    // console.log("stacksutil.209 transaction: ", transaction)
+    // console.log("stacksutil.209 transaction: ", transaction, transaction.payload)
 
     // to see the raw serialized tx
     const serializedTx = transaction.serialize();
     // .toString('hex');
-    console.log('calculateStacksTxFee serializedTx and byteLength ', serializedTx.byteLength, serializedTx);
+    // console.log('calculateStacksTxFee serializedTx and byteLength ', serializedTx.byteLength, getHexString(serializedTx));
 
     // resolves to number of microstacks per byte!!!
     const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
@@ -529,11 +531,12 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     // I think we need to serialize and get the length in bytes and multiply with base fee rate.
     const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
 
-    // estimatecontractfunctioncall uses old values I think
-    const v2fees = await getFeev2(serializedTx.byteLength, getHexString(serializedTx));
-    console.log('calculateStacksTxFee v2fees: ', v2fees);
+    // estimatecontractfunctioncall uses old values I think so trying manually getfeev2
+    const serializedPayload = serializePayload(transaction.payload);
+    const v2fee = await getFeev2(serializedTx.byteLength, getHexString(serializedPayload));
+    // console.log('calculateStacksTxFee v2fees: ', v2fee);
 
-    const normalizedFee = Math.min(Number(totalfee), maxStacksTxFee);
+    const normalizedFee = Math.min(Number(totalfee), maxStacksTxFee, Number(v2fee));
     if(functionName.includes('lockStx')) {
       lockStxCost = normalizedFee;
     } else if(functionName.includes('claimStx')) {
@@ -541,15 +544,17 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     } else {
       refundStxCost = normalizedFee;
     }
-    console.log("stacksutils.503 estimatedFee, totalfee, normalizedFee: ", estimateFee, totalfee, normalizedFee);
+    console.log("stacksutils.503 functionName, estimatedFee, totalfee, normalizedFee, v2fee: ", functionName, estimateFee, totalfee, normalizedFee, v2fee);
     return Number(normalizedFee);
   } catch (err) {
     console.log('stacksutils.511 calculateStacksTxFee err ', functionName, err.message);
-    console.log('stacksutils.512 err setting lock and claim costs to default ', 500000);
+    console.log('stacksutils.512 err setting lock/claim/refund costs to default ', 500000);
     if(functionName.includes('lockStx')) {
       lockStxCost = 500000;
-    } else {
+    } else if(functionName.includes('claimStx')) {
       claimStxCost = 500000;
+    } else {
+      refundStxCost = 500000;
     }
     return 500000;
   }
