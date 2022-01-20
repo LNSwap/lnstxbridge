@@ -1,7 +1,7 @@
 import { BigNumber, providers } from 'ethers';
 import GasNow from './GasNow';
 import { etherDecimals, gweiDecimals } from '../../consts/Consts';
-import { getBiggerBigNumber, getHexBuffer } from '../../Utils';
+import { getBiggerBigNumber, getHexBuffer, getHexString } from '../../Utils';
 // import { RPCClient } from '@stacks/rpc-client';
 import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
@@ -417,14 +417,20 @@ export const listenContract = async (address:string) => {
   */
 }
 
-export const calculateStacksTxFee = async (contract:string, functionName:string) => {
+export const calculateStacksTxFee = async (contract:string, functionName:string, amount: string, timelock: string, preimageHash?: Buffer, preimage?: Buffer, claimPrincipal?: string) => {
   try {
     // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
     let contractAddress = contract.split(".")[0];
     let contractName = contract.split(".")[1];
 
+    amount = unHex(amount)
+    timelock = unHex(timelock)
+    const preimageorhash = preimageHash ? getHexString(preimageHash) : getHexString(preimage!)
+    const decimalamount = parseInt(amount.toString(),10);
+    console.log('calculateStacksTxFee.428 start ', functionName, preimageorhash, amount, timelock)
+
     const postConditionCode = FungibleConditionCode.GreaterEqual;
-    const postConditionAmount = new BigNum(100000);
+    const postConditionAmount = new BigNum(decimalamount);
     const postConditions = [
       makeContractSTXPostCondition(
         contractAddress,
@@ -448,25 +454,44 @@ export const calculateStacksTxFee = async (contract:string, functionName:string)
     let functionArgs: any[] = [];
     if(functionName.includes("lockStx")) {
       functionArgs = [
-        bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-        bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        // bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+        // standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
+        bufferCV(preimageHash!),
+        bufferCV(Buffer.from(amount,'hex')),
         bufferCV(Buffer.from('01','hex')),
         bufferCV(Buffer.from('01','hex')),
-        bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-        standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
+        bufferCV(Buffer.from(timelock,'hex')),
+        standardPrincipalCV(claimPrincipal!),
+      ];
+    } if(functionName.includes("refundStx")) {
+      functionArgs = [
+        bufferCV(preimageHash!),
+        bufferCV(Buffer.from(amount,'hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from(timelock,'hex')),
       ];
     } else {
       // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
       functionArgs = [
-        bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-        bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        // bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+        bufferCV(preimage!),
+        bufferCV(Buffer.from(amount,'hex')),
         bufferCV(Buffer.from('01','hex')),
         bufferCV(Buffer.from('01','hex')),
-        bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+        bufferCV(Buffer.from(timelock,'hex')),
       ];
     }
 
-    // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+    console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
 
     const txOptions = {
       contractAddress,
@@ -819,4 +844,12 @@ export const sponsorTx = async (tx:string, minerfee:number) => {
     console.log('catch err sponsorTx ', err);
   }
   return txId;
+}
+
+function unHex(input) {
+  if(input.slice(0,2) === '0x') {
+    return input.slice(2)
+  } else {
+    return input
+  }
 }
