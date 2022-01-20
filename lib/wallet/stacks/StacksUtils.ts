@@ -42,7 +42,7 @@ let lockStxCost = 760000;
 let claimStxCost = 760000;
 let refundStxCost = 760000;
 const maxStacksTxFee = 751000;
-console.log('stacksutils.43 setting default lockStxCost, claimStxCost, maxStacksTxFee ', lockStxCost, claimStxCost, maxStacksTxFee);
+console.log('stacksutils.43 setting default lockStxCost, claimStxCost, refundStxCost, maxStacksTxFee ', lockStxCost, claimStxCost, refundStxCost, maxStacksTxFee);
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -430,9 +430,9 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
 
     amount = unHex(amount)
     timelock = unHex(timelock)
-    const preimageorhash = preimageHash ? getHexString(preimageHash) : getHexString(preimage!)
+    // const preimageorhash = preimageHash ? getHexString(preimageHash) : getHexString(preimage!)
     const decimalamount = parseInt(amount.toString(),10);
-    console.log('calculateStacksTxFee.428 start ', functionName, preimageorhash, amount, timelock)
+    // console.log('calculateStacksTxFee.428 start ', functionName, preimageorhash, amount, timelock)
 
     const postConditionCode = FungibleConditionCode.GreaterEqual;
     const postConditionAmount = new BigNum(decimalamount);
@@ -529,14 +529,15 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
     
     // I think we need to serialize and get the length in bytes and multiply with base fee rate.
-    const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+    // const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
 
     // estimatecontractfunctioncall uses old values I think so trying manually getfeev2
     const serializedPayload = serializePayload(transaction.payload);
     const v2fee = await getFeev2(serializedTx.byteLength, getHexString(serializedPayload));
     // console.log('calculateStacksTxFee v2fees: ', v2fee);
 
-    const normalizedFee = Math.min(Number(totalfee), maxStacksTxFee, Number(v2fee));
+    // Number(totalfee), // stop using old estimate result which gives ~80k-100k mstx
+    const normalizedFee = Math.min(maxStacksTxFee, Number(v2fee));
     if(functionName.includes('lockStx')) {
       lockStxCost = normalizedFee;
     } else if(functionName.includes('claimStx')) {
@@ -544,7 +545,9 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     } else {
       refundStxCost = normalizedFee;
     }
-    console.log("stacksutils.503 functionName, estimatedFee, totalfee, normalizedFee, v2fee: ", functionName, estimateFee, totalfee, normalizedFee, v2fee);
+
+    // totalfee
+    console.log("stacksutils.503 functionName, estimatedFee, normalizedFee, v2fee: ", functionName, estimateFee, normalizedFee, v2fee);
     return Number(normalizedFee);
   } catch (err) {
     console.log('stacksutils.511 calculateStacksTxFee err ', functionName, err.message);
