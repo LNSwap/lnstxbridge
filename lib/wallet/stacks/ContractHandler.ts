@@ -367,6 +367,7 @@ class ContractHandler {
       postConditionMode: PostConditionMode.Allow,
       anchorMode: AnchorMode.Any,
       // fee: new BigNum(150000),
+      fee: new BigNum(stacksNetworkData.refundStxCost),
       nonce: new BigNum(stacksNetworkData.nonce),
       // onFinish: data => {
       //   console.log('Stacks refund Transaction:', JSON.stringify(data));
