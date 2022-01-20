@@ -19,7 +19,7 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-import { calculateStacksTxFee, calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksNetwork, getStacksRawTransaction, mintNFTforUser, sponsorTx } from '../wallet/stacks/StacksUtils';
+import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksNetwork, getStacksRawTransaction, mintNFTforUser, sponsorTx } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 // etherDecimals, ethereumPrepayMinerFeeGasLimit,
@@ -1440,7 +1440,9 @@ class Service {
         // }
 
         // calculate stx claim fee
-        const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx'); // in mstx
+        const claimCost = getStacksNetwork().claimStxCost;
+        // const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx'); // in mstx
+
         prepayMinerFeeOnchainAmount = Math.max(claimCost * 10**-6, 0.5); // stx tx fee in stx
 
         const sendingAmountRate = sending === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', sending);
