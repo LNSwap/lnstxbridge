@@ -199,18 +199,20 @@ export const getFee = async () => {
   // return response.data;
 }
 
-export const getFeev2 = async (transaction_payload: string) => {
+export const getFeev2 = async (estimated_len: number, transaction_payload: string) => {
   try {
     // console.log("stacksutils.95 getFee ", coreApiUrl);
     let reqobj = {
-      transaction_payload
+      estimated_len,
+      transaction_payload,
     };
     const url = `${coreApiUrl}/v2/fees/transaction`;
     const response = await axios.post(url, reqobj);
     console.log("stacksutils getFeev2", response.data);
     return response.data.estimations[0].fee;
-  } catch (e: any) {
-    return "error: " + e.reason;
+  } catch (err) {
+    console.log('getFeev2 err ', err.message)
+    return 500000;
   }
 }
 
@@ -468,7 +470,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
         bufferCV(Buffer.from(timelock,'hex')),
         standardPrincipalCV(claimPrincipal!),
       ];
-    } if(functionName.includes("refundStx")) {
+    } else if(functionName.includes("refundStx")) {
       functionArgs = [
         bufferCV(preimageHash!),
         bufferCV(Buffer.from(amount,'hex')),
@@ -492,7 +494,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
       ];
     }
 
-    console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+    // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
 
     const txOptions = {
       contractAddress,
@@ -519,13 +521,17 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     // to see the raw serialized tx
     const serializedTx = transaction.serialize();
     // .toString('hex');
-    // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
+    console.log('calculateStacksTxFee serializedTx and byteLength ', serializedTx.byteLength, serializedTx);
 
     // resolves to number of microstacks per byte!!!
     const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
     
     // I think we need to serialize and get the length in bytes and multiply with base fee rate.
     const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+    // estimatecontractfunctioncall uses old values I think
+    const v2fees = await getFeev2(serializedTx.byteLength, getHexString(serializedTx));
+    console.log('calculateStacksTxFee v2fees: ', v2fees);
 
     const normalizedFee = Math.min(Number(totalfee), maxStacksTxFee);
     if(functionName.includes('lockStx')) {
