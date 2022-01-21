@@ -13,6 +13,9 @@ tasks:
       npm run docker:regtest
       sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
+    # modify regtest container? to have prune=5000 and use mempool api
+    # lnd --lnddir=/root/.lnd-btc --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --restlisten=0.0.0.0:8080 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=127.0.0.1:18443
+    # lnd --lnddir=/root/.lnd-btc2 --listen=127.0.0.1:9736 --rpclisten=0.0.0.0:10011 --restlisten=0.0.0.0:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=127.0.0.1:18443
     command: |
       npm run dev
     # rm package-lock.json

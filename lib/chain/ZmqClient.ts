@@ -6,6 +6,11 @@ import Errors from './Errors';
 import Logger from '../Logger';
 import { formatError, getHexString, reverseBuffer } from '../Utils';
 import { Block, BlockchainInfo, RawTransaction, BlockVerbose } from '../consts/Types';
+import { getInfo } from '../wallet/stacks/StacksUtils';
+import mempoolJS from "@mempool/mempool.js";
+const { bitcoin: { transactions } } = mempoolJS({
+  hostname: 'mempool.space'
+});
 
 type ZmqNotification = {
   type: string;
@@ -57,6 +62,7 @@ class ZmqClient extends EventEmitter {
     private getBlockhash: (height: number) => Promise<string>,
     private getBlockVerbose: (hash: string) => Promise<BlockVerbose>,
     private getRawTransactionVerbose: (id: string) => Promise<RawTransaction>,
+    private getRawTransactionVerboseBlockHash: (id: string, blockhash: string) => Promise<RawTransaction>,
   ) {
     super();
   }
@@ -144,7 +150,18 @@ class ZmqClient extends EventEmitter {
           const block = await this.getBlock(hash);
 
           for (const tx of block.tx) {
-            const rawTransaction = await this.getRawTransactionVerbose(tx);
+            // const rawTransaction = await this.getRawTransactionVerbose(tx);
+
+            let rawTransaction;
+            // need blockhash because we're running a pruned node with no -txindex
+            if((await getInfo()).network_id === 1) {
+              const mempoolTx = await transactions.getTx({ txid: tx });
+              rawTransaction = await this.getRawTransactionVerboseBlockHash(tx, mempoolTx.status.block_hash);
+            } else {
+              // regtest
+              rawTransaction = await this.getRawTransactionVerbose(tx);
+            }
+
             const transaction = Transaction.fromHex(rawTransaction.hex);
 
             checkTransaction(transaction);
@@ -182,8 +199,18 @@ class ZmqClient extends EventEmitter {
       }
 
       if (this.isRelevantTransaction(transaction)) {
-        // console.log('zmq.185 ', transaction);
-        const transactionData = await this.getRawTransactionVerbose(id) as RawTransaction;
+        console.log('zmq.185 isRelevantTransaction', transaction);
+        // const transactionData = await this.getRawTransactionVerbose(id) as RawTransaction;
+
+        let transactionData: RawTransaction;
+        // need blockhash because we're running a pruned node with no -txindex
+        if((await getInfo()).network_id === 1) {
+          const mempoolTx = await transactions.getTx({ txid: id });
+          transactionData = await this.getRawTransactionVerboseBlockHash(id, mempoolTx.status.block_hash);
+        } else {
+          // regtest
+          transactionData = await this.getRawTransactionVerbose(id);
+        }
 
         // Check whether the transaction got confirmed or added to the mempool
         if (transactionData.confirmations) {
