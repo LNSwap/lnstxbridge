@@ -526,7 +526,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     // console.log('calculateStacksTxFee serializedTx and byteLength ', serializedTx.byteLength, getHexString(serializedTx));
 
     // resolves to number of microstacks per byte!!!
-    const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+    // const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
     
     // I think we need to serialize and get the length in bytes and multiply with base fee rate.
     // const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
@@ -547,7 +547,7 @@ export const calculateStacksTxFee = async (contract:string, functionName:string,
     }
 
     // totalfee
-    console.log("stacksutils.503 functionName, estimatedFee, normalizedFee, v2fee: ", functionName, estimateFee, normalizedFee, v2fee);
+    // console.log("stacksutils.503 functionName, estimatedFee, normalizedFee, v2fee: ", functionName, estimateFee, normalizedFee, v2fee);
     return Number(normalizedFee);
   } catch (err) {
     console.log('stacksutils.511 calculateStacksTxFee err ', functionName, err.message);
