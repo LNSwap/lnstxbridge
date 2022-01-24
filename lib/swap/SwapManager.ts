@@ -543,11 +543,13 @@ class SwapManager {
             blockTime: TimeoutDeltaProvider.blockTimes.get(currency.symbol)!,
           };
 
-        // TODO if STX -> channel
-        // All currencies that are not Bitcoin-like are either Ether or an ERC20 token on the Ethereum chain
+        // All currencies that are not Bitcoin-like are on Stacks chain
         } else {
+          const blocks = (await getInfo()).stacks_tip_height;
+          console.log('swapmanager.549 stacks blocks, blocktime ', blocks, TimeoutDeltaProvider.blockTimes.get('STX')!);
           return {
-            blocks: await currency.provider!.getBlockNumber(),
+            // blocks: await currency.provider!.getBlockNumber(),
+            blocks,
             blockTime: TimeoutDeltaProvider.blockTimes.get('STX')!,
           };
         }
@@ -556,10 +558,12 @@ class SwapManager {
       const { blocks, blockTime } = await getChainInfo(receivingCurrency);
       const blocksUntilExpiry = swap.timeoutBlockHeight - blocks;
 
+      // Channel open invoice timeout should be at least 124 blocks = 74400 seconds
       const timeoutTimestamp = getUnixTime() + (blocksUntilExpiry * blockTime * 60);
 
       const invoiceError = Errors.INVOICE_EXPIRES_TOO_EARLY(invoiceExpiry, timeoutTimestamp);
 
+      // console.log('swapmanager.565 checking blocksUntilExpiry, timeoutTimestamp vs invoiceExpiry', blocksUntilExpiry, timeoutTimestamp, invoiceExpiry);
       if (timeoutTimestamp > invoiceExpiry) {
         // In the auto Channel Creation mode, which is used by the frontend, the invoice check can fail but the Swap should
         // still be attempted without Channel Creation
@@ -579,8 +583,8 @@ class SwapManager {
         }
       }
 
-      if(decodedInvoice.satoshis < 1000000 && !await this.checkRoutability(sendingCurrency.lndClient!, invoice)) {
-        console.log('swapmanager.583 decodedInvoice.satoshis is smaller than limit 1m sats ', decodedInvoice.satoshis);
+      if(decodedInvoice.satoshis < 300000 && !await this.checkRoutability(sendingCurrency.lndClient!, invoice)) {
+        console.log('swapmanager.583 decodedInvoice.satoshis is smaller than limit 300k sats ', decodedInvoice.satoshis);
         throw Errors.AMOUNT_TOO_LOW_FOR_CHANNELOPEN();
       }
 
