@@ -548,7 +548,7 @@ class SwapManager {
         } else {
           return {
             blocks: await currency.provider!.getBlockNumber(),
-            blockTime: TimeoutDeltaProvider.blockTimes.get('ETH')!,
+            blockTime: TimeoutDeltaProvider.blockTimes.get('STX')!,
           };
         }
       };
@@ -577,6 +577,11 @@ class SwapManager {
         } else {
           throw invoiceError;
         }
+      }
+
+      if(decodedInvoice.satoshis < 1000000 && !await this.checkRoutability(sendingCurrency.lndClient!, invoice)) {
+        console.log('swapmanager.583 decodedInvoice.satoshis is smaller than limit 1m sats ', decodedInvoice.satoshis);
+        throw Errors.AMOUNT_TOO_LOW_FOR_CHANNELOPEN();
       }
 
       await this.channelCreationRepository.setNodePublicKey(channelCreation, decodedInvoice.payeeNodeKey!);
