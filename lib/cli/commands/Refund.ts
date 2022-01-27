@@ -5,7 +5,7 @@ import { constructRefundTransaction, detectSwap } from 'boltz-core';
 import BuilderComponents from '../BuilderComponents';
 import { getHexBuffer, stringify } from '../../Utils';
 
-export const command = 'refund <network> <privateKey> <redeemScript> <rawTransaction> <destinationAddress>';
+export const command = 'refund <network> <privateKey> <redeemScript> <rawTransaction> <destinationAddress> <timeoutBlockHeight>';
 
 export const describe = 'refunds submarine or chain to chain swaps';
 
@@ -15,6 +15,7 @@ export const builder = {
   redeemScript: BuilderComponents.redeemScript,
   rawTransaction: BuilderComponents.rawTransaction,
   destinationAddress: BuilderComponents.destinationAddress,
+  timeoutBlockHeight: BuilderComponents.timeoutBlockHeight,
 };
 
 export const handler = (argv: Arguments<any>): void => {
@@ -38,8 +39,8 @@ export const handler = (argv: Arguments<any>): void => {
       keys: ECPair.fromPrivateKey(getHexBuffer(argv.privateKey)),
     }],
     address.toOutputScript(argv.destinationAddress, network),
-    717768, // timeoutblockheight!!!
-    2,
+    parseInt(argv.timeoutBlockHeight), // 719579, // timeoutblockheight!!!
+    1,
     true,
   ).toHex();
 
