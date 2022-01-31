@@ -192,7 +192,7 @@ class ZmqClient extends EventEmitter {
       // the second time the client receives the transaction
       if (this.utxos.has(id)) {
         this.utxos.delete(id);
-        // console.log('zmq.178 ', transaction);
+        console.log('zmq.195 ', transaction);
         this.emit('transaction', transaction, true);
 
         return;
@@ -202,26 +202,33 @@ class ZmqClient extends EventEmitter {
         console.log('zmq.185 isRelevantTransaction', transaction);
         // const transactionData = await this.getRawTransactionVerbose(id) as RawTransaction;
 
-        let transactionData: RawTransaction;
-        // need blockhash because we're running a pruned node with no -txindex
-        if((await getInfo()).network_id === 1) {
-          const mempoolTx = await transactions.getTx({ txid: id });
-          transactionData = await this.getRawTransactionVerboseBlockHash(id, mempoolTx.status.block_hash);
-        } else {
-          // regtest
-          transactionData = await this.getRawTransactionVerbose(id);
+        try {
+          let transactionData: RawTransaction;
+          // need blockhash because we're running a pruned node with no -txindex
+          if((await getInfo()).network_id === 1) {
+            const mempoolTx = await transactions.getTx({ txid: id });
+            console.log('zmq.212 mempoolTx.status ', id);
+            transactionData = await this.getRawTransactionVerboseBlockHash(id, mempoolTx.status.block_hash);
+          } else {
+            // regtest
+            console.log('zmq.212 regtest ');
+            transactionData = await this.getRawTransactionVerbose(id);
+          }
+  
+          // Check whether the transaction got confirmed or added to the mempool
+          if (transactionData.confirmations) {
+            // when astransaction mempool -> conf
+            console.log('zmq.219 ');
+            this.emit('transaction', transaction, true);
+          } else {
+            console.log('zmq.222 ');
+            this.utxos.add(id);
+            this.emit('transaction', transaction, false);
+          }
+        } catch(error) {
+          console.log('zmq.229 error ', error);
         }
 
-        // Check whether the transaction got confirmed or added to the mempool
-        if (transactionData.confirmations) {
-          // when astransaction mempool -> conf
-          // console.log('zmq.190 ', transaction);
-          this.emit('transaction', transaction, true);
-        } else {
-          // console.log('zmq.193 ', transaction);
-          this.utxos.add(id);
-          this.emit('transaction', transaction, false);
-        }
       }
     });
   }
