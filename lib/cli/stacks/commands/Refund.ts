@@ -61,7 +61,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   contractAddress = allargs[7].split('.')[0];
   contractName = allargs[7].split('.')[1];
   privkey = allargs[8];
-  customfee = 90000;
+  customfee = 751000;
   if (allargs[9]) {
     customfee = parseInt(allargs[9]);
   }

@@ -344,7 +344,7 @@ class ContractHandler {
       bufferCV(Buffer.from('01','hex')),
       bufferCV(Buffer.from(tl3,'hex')),
     ];
-    this.logger.verbose('stacks contracthandler.306 functionargs: '+stringify(functionArgs));
+    this.logger.verbose('stacks contracthandler.306 refund functionargs: ' + stringify(functionArgs));
 
     // const functionArgs = [
     //   bufferCV(preimageHash),

@@ -156,6 +156,7 @@ class ZmqClient extends EventEmitter {
             // need blockhash because we're running a pruned node with no -txindex
             if((await getInfo()).network_id === 1) {
               const mempoolTx = await transactions.getTx({ txid: tx });
+              console.log('zmq.159 mempoolTx.status ', tx, mempoolTx.status.block_hash);
               rawTransaction = await this.getRawTransactionVerboseBlockHash(tx, mempoolTx.status.block_hash);
             } else {
               // regtest
@@ -207,7 +208,7 @@ class ZmqClient extends EventEmitter {
           // need blockhash because we're running a pruned node with no -txindex
           if((await getInfo()).network_id === 1) {
             const mempoolTx = await transactions.getTx({ txid: id });
-            console.log('zmq.212 mempoolTx.status ', id);
+            console.log('zmq.212 mempoolTx.status ', id, mempoolTx.status.block_hash);
             transactionData = await this.getRawTransactionVerboseBlockHash(id, mempoolTx.status.block_hash);
           } else {
             // regtest
