@@ -42,7 +42,7 @@ Clarinet.test({
           wallet_2.address
         ),
       ]);
-      console.log(block, block.receipts[0].events);
+    //   console.log(block, block.receipts[0].events);
       block.receipts[0].result.expectOk().expectBool(true);
     },
   });
