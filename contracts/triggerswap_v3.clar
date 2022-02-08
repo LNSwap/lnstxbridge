@@ -1,4 +1,4 @@
-;; triggers claimstx or claimtoken from lnswap contracts and claim from any contract for trustless LN purchases.
+;; triggers claim from lnswap contracts and mint/transfer to any contract/principal for trustless LN -> STX interaction.
 
 (define-trait claim-trait
   (
