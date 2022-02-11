@@ -26,7 +26,7 @@ import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksRaw
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
-import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapUpdateEvent } from '../consts/Enums';
+import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapType, SwapUpdateEvent } from '../consts/Enums';
 import {
   Balance,
   ChainInfo,
@@ -58,6 +58,7 @@ import {
 } from '../Utils';
 
 import mempoolJS from "@mempool/mempool.js";
+import axios from 'axios';
 const { bitcoin: { transactions } } = mempoolJS({
   hostname: 'mempool.space'
 });
@@ -1561,12 +1562,34 @@ class Service {
     };
   }
 
-  public registerClient = async (stacksAddress: string, nodeId: string, pairs: Map<string, PairType>,): Promise<{
+  public forwardSwap = async (req: Request, swapType: string): Promise<{
+    // id: string,
+    // invoice: string,
+    response: Response,
+  }> => {
+
+    const provider = this.clientRepository.findRandom()[0];
+
+    let response;
+    switch (swapType) {
+      case SwapType.Submarine:
+        response = await axios.post(`${provider.url}/createswap`, req.body);
+        break;
+
+      case SwapType.ReverseSubmarine:
+        response = await axios.post(`${provider.url}/createreverseswap`, req.body);
+        break;
+    }
+
+    return {response};
+  };
+
+  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: Map<string, PairType>,): Promise<{
     // id: string,
     // invoice: string,
     result: boolean,
   }> => {
-    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${JSON.stringify(pairs)}`);
+    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)}`);
 
     // if(stxAmount < 0) {
     //   throw Errors.MINT_COST_MISMATCH();
@@ -1578,6 +1601,7 @@ class Service {
       id,
       stacksAddress,
       nodeId,
+      url,
       pairs,
     });
 

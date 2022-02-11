@@ -1,5 +1,5 @@
 // import { PairType } from './models/Pair';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import Client, { ClientType } from './models/Client';
 
 class ClientRepository {
@@ -20,6 +20,16 @@ class ClientRepository {
           [Op.lte]: nodeId,
         },
       }
+    });
+  }
+
+  public findRandom = (): Promise<Client[]> => {
+    return Client.findAll({
+      order: [
+        Sequelize.fn( 'RAND' ),
+      ],
+
+      limit: 1,
     });
   }
 

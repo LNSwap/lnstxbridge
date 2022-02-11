@@ -86,6 +86,7 @@ class Api {
 
     // aggregator
     this.app.route('/registerclient').post(controller.registerClient);
+    this.app.route('/zcreateswap').post(controller.zcreateSwap);
   }
 }
 

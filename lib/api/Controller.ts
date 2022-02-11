@@ -301,6 +301,23 @@ class Controller {
     }
   }
 
+  public zcreateSwap = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { type } = this.validateRequest(req.body, [
+        { name: 'type', type: 'string' },
+      ]);
+
+      const swapType = this.parseSwapType(type);
+
+      // forward it to potential swap providers
+      const response = await this.service.forwardSwap(req.body, swapType);
+
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   private createSubmarineSwap = async (req: Request, res: Response) => {
     const {
       pairId,
@@ -458,14 +475,15 @@ class Controller {
   // new endpoint to registerClients that want to join swap provider network
   public registerClient = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { stacksAddress, nodeId, pairs } = this.validateRequest(req.body, [
+      const { stacksAddress, nodeId, url, pairs } = this.validateRequest(req.body, [
         { name: 'stacksAddress', type: 'string' },
         { name: 'nodeId', type: 'string' },
+        { name: 'url', type: 'string' },
         { name: 'pairs', type: 'object',  },
         // { name: 'stxAmount', type: 'number', optional: true },
       ]);
 
-      const response = await this.service.registerClient(stacksAddress, nodeId, pairs);
+      const response = await this.service.registerClient(stacksAddress, nodeId, url, pairs);
       this.successResponse(res, response);
     } catch (error) {
       this.errorResponse(req, res, error);
