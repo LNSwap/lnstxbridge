@@ -1686,20 +1686,27 @@ class Service {
     return {txData};
   }
 
-  // // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
-  // public getPendingSwapInfos = async (id: string): Promise<{
-  //   // txData: StacksTransaction,
-  //   swapStatus: string,
-  //   // tx: transac,
-  //   // result: boolean,
-  // }>  => {
-  //   // check db to find out which provider is doing this swap id
-  //   const providerUrl = '';
-  //   const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
-  //     id,
-  //   });
-  //   return {swapStatus: swapStatus.data};
-  // }
+  // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
+  public getPendingSwapInfos = async (id: string): Promise<{
+    // txData: StacksTransaction,
+    swapStatus: string,
+    // tx: transac,
+    // result: boolean,
+  }>  => {
+    // check db to find out which provider is doing this swap id
+    // it is better to track swap creation vs full swap status in providerSwap table
+    const providerSwap = await this.providerSwapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    const providerUrl = providerSwap?.providerUrl;
+    const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+      id,
+    });
+    return {swapStatus: swapStatus.data};
+  }
 
   // this is for provider to update the swap status
   public updateSwapStatus = async (id: string, status: string, txId?: string, failureReason?: string, ): Promise<{
