@@ -11,6 +11,7 @@ import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
 // import ChainTipRepository from 'lib/db/ChainTipRepository';
+import StacksTransactionRepository from '../../db/StacksTransactionRepository';
 
 // let network:string = "mocknet";
 // let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/extended/v1/ws'
@@ -54,6 +55,8 @@ class ContractEventHandler extends EventEmitter {
   private sip10contractAddress!: string;
   private sip10contractName!: string;
 
+  private stacksTransactionRepository: StacksTransactionRepository;
+
   constructor(
     private logger: Logger,
   ) {
@@ -75,6 +78,7 @@ class ContractEventHandler extends EventEmitter {
     this.logger.verbose('Stacks Starting contract event subscriptions');
     this.subscribeContractEvents(contract);
     this.subscribeTokenContractEvents(sip10contract);
+    this.stacksTransactionRepository = new StacksTransactionRepository();
   }
 
   public rescan = async (startHeight: number): Promise<void> => {
@@ -332,7 +336,12 @@ class ContractEventHandler extends EventEmitter {
       const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
       const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
       const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
+      const claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=='claimPrincipal')[0].repr;
+      const swapContract = txData.contract_call.contract_id;
       console.log('checkTx lockFound fetched from contract call: ', preimageHash,amount,claimAddress,refundAddress,timelock);
+
+      // add found lock data to stackstransactionrepository to be consumed by other swap providers
+      this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, swapContract);
 
       // got all the data now check if we have the swap
       this.emit(
@@ -526,7 +535,11 @@ class ContractEventHandler extends EventEmitter {
       const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
       const tokenPrincipal = txData.contract_call.function_args.filter(a=>a.name=='tokenPrincipal')[0].repr;
       const claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=='claimPrincipal')[0].repr;
+      const swapContract = txData.contract_call.contract_id;
       console.log('checkTokenTx lockFound fetched from contract call: ', preimageHash,amount,claimAddress,tokenAddress,timelock);
+
+      // add found lock data to stackstransactionrepository to be consumed by other swap providers
+      this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, swapContract);
 
       // got all the data now check if we have the swap
       this.emit(
