@@ -83,6 +83,9 @@ class Api {
 
     // EventSource streams
     this.app.route('/streamswapstatus').get(controller.streamSwapStatus);
+
+    // aggregator
+    this.app.route('/registerclient').post(controller.registerClient);
   }
 }
 

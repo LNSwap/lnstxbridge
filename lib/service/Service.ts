@@ -11,6 +11,9 @@ import { ConfigType } from '../Config';
 import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
+import ClientRepository from '../db/ClientRepository';
+// import {PairType as PT} from '../db/models/Client';
+// import PairType from "../db/models/Client"
 import DirectSwapRepository from '../db/DirectSwapRepository';
 import { encodeBip21 } from './PaymentRequestUtils';
 import InvoiceExpiryHelper from './InvoiceExpiryHelper';
@@ -78,6 +81,7 @@ class Service {
 
   private pairRepository: PairRepository;
   private directSwapRepository: DirectSwapRepository;
+  private clientRepository: ClientRepository;
 
   private timeoutDeltaProvider: TimeoutDeltaProvider;
 
@@ -98,6 +102,7 @@ class Service {
     this.logger.debug(`Prepay miner fee for Reverse Swaps is ${this.prepayMinerFee ? 'enabled' : 'disabled' }`);
 
     this.pairRepository = new PairRepository();
+    this.clientRepository = new ClientRepository();
     this.directSwapRepository = new DirectSwapRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
 
@@ -159,7 +164,7 @@ class Service {
         this.logger.silly(`Added pair to database: ${id}`);
       }
     }
-    
+
     this.logger.verbose('Updated pairs in the database');
 
     this.timeoutDeltaProvider.init(configPairs);
@@ -413,7 +418,7 @@ class Service {
       // regtest
       return await currency.chainClient.getRawTransaction(transactionHash);
     }
-    
+
     // return await currency.chainClient.getRawTransaction(transactionHash);
   }
 
@@ -754,12 +759,12 @@ class Service {
       // verify client-side input
       if (args.quoteAmount && (args.requestedAmount != Math.floor(args.quoteAmount*10**6))) {
         console.log('s.730 VERIFICATION FAILED requestedAmount vs quoteAmount', args.requestedAmount, args.quoteAmount*10**6, args.requestedAmount !== args.quoteAmount*10**6);
-        throw Errors.INVALID_PARAMETER()
+        throw Errors.INVALID_PARAMETER();
       }
       if (expectedAmount < response.submarineSwap.invoiceAmount/10**8) {
         console.log('s.733 VERIFICATION FAILED expectedAmount (user will lock) vs invoiceAmount (operator will pay) ', expectedAmount, response.submarineSwap.invoiceAmount/10**8);
-        throw Errors.WRONG_RATE()
-      }      
+        throw Errors.WRONG_RATE();
+      }
 
       // acceptZeroConf = true;
       bip21 = encodeBip21(
@@ -796,7 +801,7 @@ class Service {
 
       // console.log('TODO: more validation NEEDED'); //done
       if (response.onchainAmount && args.quoteAmount && (args.quoteAmount > response.onchainAmount/100)) {
-        throw Errors.WRONG_RATE()
+        throw Errors.WRONG_RATE();
       }
 
     } else {
@@ -965,7 +970,7 @@ class Service {
         throw Errors.WRONG_RATE();
       }
 
-      console.log('s.899 ', 'user requested ', requestedAmount, ' stx/usda for ',  )
+      console.log('s.899 ', 'user requested ', requestedAmount, ' stx/usda for ',  );
 
     } else {
       // requested amount in mstx
@@ -975,7 +980,7 @@ class Service {
       invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       console.log('s.784 requestedAmount, onchainAmount, invoiceAmount', requestedAmount, onchainAmount, invoiceAmount);
 
-      
+
 
       // let originvoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       // invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
@@ -991,7 +996,7 @@ class Service {
       // if (this.catchRates((requestedAmount*rate)/10**6, invoiceAmount/10**8)){
       //   throw Errors.WRONG_RATE();
       // }
-      
+
       console.log('s.902 getManualRates: ', {
         onchainAmount: swap.onchainAmount,
         submarineSwap: {
@@ -1020,11 +1025,11 @@ class Service {
    public catchRates = (operatorSide: number, userSide: number): boolean => {
     // operatorSide = requestedAmount*rate - lnswap is sending this
     // userSide = invoiceAmount calculated in backend - lnswap is receiving this
-    
+
     // Accept spread due to fees
     if (operatorSide*1.01 > userSide ) {
       console.log('s.940 caught rate issue');
-      // 
+      //
       // || amountOne < amountTwo*0.97
       // throw Errors.WRONG_RATE();
       return true;
@@ -1497,16 +1502,16 @@ class Service {
 
     if(stxAmount < 0) {
       throw Errors.MINT_COST_MISMATCH();
-    } 
+    }
 
     // check contract signature to see how much it would cost to mint
     // find a previous call of the same function and add up stx transfers of that call
     const mintCostStx = stxAmount * 10**6; // 10000000;
     const calcMintCostStx = await calculateStxOutTx(nftAddress, contractSignature!);
     if(calcMintCostStx && calcMintCostStx > mintCostStx) {
-      this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);  
+      this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);
       throw Errors.MINT_COST_MISMATCH();
-    } 
+    }
     // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
 
     // TODO: maybe add whitelisted NFT contracts to avoid issues?
@@ -1527,7 +1532,7 @@ class Service {
     this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
 
     // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
-    const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
+    const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate);
     // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
     this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
 
@@ -1539,7 +1544,7 @@ class Service {
     const id = generateId();
     this.directSwapRepository.addDirectSwap({
       id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
-    })
+    });
     this.eventHandler.emitSwapCreation(id);
 
     // listen to invoice payment
@@ -1553,9 +1558,84 @@ class Service {
     return {
       id,
       invoice: invoice!.paymentRequest
-    }
+    };
   }
 
+  public registerClient = async (stacksAddress: string, nodeId: string, pairs: Map<string, PairType>,): Promise<{
+    // id: string,
+    // invoice: string,
+    result: boolean,
+  }> => {
+    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${JSON.stringify(pairs)}`);
+
+    // if(stxAmount < 0) {
+    //   throw Errors.MINT_COST_MISMATCH();
+    // }
+
+    const id = generateId();
+    // save to db as a potential swap provider
+    await this.clientRepository.addClient({
+      id,
+      stacksAddress,
+      nodeId,
+      pairs,
+    });
+
+    // // check contract signature to see how much it would cost to mint
+    // // find a previous call of the same function and add up stx transfers of that call
+    // const mintCostStx = stxAmount * 10**6; // 10000000;
+    // const calcMintCostStx = await calculateStxOutTx(nftAddress, contractSignature!);
+    // if(calcMintCostStx && calcMintCostStx > mintCostStx) {
+    //   this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);
+    //   throw Errors.MINT_COST_MISMATCH();
+    // }
+    // // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
+
+    // // TODO: maybe add whitelisted NFT contracts to avoid issues?
+
+    // // add a check to make sure lnswap signer has enough funds before creating swap
+    // const signerBalances = await getAddressAllBalances();
+    // console.log('s.1504 signerBalances ', signerBalances);
+    // if (mintCostStx > signerBalances['STX']) {
+    //   throw Errors.EXCEEDS_SWAP_LIMIT();
+    // }
+
+    // // convert to BTC + fees + generate LN invoice
+    // const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');
+    // this.logger.verbose(`s.1488 sendingAmountRate ${sendingAmountRate}`); //18878.610534264677
+
+    // const percentageFee = this.rateProvider.feeProvider.getPercentageFee('BTC/STX');
+    // const baseFee = this.rateProvider.feeProvider.getBaseFee('STX', BaseFeeType.NormalClaim);
+    // this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
+
+    // // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
+    // const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
+    // // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
+    // this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
+
+    // const currency = this.getCurrency('BTC');
+    // const invoice = await currency.lndClient?.addInvoice(invoiceAmount, undefined, `Mint NFT for ${nftAddress}`);
+    // this.logger.verbose(`s.1499 mintNFT invoice ${invoice?.paymentRequest}`);
+
+    // // create swap + enter info in db in a new table
+    // const id = generateId();
+    // this.directSwapRepository.addDirectSwap({
+    //   id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
+    // })
+    // this.eventHandler.emitSwapCreation(id);
+
+    // // listen to invoice payment
+    // this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
+    // // dont subscribe to each invoice separately - subscribing to all in lndclient
+    // // currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
+
+    // // call contract so user gets NFT upon LN payment
+    // // listener is started at the beginning which will handle this.
+
+    return {
+      result: true,
+    };
+  }
 
   /**
    * Verifies that the requested amount is neither above the maximal nor beneath the minimal
@@ -1698,7 +1778,7 @@ class Service {
             await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
             this.logger.verbose(`s.1533 directSwap ${directSwap.id} updated with txId ${txId}`);
             this.eventHandler.emitSwapNftMinted(directSwap.id, txId);
-          } 
+          }
           if (txId.includes('error')) {
             this.logger.error(`s.1561 directSwap ${directSwap.id} failed with error ${txId}`);
             await this.directSwapRepository.setSwapStatus(directSwap, 'transaction.failed', txId, txId);
@@ -1727,7 +1807,7 @@ class Service {
         //     await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
         //     this.logger.verbose(`s.1533 directSwap ${id} updated with txId ${txId}`);
         //     this.eventHandler.emitSwapNftMinted(id, txId);
-        //   } 
+        //   }
         //   if (directSwap && txId.includes('error')) {
         //     this.logger.error(`s.1561 directSwap ${id} failed with error ${txId}`);
         //     await this.directSwapRepository.setSwapStatus(directSwap, 'transaction.failed', txId, txId);

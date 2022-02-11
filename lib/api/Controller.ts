@@ -455,6 +455,23 @@ class Controller {
     }
   }
 
+  // new endpoint to registerClients that want to join swap provider network
+  public registerClient = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { stacksAddress, nodeId, pairs } = this.validateRequest(req.body, [
+        { name: 'stacksAddress', type: 'string' },
+        { name: 'nodeId', type: 'string' },
+        { name: 'pairs', type: 'object',  },
+        // { name: 'stxAmount', type: 'number', optional: true },
+      ]);
+
+      const response = await this.service.registerClient(stacksAddress, nodeId, pairs);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   // EventSource streams
   public streamSwapStatus = (req: Request, res: Response): void => {
     try {
