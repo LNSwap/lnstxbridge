@@ -1588,6 +1588,13 @@ class Service {
         break;
     }
 
+    // once created save info to aggregator db
+    this.providerSwapRepository.addProviderSwap({
+      id: response.data.id,
+      providerUrl: provider.url,
+      status: 'swap.created',
+    });
+
     return {response};
   };
 
