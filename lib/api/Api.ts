@@ -88,7 +88,7 @@ class Api {
     this.app.route('/registerclient').post(controller.registerClient);
     this.app.route('/zcreateswap').post(controller.zcreateSwap);
     this.app.route('/getlocked').post(controller.getLocked);
-    // this.app.route('/zswapstatus').post(controller.zswapStatus);
+    this.app.route('/zswapstatus').post(controller.zswapStatus);
     this.app.route('/updateswapstatus').post(controller.updateSwapStatus);
   }
 }
