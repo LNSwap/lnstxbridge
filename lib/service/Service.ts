@@ -12,6 +12,8 @@ import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
 import ClientRepository from '../db/ClientRepository';
+import StacksTransactionRepository from '../db/StacksTransactionRepository';
+import StacksTransaction from '../db/models/StacksTransaction';
 // import {PairType as PT} from '../db/models/Client';
 // import PairType from "../db/models/Client"
 import DirectSwapRepository from '../db/DirectSwapRepository';
@@ -83,6 +85,7 @@ class Service {
   private pairRepository: PairRepository;
   private directSwapRepository: DirectSwapRepository;
   private clientRepository: ClientRepository;
+  private stacksTransactionRepository: StacksTransactionRepository;
 
   private timeoutDeltaProvider: TimeoutDeltaProvider;
 
@@ -104,6 +107,7 @@ class Service {
 
     this.pairRepository = new PairRepository();
     this.clientRepository = new ClientRepository();
+    this.stacksTransactionRepository = new StacksTransactionRepository();
     this.directSwapRepository = new DirectSwapRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
 
@@ -1661,6 +1665,23 @@ class Service {
     };
   }
 
+  public getLocked = async (preimageHash: string, swapContractAddress: string, ): Promise<{
+    txData: StacksTransaction,
+    // invoice: string,
+    // tx: transac,
+
+  }> => {
+    this.logger.verbose(`s.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
+
+    // check if any funds locked into swap contract with preimageHash
+    const txData = this.stacksTransactionRepository.findByPreimageHash(preimageHash)[0];
+
+    // if(stxAmount < 0) {
+    //   throw Errors.MINT_COST_MISMATCH();
+    // }
+
+    return {txData};
+  }
   /**
    * Verifies that the requested amount is neither above the maximal nor beneath the minimal
    */

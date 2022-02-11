@@ -490,6 +490,24 @@ class Controller {
     }
   }
 
+    // new endpoint to registerClients that want to join swap provider network
+    public getLocked = async (req: Request, res: Response): Promise<void> => {
+      try {
+        const { preimageHash, swapContractAddress } = this.validateRequest(req.body, [
+          { name: 'preimageHash', type: 'string' },
+          // { name: 'amount', type: 'string' },
+          // { name: 'claimPrincipal', type: 'string' },
+          { name: 'swapContractAddress', type: 'string', },
+          // { name: 'stxAmount', type: 'number', optional: true },
+        ]);
+  
+        const response = await this.service.getLocked(preimageHash, swapContractAddress);
+        this.successResponse(res, response);
+      } catch (error) {
+        this.errorResponse(req, res, error);
+      }
+    }
+
   // EventSource streams
   public streamSwapStatus = (req: Request, res: Response): void => {
     try {
