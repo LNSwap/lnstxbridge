@@ -1683,6 +1683,22 @@ class Service {
     return {txData};
   }
 
+  // // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
+  // public getPendingSwapInfos = async (id: string): Promise<{
+  //   // txData: StacksTransaction,
+  //   swapStatus: string,
+  //   // tx: transac,
+  //   // result: boolean,
+  // }>  => {
+  //   // check db to find out which provider is doing this swap id
+  //   const providerUrl = '';
+  //   const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+  //     id,
+  //   });
+  //   return {swapStatus: swapStatus.data};
+  // }
+
+  // this is for provider to update the swap status
   public updateSwapStatus = async (id: string, status: string, ): Promise<{
     // txData: StacksTransaction,
     // invoice: string,
@@ -1691,17 +1707,10 @@ class Service {
   }> => {
     this.logger.verbose(`s.1692 updateSwapStatus with ${id}, ${status}, `);
 
-    // update the zswapstatus from provider to user
+    // update the zswapstatus from provider to user - zswapdb = just id + status
     
 
-    // check if any funds locked into swap contract with preimageHash
-    const txData = this.stacksTransactionRepository.findByPreimageHash(preimageHash)[0];
-
-    // if(stxAmount < 0) {
-    //   throw Errors.MINT_COST_MISMATCH();
-    // }
-
-    return {txData};
+    return {result: true};
   }
 
   /**

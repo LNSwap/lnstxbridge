@@ -224,23 +224,23 @@ class Controller {
     }
   }
 
-  public zswapStatus = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = this.validateRequest(req.body, [
-        { name: 'id', type: 'string' },
-      ]);
+  // public zswapStatus = async (req: Request, res: Response): Promise<void> => {
+  //   try {
+  //     const { id } = this.validateRequest(req.body, [
+  //       { name: 'id', type: 'string' },
+  //     ]);
 
-      const response = this.service.getPendingSwapInfos.get(id);
+  //     const response = this.service.getPendingSwapInfos(id);
 
-      if (response) {
-        this.successResponse(res, response);
-      } else {
-        this.errorResponse(req, res, `could not find swap with id: ${id}`, 404);
-      }
-    } catch (error) {
-      this.errorResponse(req, res, error);
-    }
-  }
+  //     if (response) {
+  //       this.successResponse(res, response);
+  //     } else {
+  //       this.errorResponse(req, res, `could not find swap with id: ${id}`, 404);
+  //     }
+  //   } catch (error) {
+  //     this.errorResponse(req, res, error);
+  //   }
+  // }
 
   public swapRates = async (req: Request, res: Response): Promise<void> => {
     try {
