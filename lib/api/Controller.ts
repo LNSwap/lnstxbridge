@@ -529,15 +529,17 @@ class Controller {
   // new endpoint to registerClients that want to join swap provider network
   public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id, status } = this.validateRequest(req.body, [
+      const { id, status, txId, failureReason } = this.validateRequest(req.body, [
         { name: 'id', type: 'string' },
         { name: 'status', type: 'string' },
+        { name: 'txId', type: 'string', optional: true },
+        { name: 'failureReason', type: 'string', optional: true },
         // { name: 'claimPrincipal', type: 'string' },
         // { name: 'swapContractAddress', type: 'string', },
         // { name: 'stxAmount', type: 'number', optional: true },
       ]);
 
-      const response = await this.service.updateSwapStatus(id, status);
+      const response = await this.service.updateSwapStatus(id, status, txId, failureReason);
       this.successResponse(res, response);
     } catch (error) {
       this.errorResponse(req, res, error);

@@ -14,6 +14,7 @@ import PairRepository from '../db/PairRepository';
 import ClientRepository from '../db/ClientRepository';
 import StacksTransactionRepository from '../db/StacksTransactionRepository';
 import StacksTransaction from '../db/models/StacksTransaction';
+import ProviderSwapRepository from '../db/ProviderSwapRepository';
 // import {PairType as PT} from '../db/models/Client';
 // import PairType from "../db/models/Client"
 import DirectSwapRepository from '../db/DirectSwapRepository';
@@ -86,6 +87,7 @@ class Service {
   private directSwapRepository: DirectSwapRepository;
   private clientRepository: ClientRepository;
   private stacksTransactionRepository: StacksTransactionRepository;
+  private providerSwapRepository: ProviderSwapRepository;
 
   private timeoutDeltaProvider: TimeoutDeltaProvider;
 
@@ -110,6 +112,7 @@ class Service {
     this.stacksTransactionRepository = new StacksTransactionRepository();
     this.directSwapRepository = new DirectSwapRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
+    this.providerSwapRepository = new ProviderSwapRepository();
 
     console.log('service.ts 88');
     this.rateProvider = new RateProvider(
@@ -1699,16 +1702,25 @@ class Service {
   // }
 
   // this is for provider to update the swap status
-  public updateSwapStatus = async (id: string, status: string, ): Promise<{
+  public updateSwapStatus = async (id: string, status: string, txId?: string, failureReason?: string, ): Promise<{
     // txData: StacksTransaction,
     // invoice: string,
     // tx: transac,
     result: boolean,
   }> => {
-    this.logger.verbose(`s.1692 updateSwapStatus with ${id}, ${status}, `);
+    this.logger.verbose(`s.1711 updateSwapStatus with ${id}, ${status}, `);
 
-    // update the zswapstatus from provider to user - zswapdb = just id + status
-    
+    const providerSwap = await this.providerSwapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    if(!providerSwap) {
+      throw new Error('providerSwap not found!');
+    }
+    // update the zswapstatus from provider to user - providerSwapRepository = just id + status
+    await this.providerSwapRepository.setSwapStatus(providerSwap, status, txId, failureReason);
 
     return {result: true};
   }
