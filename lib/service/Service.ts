@@ -1682,6 +1682,28 @@ class Service {
 
     return {txData};
   }
+
+  public updateSwapStatus = async (id: string, status: string, ): Promise<{
+    // txData: StacksTransaction,
+    // invoice: string,
+    // tx: transac,
+    result: boolean,
+  }> => {
+    this.logger.verbose(`s.1692 updateSwapStatus with ${id}, ${status}, `);
+
+    // update the zswapstatus from provider to user
+    
+
+    // check if any funds locked into swap contract with preimageHash
+    const txData = this.stacksTransactionRepository.findByPreimageHash(preimageHash)[0];
+
+    // if(stxAmount < 0) {
+    //   throw Errors.MINT_COST_MISMATCH();
+    // }
+
+    return {txData};
+  }
+
   /**
    * Verifies that the requested amount is neither above the maximal nor beneath the minimal
    */

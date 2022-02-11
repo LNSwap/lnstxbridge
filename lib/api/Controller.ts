@@ -224,6 +224,24 @@ class Controller {
     }
   }
 
+  public zswapStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = this.validateRequest(req.body, [
+        { name: 'id', type: 'string' },
+      ]);
+
+      const response = this.service.getPendingSwapInfos.get(id);
+
+      if (response) {
+        this.successResponse(res, response);
+      } else {
+        this.errorResponse(req, res, `could not find swap with id: ${id}`, 404);
+      }
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   public swapRates = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = this.validateRequest(req.body, [
@@ -490,24 +508,41 @@ class Controller {
     }
   }
 
-    // new endpoint to registerClients that want to join swap provider network
-    public getLocked = async (req: Request, res: Response): Promise<void> => {
-      try {
-        const { preimageHash, swapContractAddress } = this.validateRequest(req.body, [
-          { name: 'preimageHash', type: 'string' },
-          // { name: 'amount', type: 'string' },
-          // { name: 'claimPrincipal', type: 'string' },
-          { name: 'swapContractAddress', type: 'string', },
-          // { name: 'stxAmount', type: 'number', optional: true },
-        ]);
-  
-        const response = await this.service.getLocked(preimageHash, swapContractAddress);
-        this.successResponse(res, response);
-      } catch (error) {
-        this.errorResponse(req, res, error);
-      }
-    }
+  // new endpoint to registerClients that want to join swap provider network
+  public getLocked = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { preimageHash, swapContractAddress } = this.validateRequest(req.body, [
+        { name: 'preimageHash', type: 'string' },
+        // { name: 'amount', type: 'string' },
+        // { name: 'claimPrincipal', type: 'string' },
+        { name: 'swapContractAddress', type: 'string', },
+        // { name: 'stxAmount', type: 'number', optional: true },
+      ]);
 
+      const response = await this.service.getLocked(preimageHash, swapContractAddress);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
+  // new endpoint to registerClients that want to join swap provider network
+  public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id, status } = this.validateRequest(req.body, [
+        { name: 'id', type: 'string' },
+        { name: 'status', type: 'string' },
+        // { name: 'claimPrincipal', type: 'string' },
+        // { name: 'swapContractAddress', type: 'string', },
+        // { name: 'stxAmount', type: 'number', optional: true },
+      ]);
+
+      const response = await this.service.updateSwapStatus(id, status);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
   // EventSource streams
   public streamSwapStatus = (req: Request, res: Response): void => {
     try {
