@@ -11,6 +11,9 @@ import { Currency } from '../wallet/WalletManager';
 import DatabaseVersion from './models/DatabaseVersion';
 import ChannelCreation from './models/ChannelCreation';
 import PendingEthereumTransaction from './models/PendingEthereumTransaction';
+import Client from './models/Client';
+import ProviderSwap from './models/ProviderSwap';
+import StacksTransaction from './models/StacksTransaction';
 
 class Db {
   public sequelize: Sequelize.Sequelize;
@@ -49,6 +52,9 @@ class Db {
       KeyProvider.sync(),
       DatabaseVersion.sync(),
       PendingEthereumTransaction.sync(),
+      Client.sync(),
+      ProviderSwap.sync(),
+      StacksTransaction.sync(),
     ]);
 
     await Promise.all([
@@ -77,6 +83,9 @@ class Db {
     ChannelCreation.load(this.sequelize);
     DatabaseVersion.load(this.sequelize);
     PendingEthereumTransaction.load(this.sequelize);
+    Client.load(this.sequelize);
+    ProviderSwap.load(this.sequelize);
+    StacksTransaction.load(this.sequelize);
   }
 }
 
