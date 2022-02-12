@@ -252,8 +252,11 @@ export const getAccountNonce = async (initAddress?: string) => {
     queryAddress = initAddress;
   }
   // console.log(`getAccountInfo ${queryAddress}`);
+
   // https://stacks-node-api.mainnet.stacks.co/extended/v1/address/{principal}/nonces
-  const url = `${coreApiUrl}/extended/v1/address/${queryAddress}/nonces`;
+  // use stacks instance due to nonce issue!
+  // const url = `${coreApiUrl}/extended/v1/address/${queryAddress}/nonces`;
+  const url = `https://stacks-node-api.mainnet.stacks.co/extended/v1/address/${queryAddress}/nonces`;
   try {
     const response = await axios.get(url)
     // console.log("stacksutils getAccountNonce", response.data);
