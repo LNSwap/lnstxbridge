@@ -1569,29 +1569,40 @@ class Service {
     };
   }
 
-  public forwardSwap = async (req: Request, swapType: string): Promise<{
+  public forwardSwap = async (req: string, swapType: string): Promise<{
     // id: string,
     // invoice: string,
     response: Response,
   }> => {
 
-    const provider = this.clientRepository.findRandom()[0];
+    const provider = await this.clientRepository.findRandom();
+    console.log('service.1579 provider ', provider[0].url);
 
+    // const allProviders = await this.clientRepository.getAll();
+    // console.log('service.1582 allProviders ', allProviders);
+    // var randomProvider = allProviders[Math.floor(Math.random()*allProviders.length)];
+    // console.log('service.1582 randomProvider ', randomProvider);
+
+    if(provider.length == 0) {
+      throw new Error('No providers found');
+    }
+
+    console.log('service.1590 post ', `${provider[0].url}/createswap`,req)
     let response;
     switch (swapType) {
       case SwapType.Submarine:
-        response = await axios.post(`${provider.url}/createswap`, req.body);
+        response = await axios.post(`${provider[0].url}/createswap`, req);
         break;
 
       case SwapType.ReverseSubmarine:
-        response = await axios.post(`${provider.url}/createreverseswap`, req.body);
+        response = await axios.post(`${provider[0].url}/createreverseswap`, req);
         break;
     }
 
     // once created save info to aggregator db
     this.providerSwapRepository.addProviderSwap({
       id: response.data.id,
-      providerUrl: provider.url,
+      providerUrl: provider[0].url,
       status: 'swap.created',
     });
 

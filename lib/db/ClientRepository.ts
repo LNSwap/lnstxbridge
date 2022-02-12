@@ -36,11 +36,16 @@ class ClientRepository {
   public findRandom = (): Promise<Client[]> => {
     return Client.findAll({
       order: [
-        Sequelize.fn( 'RAND' ),
+        // Sequelize.fn( 'RANDOM' ),
+        Sequelize.literal('RANDOM()')
       ],
 
       limit: 1,
     });
+  }
+
+  public getAll = (): Promise<Client[]> => {
+    return Client.findAll();
   }
 
   public addClient = (client: ClientType): Promise<ClientType> => {
