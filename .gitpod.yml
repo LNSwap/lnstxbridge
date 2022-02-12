@@ -83,11 +83,15 @@ tasks:
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-client /workspace/lnstxbridge-client
         cd /workspace/lnstxbridge-client
+        sleep 120
         npm i
         sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
         mkdir ~/.lnstx-client
         cp boltz.conf ~/.lnstx-client/boltz.conf
         echo "diamond harbor game bird when board caution improve sight scorpion inform income" > ~/.lnstx-client/seed.dat
+        mkdir ~/.lnstx-client/lnd
+        docker cp regtest:/root/.lnd-btc2/tls.cert ~/.lnstx-client/lnd/tls.cert
+        docker cp regtest:/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon ~/.lnstx-client/lnd/admin.macaroon
     command: npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
