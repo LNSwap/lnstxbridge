@@ -45,9 +45,9 @@ tasks:
       sleep 5
       SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP npm run stacks:fund:signer
       sleep 10
-      sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v1.clar
+      sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v3.clar
       npm run stacks:deploy
-      sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v1.clar
+      sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v3.clar
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
@@ -68,7 +68,7 @@ tasks:
     command: npm run start
   - init: brew install clarinet
     command: |
-        sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v1.clar
+        sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v3.clar
         clarinet test
   - init: |
         echo 'npm run compile:watch'
