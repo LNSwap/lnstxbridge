@@ -23,6 +23,16 @@ class ClientRepository {
     });
   }
 
+  public findByUrl = (url: string): Promise<Client[]> => {
+    return Client.findAll({
+      where: {
+        url: {
+          [Op.lte]: url,
+        },
+      }
+    });
+  }
+
   public findRandom = (): Promise<Client[]> => {
     return Client.findAll({
       order: [

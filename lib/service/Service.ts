@@ -1609,6 +1609,14 @@ class Service {
     //   throw Errors.MINT_COST_MISMATCH();
     // }
 
+    // check if this url exists already
+    const client = await this.clientRepository.findByUrl(url);
+    console.log('service.1614 checking if url exist in clientdb already ', client);
+
+    if(client) {
+      throw new Error('Client url exists already');
+    }
+
     const id = generateId();
     // save to db as a potential swap provider
     await this.clientRepository.addClient({
