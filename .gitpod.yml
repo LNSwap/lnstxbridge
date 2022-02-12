@@ -85,10 +85,10 @@ tasks:
         cd /workspace/lnstxbridge-client
         npm i
         sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
-      # mkdir ~/.lnstx-client
-      # cp boltz.conf ~/.lnstx-client/boltz.conf
-      # echo "bronze large spike canoe youth crucial seminar awkward allow frozen client math" > ~/.lnstx-client/seed.dat
-    command: npm run start
+        mkdir ~/.lnstx-client
+        cp boltz.conf ~/.lnstx-client/boltz.conf
+        echo "diamond harbor game bird when board caution improve sight scorpion inform income" > ~/.lnstx-client/seed.dat
+    command: npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
