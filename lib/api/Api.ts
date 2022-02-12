@@ -84,11 +84,16 @@ class Api {
     // EventSource streams
     this.app.route('/streamswapstatus').get(controller.streamSwapStatus);
 
-    // aggregator
+    // aggregator endpoints
+    // provider -> aggregator
     this.app.route('/registerclient').post(controller.registerClient);
+    // frontend -> aggregator -> provider
     this.app.route('/zcreateswap').post(controller.zcreateSwap);
+    // provider -> aggregator
     this.app.route('/getlocked').post(controller.getLocked);
+    // frontend -> aggregator -> provider
     this.app.route('/zswapstatus').post(controller.zswapStatus);
+    // provider -> aggregator
     this.app.route('/updateswapstatus').post(controller.updateSwapStatus);
   }
 }

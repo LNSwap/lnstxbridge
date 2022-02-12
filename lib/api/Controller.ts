@@ -526,7 +526,7 @@ class Controller {
     }
   }
 
-  // new endpoint to registerClients that want to join swap provider network
+  // new endpoint for providers to update providerSwap status
   public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id, status, txId, failureReason } = this.validateRequest(req.body, [
