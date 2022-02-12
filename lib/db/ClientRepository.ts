@@ -46,6 +46,26 @@ class ClientRepository {
   public addClient = (client: ClientType): Promise<ClientType> => {
     return Client.create(client);
   }
+
+  public removeClient = (id: string): Promise<number> => {
+    return Client.destroy({
+      where: {
+        id: {
+          [Op.eq]: id,
+        },
+      },
+    });
+  }
+
+  public updateClient = (client: Client, stacksAddress: string, nodeId: string, url: string, pairs: string): Promise<Client> => {
+    return client.update({
+      stacksAddress,
+      nodeId,
+      url,
+      pairs,
+    });
+  }
+
 }
 
 export default ClientRepository;

@@ -1598,7 +1598,7 @@ class Service {
     return {response};
   };
 
-  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: Map<string, PairType>,): Promise<{
+  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object,): Promise<{
     // id: string,
     // invoice: string,
     result: boolean,
@@ -1611,21 +1611,23 @@ class Service {
 
     // check if this url exists already
     const client = await this.clientRepository.findByUrl(url);
-    console.log('service.1614 checking if url exist in clientdb already ', client);
-
-    if(client) {
-      throw new Error('Client url exists already');
+    // console.log('service.1614 checking if url exist in clientdb already ', client);
+    const strPairs = JSON.stringify(pairs);
+    // dont reject re-registration just update?
+    if(client.length > 0) {
+      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs);
+      // throw new Error('Client url exists already');
+    } else {
+      const id = generateId();
+      // save to db as a potential swap provider
+      await this.clientRepository.addClient({
+        id,
+        stacksAddress,
+        nodeId,
+        url,
+        pairs: strPairs,
+      });
     }
-
-    const id = generateId();
-    // save to db as a potential swap provider
-    await this.clientRepository.addClient({
-      id,
-      stacksAddress,
-      nodeId,
-      url,
-      pairs,
-    });
 
     // // check contract signature to see how much it would cost to mint
     // // find a previous call of the same function and add up stx transfers of that call

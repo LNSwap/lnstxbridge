@@ -1,13 +1,14 @@
 import { Model, Sequelize, DataTypes } from 'sequelize';
 // import { PairType } from './Pair';
-import { PairType } from '../../rates/RateProvider';
+// import { PairType } from '../../rates/RateProvider';
 
 type ClientType = {
   id: string;
   stacksAddress: string;
   nodeId: string;
   url: string;
-  pairs: Map<string, PairType>;
+  // pairs: Map<string, PairType>;
+  pairs: string;
 };
 
 class Client extends Model implements ClientType {
@@ -15,7 +16,8 @@ class Client extends Model implements ClientType {
   public stacksAddress!: string;
   public nodeId!: string;
   public url!: string;
-  public pairs!: Map<string, PairType>;
+  // public pairs!: Map<string, PairType>;
+  public pairs!: string;
 
   public static load = (sequelize: Sequelize): void => {
     Client.init({
