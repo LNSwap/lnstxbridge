@@ -55,7 +55,7 @@ class ContractEventHandler extends EventEmitter {
   private sip10contractAddress!: string;
   private sip10contractName!: string;
 
-  private stacksTransactionRepository: StacksTransactionRepository;
+  private stacksTransactionRepository!: StacksTransactionRepository;
 
   constructor(
     private logger: Logger,
