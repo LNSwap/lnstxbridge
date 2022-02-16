@@ -95,6 +95,7 @@ tasks:
         mkdir ~/.lnstx-client/lnd
         docker cp regtest:/root/.lnd-btc2/tls.cert ~/.lnstx-client/lnd/tls.cert
         docker cp regtest:/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon ~/.lnstx-client/lnd/admin.macaroon
+      # no need - manually set ~/.lnstx-client/boltz.conf providerUrl=https://9003-pseudozach-lnstxbridge-e1iw24tfkhf.ws-us32.gitpod.io
       # sed -i 's#http://localhost:9003#https://9003-`${GITPOD_WORKSPACE_URL:8}`#g' ~/.lnstx-client/boltz.conf
     command: npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/

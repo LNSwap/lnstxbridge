@@ -329,8 +329,8 @@ class Controller {
 
       // forward it to potential swap providers
       const response = await this.service.forwardSwap(req.body, swapType);
-
-      this.successResponse(res, response);
+      // console.log('got response from client ', response.response);
+      this.successResponse(res, response.response);
     } catch (error) {
       this.errorResponse(req, res, error);
     }

@@ -29,7 +29,7 @@ import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksRaw
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
 import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
-import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapType, SwapUpdateEvent } from '../consts/Enums';
+import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapUpdateEvent } from '../consts/Enums';
 import {
   Balance,
   ChainInfo,
@@ -1572,7 +1572,7 @@ class Service {
   public forwardSwap = async (req: string, swapType: string): Promise<{
     // id: string,
     // invoice: string,
-    response: Response,
+    response: any,
   }> => {
 
     const provider = await this.clientRepository.findRandom();
@@ -1587,18 +1587,23 @@ class Service {
       throw new Error('No providers found');
     }
 
-    let response;
+    let data;
     try {
-      console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req)
-      switch (swapType) {
-        case SwapType.Submarine:
-          response = await axios.post(`${provider[0].url}/createswap`, req);
-          break;
+      console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req);
+      const response = await axios.post(`${provider[0].url}/createswap`, req);
+      data = response.data;
+
+      // switch (swapType) {
+      //   case SwapType.Submarine:
+      //     console.log('axios post to ', `${provider[0].url}/createswap`, ' with data: ',  JSON.stringify(req))
+      //     response = await axios.post(`${provider[0].url}/createswap`, JSON.stringify(req));
+      //     break;
   
-        case SwapType.ReverseSubmarine:
-          response = await axios.post(`${provider[0].url}/createreverseswap`, req);
-          break;
-      }
+      //   case SwapType.ReverseSubmarine:
+      //     console.log('axios post to ', `${provider[0].url}/createreverseswap`, ' with data: ',  JSON.stringify(req))
+      //     response = await axios.post(`${provider[0].url}/createreverseswap`, JSON.stringify(req));
+      //     break;
+      // }
       console.log('service.1602 response.data ', response.data);
 
       // once created save info to aggregator db
@@ -1612,7 +1617,7 @@ class Service {
       console.log('service.1593 error ', error.message);
     }
 
-    return {response};
+    return {response: data};
   };
 
   public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object,): Promise<{
