@@ -1587,24 +1587,30 @@ class Service {
       throw new Error('No providers found');
     }
 
-    console.log('service.1590 post ', `${provider[0].url}/createswap`,req)
     let response;
-    switch (swapType) {
-      case SwapType.Submarine:
-        response = await axios.post(`${provider[0].url}/createswap`, req);
-        break;
+    try {
+      console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req)
+      switch (swapType) {
+        case SwapType.Submarine:
+          response = await axios.post(`${provider[0].url}/createswap`, req);
+          break;
+  
+        case SwapType.ReverseSubmarine:
+          response = await axios.post(`${provider[0].url}/createreverseswap`, req);
+          break;
+      }
+      console.log('service.1602 response.data ', response.data);
 
-      case SwapType.ReverseSubmarine:
-        response = await axios.post(`${provider[0].url}/createreverseswap`, req);
-        break;
+      // once created save info to aggregator db
+      this.providerSwapRepository.addProviderSwap({
+        id: response.data.id,
+        providerUrl: provider[0].url,
+        status: 'swap.created',
+      });
+      
+    } catch (error) {
+      console.log('service.1593 error ', error.message);
     }
-
-    // once created save info to aggregator db
-    this.providerSwapRepository.addProviderSwap({
-      id: response.data.id,
-      providerUrl: provider[0].url,
-      status: 'swap.created',
-    });
 
     return {response};
   };

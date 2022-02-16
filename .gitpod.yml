@@ -90,6 +90,7 @@ tasks:
         sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
         mkdir ~/.lnstx-client
         cp boltz.conf ~/.lnstx-client/boltz.conf
+        sed -i 's#http://localhost:9003#https://9003-${GITPOD_WORKSPACE_URL:8}#g' ~/.lnstx-client/boltz.conf
         echo "diamond harbor game bird when board caution improve sight scorpion inform income" > ~/.lnstx-client/seed.dat
         mkdir ~/.lnstx-client/lnd
         docker cp regtest:/root/.lnd-btc2/tls.cert ~/.lnstx-client/lnd/tls.cert
