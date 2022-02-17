@@ -1,5 +1,6 @@
 import { Op } from 'sequelize';
 import StacksTransaction from './models/StacksTransaction';
+import { crypto } from 'bitcoinjs-lib';
 
 class StacksTransactionRepository {
   public findByTxId = (txId: string): Promise<StacksTransaction[]> => {
@@ -30,11 +31,22 @@ class StacksTransactionRepository {
     });
   }
 
-  public addTransaction = (txId: string, preimageHash: string, claimPrincipal: string, swapContractAddress: string): Promise<StacksTransaction> => {
+  public addTransaction = (txId: string, preimageHash: string, claimPrincipal: string, event: string, swapContractAddress: string): Promise<StacksTransaction> => {
     return StacksTransaction.create({
       txId,
       preimageHash,
       claimPrincipal,
+      event,
+      swapContractAddress
+    });
+  }
+
+  public addClaimTransaction = (txId: string, preimage: string, event: string, swapContractAddress: string): Promise<StacksTransaction> => {
+    const preimageHash = crypto.sha256(Buffer.from(preimage, 'hex'));
+    return StacksTransaction.create({
+      txId,
+      preimageHash,
+      event,
       swapContractAddress
     });
   }
