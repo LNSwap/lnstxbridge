@@ -1713,16 +1713,12 @@ class Service {
     // tx: transac,
 
   }> => {
-    this.logger.verbose(`s.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
+    this.logger.verbose(`service.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
 
-    // check if any funds locked into swap contract with preimageHash
-    const txData = this.stacksTransactionRepository.findByPreimageHash(preimageHash)[0];
-
-    // if(stxAmount < 0) {
-    //   throw Errors.MINT_COST_MISMATCH();
-    // }
-
-    return {txData};
+    // check if any funds locked/claimed into swap contract with preimageHash
+    const txData = await this.stacksTransactionRepository.findByPreimageHash(preimageHash);
+    console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
+    return {txData: txData[0]};
   }
 
   // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
