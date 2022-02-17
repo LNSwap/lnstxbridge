@@ -540,6 +540,11 @@ class Controller {
       ]);
 
       const response = await this.service.updateSwapStatus(id, status, txId, failureReason);
+
+      // trigger swap.update so the pendingswapstreams get updated
+      const message = {status, txId, failureReason};
+      this.service.eventHandler.emit('swap.update', id, message);
+
       this.successResponse(res, response);
     } catch (error) {
       this.errorResponse(req, res, error);
