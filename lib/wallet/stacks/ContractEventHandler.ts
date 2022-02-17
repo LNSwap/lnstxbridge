@@ -370,8 +370,8 @@ class ContractEventHandler extends EventEmitter {
       console.log('claimFound fetched from contract call: ', preimage,hashvalue,amount,claimAddress,refundAddress,timelock);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
 
-      // add found lock data to stackstransactionrepository to be consumed by other swap providers
-      this.stacksTransactionRepository.addClaimTransaction(txid, preimage, 'claim', swapContract);
+      // add found claim data to stackstransactionrepository to be consumed by other swap providers
+      this.stacksTransactionRepository.addClaimTransaction(txid, hashvalue, 'claim', swapContract);
       
       // got all the data now check if we have the swap
       // getHexBuffer -> good, parseBuffer -> butcher .slice(2)

@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import StacksTransaction from './models/StacksTransaction';
-import { crypto } from 'bitcoinjs-lib';
+// import { crypto } from 'bitcoinjs-lib';
+// import { getHexString } from '../../lib/Utils';
 
 class StacksTransactionRepository {
   public findByTxId = (txId: string): Promise<StacksTransaction[]> => {
@@ -16,7 +17,7 @@ class StacksTransactionRepository {
     return StacksTransaction.findAll({
       where: {
         preimageHash: {
-          [Op.lte]: preimageHash,
+          [Op.eq]: preimageHash,
         },
       }
     });
@@ -41,8 +42,8 @@ class StacksTransactionRepository {
     });
   }
 
-  public addClaimTransaction = (txId: string, preimage: string, event: string, swapContractAddress: string): Promise<StacksTransaction> => {
-    const preimageHash = crypto.sha256(Buffer.from(preimage, 'hex'));
+  public addClaimTransaction = (txId: string, preimageHash: string, event: string, swapContractAddress: string): Promise<StacksTransaction> => {
+    // const preimageHash = getHexString(crypto.sha256(Buffer.from(preimage, 'hex')));
     return StacksTransaction.create({
       txId,
       preimageHash,
