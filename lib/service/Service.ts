@@ -54,7 +54,7 @@ import {
   reverseBuffer,
   splitPairId,
 } from '../Utils';
-// import ReverseSwap from '../../lib/db/models/ReverseSwap';
+import ReverseSwap from '../../lib/db/models/ReverseSwap';
 
 // import mempoolJS from "@mempool/mempool.js";
 // import ReverseSwap from 'lib/db/models/ReverseSwap';
