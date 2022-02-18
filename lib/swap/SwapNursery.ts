@@ -1886,7 +1886,7 @@ class SwapNursery extends EventEmitter {
       return;
     }
 
-    this.logger.verbose('swapnursery expireSwap continues'+ swap.id);
+    this.logger.verbose('swapnursery expireSwap continues '+ swap.id);
 
     // check if there's any atomic swap refund to be done
     if (swap.asLockupTransactionId) {
