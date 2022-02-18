@@ -54,10 +54,10 @@ import { TxBroadcastResult } from '@stacks/transactions';
 import { getInfo, incrementNonce, querySip10SwapValuesFromTx, querySwapValuesFromTx } from '../wallet/stacks/StacksUtils';
 import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
 
-import mempoolJS from "@mempool/mempool.js";
-const { bitcoin: { transactions } } = mempoolJS({
-  hostname: 'mempool.space'
-});
+// import mempoolJS from "@mempool/mempool.js";
+// const { bitcoin: { transactions } } = mempoolJS({
+//   hostname: 'mempool.space'
+// });
 
 interface SwapNursery {
   // UTXO based chains emit the "Transaction" object and Ethereum based ones just the transaction hash
@@ -537,16 +537,17 @@ class SwapNursery extends EventEmitter {
     switch (currency.type) {
       case CurrencyType.BitcoinLike: {
         this.logger.info('swapnursery.538 attemptSettleSwap getRawTransaction');
-        // const lockupTransactionHex = await currency.chainClient!.getRawTransaction(swap.lockupTransactionId!);
-        let lockupTransactionHex;
-        // need blockhash because we're running a pruned node with no -txindex
-        if((await getInfo()).network_id === 1) {
-          const mempoolTx = await transactions.getTx({ txid: swap.lockupTransactionId! });
-          lockupTransactionHex = await currency.chainClient!.getRawTransactionBlockHash(swap.lockupTransactionId!, mempoolTx.status.block_hash);
-        } else {
-          // regtest
-          lockupTransactionHex = await currency.chainClient!.getRawTransaction(swap.lockupTransactionId!);
-        }
+        const lockupTransactionHex = await currency.chainClient!.getRawTransaction(swap.lockupTransactionId!);
+        
+        // let lockupTransactionHex;
+        // // need blockhash because we're running a pruned node with no -txindex
+        // if((await getInfo()).network_id === 1) {
+        //   const mempoolTx = await transactions.getTx({ txid: swap.lockupTransactionId! });
+        //   lockupTransactionHex = await currency.chainClient!.getRawTransactionBlockHash(swap.lockupTransactionId!, mempoolTx.status.block_hash);
+        // } else {
+        //   // regtest
+        //   lockupTransactionHex = await currency.chainClient!.getRawTransaction(swap.lockupTransactionId!);
+        // }
 
         await this.claimUtxo(
           currency.chainClient!,
@@ -928,15 +929,17 @@ class SwapNursery extends EventEmitter {
 
         if (chainClient) {
           try {
-            let rawTx;
-            // need blockhash because we're running a pruned node with no -txindex
-            if((await getInfo()).network_id === 1) {
-              const mempoolTx = await transactions.getTx({ txid: transactionHash });
-              rawTx = await chainClient.getRawTransactionVerboseBlockHash(transactionHash, mempoolTx.status.block_hash);
-            } else {
-              // regtest
-              rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
-            }
+            const rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
+
+            // let rawTx;
+            // // need blockhash because we're running a pruned node with no -txindex
+            // if((await getInfo()).network_id === 1) {
+            //   const mempoolTx = await transactions.getTx({ txid: transactionHash });
+            //   rawTx = await chainClient.getRawTransactionVerboseBlockHash(transactionHash, mempoolTx.status.block_hash);
+            // } else {
+            //   // regtest
+            //   rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
+            // }
                
             const tx = Transaction.fromHex(rawTx.hex);
             console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
@@ -1984,17 +1987,18 @@ class SwapNursery extends EventEmitter {
     const wallet = this.walletManager.wallets.get(chainSymbol)!;
 
     this.logger.info('swapnursery.1976 refundUtxo getRawTransaction');
-    // const rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.transactionId!);
+    const rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.transactionId!);
 
-    // need blockhash because we're running a pruned node with no -txindex
-    let rawLockupTransaction;
-    if((await getInfo()).network_id === 1) {
-      const mempoolTx = await transactions.getTx({ txid: reverseSwap.transactionId! });
-      rawLockupTransaction = await chainCurrency.chainClient!.getRawTransactionBlockHash(reverseSwap.transactionId!, mempoolTx.status.block_hash);
-    } else {
-      // regtest
-      rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.transactionId!);
-    }
+    // // need blockhash because we're running a pruned node with no -txindex
+    // let rawLockupTransaction;
+    // if((await getInfo()).network_id === 1) {
+    //   const mempoolTx = await transactions.getTx({ txid: reverseSwap.transactionId! });
+    //   rawLockupTransaction = await chainCurrency.chainClient!.getRawTransactionBlockHash(reverseSwap.transactionId!, mempoolTx.status.block_hash);
+    // } else {
+    //   // regtest
+    //   rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.transactionId!);
+    // }
+
     const lockupTransaction = Transaction.fromHex(rawLockupTransaction);
 
     const lockupOutput = lockupTransaction.outs[reverseSwap.transactionVout!];
@@ -2030,17 +2034,17 @@ class SwapNursery extends EventEmitter {
     const wallet = this.walletManager.wallets.get(chainSymbol)!;
 
     this.logger.info('swapnursery.1976 refundUtxoAS getRawTransaction');
-    // const rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.asLockupTransactionId!);
+    const rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.asLockupTransactionId!);
 
-    // need blockhash because we're running a pruned node with no -txindex
-    let rawLockupTransaction;
-    if((await getInfo()).network_id === 1) {
-      const mempoolTx = await transactions.getTx({ txid: reverseSwap.asLockupTransactionId! });
-      rawLockupTransaction = await chainCurrency.chainClient!.getRawTransactionBlockHash(reverseSwap.asLockupTransactionId!, mempoolTx.status.block_hash);
-    } else {
-      // regtest
-      rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.asLockupTransactionId!);
-    }
+    // // need blockhash because we're running a pruned node with no -txindex
+    // let rawLockupTransaction;
+    // if((await getInfo()).network_id === 1) {
+    //   const mempoolTx = await transactions.getTx({ txid: reverseSwap.asLockupTransactionId! });
+    //   rawLockupTransaction = await chainCurrency.chainClient!.getRawTransactionBlockHash(reverseSwap.asLockupTransactionId!, mempoolTx.status.block_hash);
+    // } else {
+    //   // regtest
+    //   rawLockupTransaction = await chainCurrency.chainClient!.getRawTransaction(reverseSwap.asLockupTransactionId!);
+    // }
 
     const lockupTransaction = Transaction.fromHex(rawLockupTransaction);
 
