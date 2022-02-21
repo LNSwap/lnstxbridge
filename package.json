@@ -93,6 +93,7 @@
     "sequelize": "^6.6.2",
     "socket.io-client": "^4.3.2",
     "sqlite3": "^5.0.2",
+    "tor-axios": "^1.0.9",
     "winston": "^3.3.3",
     "ws": "^7.4.6",
     "yargs": "^17.0.1",

@@ -66,6 +66,12 @@ const { bitcoin: { transactions } } = mempoolJS({
   hostname: 'mempool.space'
 });
 
+import tor_axios from 'tor-axios'
+const tor = tor_axios.torSetup({
+    ip: 'localhost',
+    port: 9050,
+})
+
 // increase listenerlimit
 require('events').EventEmitter.defaultMaxListeners = 100;
 
@@ -1592,7 +1598,12 @@ class Service {
       // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
 
       try {
-        const res = await axios.get(`${provider[0].url}/getpairs`);
+        let res
+        if(provider[0].url.includes('.onion')) {
+          res = await tor.get(`${provider[0].url}/getpairs`);
+        } else {
+          res = await axios.get(`${provider[0].url}/getpairs`);
+        }
         reachable = res.data.includes(req['pairId']);
       } catch (error) {
         console.log('provider unreachable')
@@ -1616,7 +1627,12 @@ class Service {
     let data;
     try {
       console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req);
-      const response = await axios.post(`${provider[0].url}/createswap`, req);
+      let response;
+      if(provider[0].url.includes('.onion')) {
+        response = await tor.post(`${provider[0].url}/createswap`, req);
+      } else {
+        response = await axios.post(`${provider[0].url}/createswap`, req);
+      }
       data = response.data;
 
       console.log('service.1602 response.data ', response.data);
