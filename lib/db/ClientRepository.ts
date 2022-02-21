@@ -62,13 +62,21 @@ class ClientRepository {
     });
   }
 
-  public updateClient = (client: Client, stacksAddress: string, nodeId: string, url: string, pairs: string): Promise<Client> => {
+  public updateClient = (client: Client, stacksAddress: string, nodeId: string, url: string, pairs: string, ): Promise<Client> => {
     return client.update({
       stacksAddress,
       nodeId,
       url,
       pairs,
     });
+  }
+
+  public incrementSuccess = (client: Client, success: number): Promise<Client> => {
+    return client.increment('success', { by: success });
+  }
+
+  public incrementFailure = (client: Client, fail: number): Promise<Client> => {
+    return client.increment('fail', { by: fail });
   }
 
 }

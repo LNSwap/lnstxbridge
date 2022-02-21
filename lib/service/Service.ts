@@ -1610,17 +1610,6 @@ class Service {
       const response = await axios.post(`${provider[0].url}/createswap`, req);
       data = response.data;
 
-      // switch (swapType) {
-      //   case SwapType.Submarine:
-      //     console.log('axios post to ', `${provider[0].url}/createswap`, ' with data: ',  JSON.stringify(req))
-      //     response = await axios.post(`${provider[0].url}/createswap`, JSON.stringify(req));
-      //     break;
-  
-      //   case SwapType.ReverseSubmarine:
-      //     console.log('axios post to ', `${provider[0].url}/createreverseswap`, ' with data: ',  JSON.stringify(req))
-      //     response = await axios.post(`${provider[0].url}/createreverseswap`, JSON.stringify(req));
-      //     break;
-      // }
       console.log('service.1602 response.data ', response.data);
 
       // once created save info to aggregator db
@@ -1632,6 +1621,7 @@ class Service {
       
     } catch (error) {
       console.log('service.1593 error ', error.message);
+      this.clientRepository.incrementFailure(provider[0], 1);
     }
 
     return {response: data};
@@ -1665,6 +1655,8 @@ class Service {
         nodeId,
         url,
         pairs: strPairs,
+        success: 0,
+        fail: 0,
       });
     }
 
