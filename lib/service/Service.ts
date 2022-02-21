@@ -1575,8 +1575,25 @@ class Service {
     response: any,
   }> => {
 
-    const provider = await this.clientRepository.findRandom();
-    console.log('service.1579 provider ', provider[0].url);
+    const allClients = await this.clientRepository.getAll();
+
+    // check if this provider supports pair + amount
+    let count = 0;
+    let provider;
+    let providerPairs;
+    do {
+      if(count > allClients.length) {
+        throw new Error('No providers found')
+      }
+      provider = await this.clientRepository.findRandom();
+      providerPairs = JSON.parse(provider[0].pairs)
+      // console.log('provider pair data: ', providerPairs, req,)
+      
+      // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
+      count++
+    } while (provider[0].pairs.includes(req['pairId']) && 
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] && 
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal']);
 
     // const allProviders = await this.clientRepository.getAll();
     // console.log('service.1582 allProviders ', allProviders);
