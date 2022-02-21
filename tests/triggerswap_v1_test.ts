@@ -38,6 +38,7 @@ Clarinet.test({
             `0x${"9abc".padStart(42, "0")}`, // refundaddress
             `0x${"5".padStart(32, "0")}`, // timelock
             types.principal(wallet_3.address),
+            types.ascii("Buy: 4167 Code: 7e28eac65f")
           ],
           wallet_2.address
         ),
