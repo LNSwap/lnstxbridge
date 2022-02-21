@@ -28,7 +28,7 @@ path = "contracts/stxswap_v9.clar"
 depends_on = []
 
 [contracts.triggerswap]
-path = "contracts/triggerswap_v3.clar"
+path = "contracts/triggerswap_v4.clar"
 depends_on = ["sip-010-trait"]
 
 [contracts.usda-token]
