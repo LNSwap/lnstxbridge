@@ -9,6 +9,8 @@ type ClientType = {
   url: string;
   // pairs: Map<string, PairType>;
   pairs: string;
+  success: number;
+  fail: number;
 };
 
 class Client extends Model implements ClientType {
@@ -18,6 +20,8 @@ class Client extends Model implements ClientType {
   public url!: string;
   // public pairs!: Map<string, PairType>;
   public pairs!: string;
+  public success!: number;
+  public fail!: number;
 
   public static load = (sequelize: Sequelize): void => {
     Client.init({
@@ -26,6 +30,8 @@ class Client extends Model implements ClientType {
       nodeId: { type: new DataTypes.STRING(255), allowNull: false },
       url: { type: new DataTypes.STRING(255), allowNull: false },
       pairs: { type: new DataTypes.STRING(1255), allowNull: false },
+      success: { type: new DataTypes.INTEGER(), allowNull: true },
+      fail: { type: new DataTypes.INTEGER(), allowNull: true },
     }, {
       sequelize,
       tableName: 'clients',
