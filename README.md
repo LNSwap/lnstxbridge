@@ -1,8 +1,9 @@
-# LN - STX Bridge
-## Submarine Swaps between STX (and USDA) on Stacks <-> Bitcoin on Lightning Network
+# LN - STX Bridge with Provider Swap Network
+## Submarine Swaps between assets on Stacks <-> Bitcoin (onchain and Lightning Network)
+
+* This version adds independent provider support such that any entity can register to serve swaps. This app will act as an aggregator to route swap requests to registered swap providers.
 
 * This app enables functionality as described in https://github.com/stacksgov/Stacks-Grants/issues/172 and https://github.com/stacksgov/Stacks-Grants/issues/204
-
 * Running on https://lnswap.org
 
 ## install
@@ -18,6 +19,8 @@
 * copy boltz.conf to ~/.lnstx/boltz.conf and modify as needed  
 * start the app  
 `npm run start`
+
+* clone [lnstxbridge-client](https://github.com/pseudozach/lnstxbridge-client.git) repo and start it with `aggregatorUrl` parameter set to this bridge IP:port.
 
 ## use 
 * API is available at http://localhost:9002, e.g. curl http://localhost:9002/getpairs  
