@@ -1581,6 +1581,7 @@ class Service {
     let count = 0;
     let provider;
     let providerPairs;
+    let reachable = false;
     do {
       if(count > allClients.length) {
         throw new Error('No providers found')
@@ -1588,12 +1589,20 @@ class Service {
       provider = await this.clientRepository.findRandom();
       providerPairs = JSON.parse(provider[0].pairs)
       // console.log('provider pair data: ', providerPairs, req,)
-      
       // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
+
+      try {
+        const res = await axios.get(`${provider[0].url}/getpairs`);
+        reachable = res.data.includes(req['pairId']);
+      } catch (error) {
+        console.log('provider unreachable')
+      }
+
       count++
     } while (provider[0].pairs.includes(req['pairId']) && 
       req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] && 
-      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal']);
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] &&
+      reachable);
 
     // const allProviders = await this.clientRepository.getAll();
     // console.log('service.1582 allProviders ', allProviders);
