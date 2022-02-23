@@ -80,7 +80,7 @@ export const getAddressBalance = async (address:string) => {
   const response = await axios.get(url)
   // const data = await response.json();
   // works!!!
-  console.log("stacksutls  48 test", response.data);
+  // console.log("stacksutls  48 test", response.data);
   return response.data.stx.balance;
 
   // {
