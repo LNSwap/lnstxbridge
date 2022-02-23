@@ -89,6 +89,12 @@ tasks:
         sed -i 's#// apiUrl: "http://localhost#apiUrl: "http://localhost#g' /workspace/lnswap-widget/src/config.js
         sed -i 's#gitpodapiurl#https://3999-'"$GITPOD_CORE_URL"'#g' /workspace/lnswap-widget/src/config.js
     command: npm run start
+  - init: |
+        git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
+        cd /workspace/lnstxbridge-dashboard
+        npm i
+        export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
+    command: npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
