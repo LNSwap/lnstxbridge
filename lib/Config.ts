@@ -147,6 +147,13 @@ type NotificationConfig = {
   otpsecretpath: string;
 };
 
+type BalancerConfig = {
+  apiUri: string;
+  apiKey: string;
+  secretKey: string;
+  passphrase: string;
+};
+
 type ConfigType = {
   datadir: string;
 
@@ -167,6 +174,7 @@ type ConfigType = {
   rates: RatesConfig;
   backup: BackupConfig;
   notification: NotificationConfig;
+  balancer: BalancerConfig;
 
   pairs: PairConfig[];
   currencies: CurrencyConfig[];
@@ -233,7 +241,7 @@ class Config {
         port: Config.defaultPort,
         sslKey: '/etc/letsencrypt/live/api.lnswap.org/privkey.pem',
         sslCert: '/etc/letsencrypt/live/api.lnswap.org/fullchain.pem',
-        sslEnabled: true,
+        sslEnabled: false,
       },
 
       grpc: {
@@ -264,6 +272,13 @@ class Config {
         interval: 1,
 
         otpsecretpath: notification.otpsecretpath,
+      },
+
+      balancer : {
+        apiUri: 'https://www.okcoin.com',
+        apiKey: '',
+        secretKey: '',
+        passphrase: '',
       },
 
       pairs: [
@@ -518,6 +533,7 @@ export {
   StacksConfig,
   CurrencyConfig,
   NotificationConfig,
+  BalancerConfig,
   EthProviderServiceConfig,
   RskProviderServiceConfig,
 };
