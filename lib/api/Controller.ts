@@ -592,7 +592,12 @@ class Controller {
     }
   }
 
-  public getAdminSwaps = async (_: Request, res: Response): Promise<void> => {
+  public getAdminSwaps = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== process.env.authHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminSwaps();
     console.log('controller.597 getAdminSwaps data ', data);
     this.successResponse(res, {
@@ -600,35 +605,60 @@ class Controller {
     });
   }
 
-  public getAdminReverseSwaps = async (_: Request, res: Response): Promise<void> => {
+  public getAdminReverseSwaps = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== process.env.authHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminReverseSwaps();
     this.successResponse(res, {
       swaps: data,
     });
   }
 
-  public getAdminBalancer = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalancer = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== process.env.authHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalancer();
     this.successResponse(res, {
       data,
     });
   }
 
-  public getAdminBalanceOffchain = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalanceOffchain = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== process.env.authHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalanceOffchain();
     this.successResponse(res, {
       data,
     });
   }
 
-  public getAdminBalanceOnchain = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalanceOnchain = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== process.env.authHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalanceOnchain();
     this.successResponse(res, {
       data,
     });
   }
 
-  public getAdminBalanceStacks = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalanceStacks = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== process.env.authHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalanceStacks();
     this.successResponse(res, {
       data,
