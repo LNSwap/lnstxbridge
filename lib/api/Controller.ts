@@ -9,6 +9,8 @@ import { SwapUpdate } from '../service/EventHandler';
 import { SwapType, SwapUpdateEvent } from '../consts/Enums';
 import { getChainCurrency, getHexBuffer, getVersion, mapToObject, splitPairId, stringify } from '../Utils';
 
+const tempAuthorizationHeader = process.env.authHeader || 'Basic YWRtaW46YWRtaW4=';
+
 type ApiArgument = {
   name: string,
   type: string,
@@ -594,32 +596,29 @@ class Controller {
 
   public getAdminSwaps = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== process.env.authHeader) {
+    // console.log('getAdminSwaps authHeader ', authHeader, tempAuthorizationHeader);
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
     const data = await this.service.getAdminSwaps();
     console.log('controller.597 getAdminSwaps data ', data);
-    this.successResponse(res, {
-      swaps: data,
-    });
+    this.successResponse(res, data);
   }
 
   public getAdminReverseSwaps = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== process.env.authHeader) {
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
     const data = await this.service.getAdminReverseSwaps();
-    this.successResponse(res, {
-      swaps: data,
-    });
+    this.successResponse(res, data);
   }
 
   public getAdminBalancer = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== process.env.authHeader) {
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -631,38 +630,32 @@ class Controller {
 
   public getAdminBalanceOffchain = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== process.env.authHeader) {
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
     const data = await this.service.getAdminBalanceOffchain();
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
 
   public getAdminBalanceOnchain = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== process.env.authHeader) {
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
     const data = await this.service.getAdminBalanceOnchain();
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
 
   public getAdminBalanceStacks = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== process.env.authHeader) {
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
     const data = await this.service.getAdminBalanceStacks();
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
   
 }
