@@ -1856,19 +1856,16 @@ class Service {
   public getAdminBalanceOnchain = async (): Promise<string> => {
     const balances = (await this.getBalance()).getBalancesMap();
     let balanceOnchain = ''
-    balances.forEach((balance: Balance) => {
-      // tslint:disable-next-line:prefer-template
+    balances.forEach((balance: Balance, symbol: string) => {
+      if(symbol === 'BTC')
       balanceOnchain = `${balance.getWalletBalance()!.getTotalBalance()}`;
     });
     return balanceOnchain;
   }
 
   public getAdminBalanceStacks = async (): Promise<{walletName: string, value: string, address: string}[]> => {
-    const data = JSON.stringify(await getAddressAllBalances());
+    const data = await getAddressAllBalances();
     const signerAddress = (await getStacksNetwork()).signerAddress;
-    console.log('getAdminBalanceStacks ', data);
-    // getAdminBalanceStacks  {"STX":"500000000","USDA":"1000000000"}
-    // [{"walletName":"RBTC","value":0.034069056284946175,"address":"0x4f3b4f618b9b23ccc33beb6352df2f93f082cad4"},{"walletName":"SOV","value":67.822160889999999992,"address":"0x4f3b4f618b9b23ccc33beb6352df2f93f082cad4"},{"walletName":"XUSD","value":507.600388926785315076,"address":"0x4f3b4f618b9b23ccc33beb6352df2f93f082cad4"}]
     let respArray: {walletName: string, value: string, address: string}[] = []
     Object.keys(data).forEach((key) => {
       respArray.push({walletName: key, value: data[key], address: signerAddress});
