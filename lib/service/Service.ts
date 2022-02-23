@@ -1822,19 +1822,15 @@ class Service {
   }
 
   // admin dashboard
-  public getAdminSwaps = async (): Promise<{ swaps: Swap[]; }> => {
+  public getAdminSwaps = async (): Promise<Swap[]> => {
     const swaps: Swap[] = await this.swapManager.swapRepository.getSwaps();
     console.log('service.1826 getAdminSwaps swaps ', swaps);
-    return {
-      swaps,
-    };
+    return swaps;
   }
 
-  public getAdminReverseSwaps = async (): Promise<{ swaps: ReverseSwap[]; }> => {
+  public getAdminReverseSwaps = async (): Promise<ReverseSwap[]> => {
     const swaps: ReverseSwap[] = await this.swapManager.reverseSwapRepository.getReverseSwaps();
-    return {
-      swaps,
-    };
+    return swaps;
   }
 
   public getAdminBalancer = async (): Promise<{ data: string; }> => {
@@ -1845,27 +1841,39 @@ class Service {
     };
   }
 
-  public getAdminBalanceOffchain = async (): Promise<{ data: string; }> => {
-    const data = (await this.getBalance()).getBalancesMap();
-    console.log('service.1850 getAdminBalanceOffchain data', data);
-    return {
-      data,
-    };
+  public getAdminBalanceOffchain = async (): Promise<string> => {
+    const balances = (await this.getBalance()).getBalancesMap();
+    let balanceLN = '';
+    balances.forEach((balance: Balance) => {
+      const lightningBalance = balance.getLightningBalance();
+      if (lightningBalance) {
+        balanceLN = `${lightningBalance.getLocalBalance()}`;
+      }
+    });
+    return balanceLN;
   }
 
-  public getAdminBalanceOnchain = async (): Promise<{ data: string; }> => {
-    const data = (await this.getBalance()).getBalancesMap();
-    console.log('service.1859 getAdminBalanceOnchain data', data);
-    return {
-      data,
-    };
+  public getAdminBalanceOnchain = async (): Promise<string> => {
+    const balances = (await this.getBalance()).getBalancesMap();
+    let balanceOnchain = ''
+    balances.forEach((balance: Balance) => {
+      // tslint:disable-next-line:prefer-template
+      balanceOnchain = `${balance.getWalletBalance()!.getTotalBalance()}`;
+    });
+    return balanceOnchain;
   }
 
-  public getAdminBalanceStacks = async (): Promise<{ data: string; }> => {
+  public getAdminBalanceStacks = async (): Promise<{walletName: string, value: string, address: string}[]> => {
     const data = JSON.stringify(await getAddressAllBalances());
-    return {
-      data,
-    };
+    const signerAddress = (await getStacksNetwork()).signerAddress;
+    console.log('getAdminBalanceStacks ', data);
+    // getAdminBalanceStacks  {"STX":"500000000","USDA":"1000000000"}
+    // [{"walletName":"RBTC","value":0.034069056284946175,"address":"0x4f3b4f618b9b23ccc33beb6352df2f93f082cad4"},{"walletName":"SOV","value":67.822160889999999992,"address":"0x4f3b4f618b9b23ccc33beb6352df2f93f082cad4"},{"walletName":"XUSD","value":507.600388926785315076,"address":"0x4f3b4f618b9b23ccc33beb6352df2f93f082cad4"}]
+    let respArray: {walletName: string, value: string, address: string}[] = []
+    Object.keys(data).forEach((key) => {
+      respArray.push({walletName: key, value: data[key], address: signerAddress});
+    })
+    return respArray;
   }
 
 }
