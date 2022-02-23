@@ -591,6 +591,50 @@ class Controller {
       throw `invalid preimage hash length: ${preimageHash.length}`;
     }
   }
+
+  public getAdminSwaps = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getAdminSwaps();
+    console.log('controller.597 getAdminSwaps data ', data);
+    this.successResponse(res, {
+      swaps: data,
+    });
+  }
+
+  public getAdminReverseSwaps = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getAdminReverseSwaps();
+    this.successResponse(res, {
+      swaps: data,
+    });
+  }
+
+  public getAdminBalancer = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getAdminBalancer();
+    this.successResponse(res, {
+      data,
+    });
+  }
+
+  public getAdminBalanceOffchain = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getAdminBalanceOffchain();
+    this.successResponse(res, {
+      data,
+    });
+  }
+
+  public getAdminBalanceOnchain = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getAdminBalanceOnchain();
+    this.successResponse(res, {
+      data,
+    });
+  }
+
+  public getAdminBalanceStacks = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getAdminBalanceStacks();
+    this.successResponse(res, {
+      data,
+    });
+  }
+  
 }
 
 export default Controller;

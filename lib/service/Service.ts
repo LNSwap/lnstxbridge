@@ -1821,6 +1821,52 @@ class Service {
     }
   }
 
+  // admin dashboard
+  public getAdminSwaps = async (): Promise<{ swaps: Swap[]; }> => {
+    const swaps: Swap[] = await this.swapManager.swapRepository.getSwaps();
+    console.log('service.1826 getAdminSwaps swaps ', swaps);
+    return {
+      swaps,
+    };
+  }
+
+  public getAdminReverseSwaps = async (): Promise<{ swaps: ReverseSwap[]; }> => {
+    const swaps: ReverseSwap[] = await this.swapManager.reverseSwapRepository.getReverseSwaps();
+    return {
+      swaps,
+    };
+  }
+
+  public getAdminBalancer = async (): Promise<{ data: string; }> => {
+    // should be able to trigger balancing and return result
+    const data = 'balancer result';
+    return {
+      data,
+    };
+  }
+
+  public getAdminBalanceOffchain = async (): Promise<{ data: string; }> => {
+    const data = (await this.getBalance()).getBalancesMap();
+    console.log('service.1850 getAdminBalanceOffchain data', data);
+    return {
+      data,
+    };
+  }
+
+  public getAdminBalanceOnchain = async (): Promise<{ data: string; }> => {
+    const data = (await this.getBalance()).getBalancesMap();
+    console.log('service.1859 getAdminBalanceOnchain data', data);
+    return {
+      data,
+    };
+  }
+
+  public getAdminBalanceStacks = async (): Promise<{ data: string; }> => {
+    const data = JSON.stringify(await getAddressAllBalances());
+    return {
+      data,
+    };
+  }
 
 }
 
