@@ -5,7 +5,7 @@ import Controller from './Controller';
 import { ApiConfig } from '../Config';
 import Service from '../service/Service';
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import * as https from 'https';
 
 class Api {
@@ -37,7 +37,7 @@ class Api {
     await this.controller.init();
 
     await new Promise<void>((resolve) => {
-      if(this.config.sslEnabled) {
+      if(this.config.sslEnabled && existsSync(this.config.sslKey)) {
         const options = {
           key: readFileSync(this.config.sslKey),
           cert: readFileSync(this.config.sslCert),

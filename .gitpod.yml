@@ -11,7 +11,7 @@ tasks:
       echo "bronze large spike canoe youth crucial seminar awkward allow frozen client math" > ~/.lnstx/seed.dat
       npm i
       npm run docker:regtest
-      sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
+    # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
     # modify regtest container? to have prune=5000 and use mempool api
     # lnd --lnddir=/root/.lnd-btc --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --restlisten=0.0.0.0:8080 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=127.0.0.1:18443
