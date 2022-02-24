@@ -55,6 +55,7 @@ import {
   splitPairId,
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
+import Balancer from './Balancer';
 
 // import mempoolJS from "@mempool/mempool.js";
 // import ReverseSwap from 'lib/db/models/ReverseSwap';
@@ -90,6 +91,8 @@ class Service {
   private static MaxInboundLiquidity = 50;
 
   private serviceInvoiceListener;
+
+  private balancer: Balancer;
 
   constructor(
     private logger: Logger,
@@ -130,6 +133,8 @@ class Service {
       this.currencies,
       this.swapManager.nursery,
     );
+
+    this.balancer = new Balancer(logger, config.balancer.apiUri, config.balancer.apiKey, config.balancer.secretKey, config.balancer.passphrase, config.balancer.tradePassword);
   }
 
   public init = async (configPairs: PairConfig[]): Promise<void> => {
@@ -171,6 +176,8 @@ class Service {
     await this.rateProvider.init(configPairs);
 
     this.startNFTListener();
+
+    this.balancer.getExchangeBalance('STX');
   }
 
   /**

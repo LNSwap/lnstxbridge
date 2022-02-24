@@ -7,30 +7,41 @@ const { AuthenticatedClient } = require("@pseudozach/okex-node");
 
 class Balancer {
   public pClient = new PublicClient();
-
   public authClient: any;
+  private apiKey: string;
+  private tradePassword: string;
 
-  constructor(private logger: Logger, apiUri: string, apiKey: string, secretKey: string, passphrase: string) {
+  constructor(private logger: Logger, apiUri: string, apiKey: string, secretKey: string, passphrase: string, tradePassword: string,) {
+    this.apiKey = apiKey;
+    this.tradePassword = tradePassword;
     this.authClient = new AuthenticatedClient(apiKey, secretKey, passphrase, apiUri);
+  }
+
+  public getExchangeBalance = async (currency: string): Promise<void> => {
+    if (this.apiKey === '') {
+      throw Error('no API key provided');
+    }
+    // get account + balances
+    const accounts = await this.authClient.spot().getAccounts();
+    // console.log('accounts ', accounts);
+    const currencyAccount = accounts.find((item) => item.currency === currency);
+    const currencyBalance = currencyAccount['available'];
+    console.log('balancer.22 getExchangeBalance ', currencyBalance, currency, this.tradePassword);
   }
 
   /**
    * Triggers automated balancing via centralized exchange APIs
    */
   public balanceFunds = async (): Promise<void> => {
+    if (this.apiKey === '') {
+      throw Error('no API key provided');
+    }
     this.logger.debug('Balancer.18 start');
 
+    // get current price
     const orderbook = await this.pClient.spot().getSpotBook("BTC-USDT", {"size":"10"});
     console.log('orderbook ', orderbook);
     
-    // get account + balances
-    // const accounts = await authClient.spot().getAccounts();
-    // // console.log('accounts ', accounts);
-    // const stxaccount = accounts.find((item) => item.currency === 'STX');
-    // const initialstxbalance = stxaccount['available'];
-    // console.log('initialstxbalance ', initialstxbalance);
-
-
     // # get rates
     // let result = await pClient.spot().getSpotTicker('BTC-USD')
     // const btcusdrate = result["bid"]
@@ -85,3 +96,5 @@ class Balancer {
     // // result['result'] != True:
   }
 }
+
+export default Balancer;

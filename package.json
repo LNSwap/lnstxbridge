@@ -69,6 +69,7 @@
     "@google-cloud/storage": "^5.8.5",
     "@iarna/toml": "^2.2.5",
     "@mempool/mempool.js": "^2.3.0-dev1",
+    "@pseudozach/okex-node": "0.0.52",
     "@stacks/keychain": "^2.0.1",
     "@stacks/network": "^3.0.0",
     "@stacks/rpc-client": "^0.8.18",
