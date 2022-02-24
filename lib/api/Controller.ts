@@ -602,7 +602,7 @@ class Controller {
       return;
     }
     const data = await this.service.getAdminSwaps();
-    console.log('controller.597 getAdminSwaps data ', data);
+    // console.log('controller.597 getAdminSwaps data ', data);
     this.successResponse(res, data);
   }
 
@@ -632,7 +632,11 @@ class Controller {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
-    const data = await this.service.getAdminBalancer(req.body);
+    const { pairId, buyAmount } = this.validateRequest(req.body, [
+      { name: 'pairId', type: 'string' },
+      { name: 'buyAmount', type: 'number' },
+    ]);
+    const data = await this.service.getAdminBalancer(pairId, buyAmount);
     this.successResponse(res, data);
   }
 

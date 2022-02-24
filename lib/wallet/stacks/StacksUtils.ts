@@ -866,7 +866,7 @@ export const sponsorTx = async (tx:string, minerfee:number) => {
   return txId;
 }
 
-export const sendSTX = async (address:string, amount: number) => {
+export const sendSTX = async (address:string, amount: number, memo: string) => {
   let txId = ''
   try {
     const sendAmount = new BigNum(amount*10**6);
@@ -876,7 +876,7 @@ export const sendSTX = async (address:string, amount: number) => {
       amount: sendAmount,
       senderKey: getStacksNetwork().privateKey,
       network: stacksNetwork,
-      // memo: 'test memo',
+      memo,
       nonce: new BigNum(nonce), 
       fee: new BigNum(10000), // TODO: dynamically calculate fee later
       anchorMode: AnchorMode.Any,

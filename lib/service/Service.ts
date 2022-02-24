@@ -1831,7 +1831,7 @@ class Service {
   // admin dashboard
   public getAdminSwaps = async (): Promise<Swap[]> => {
     const swaps: Swap[] = await this.swapManager.swapRepository.getSwaps();
-    console.log('service.1826 getAdminSwaps swaps ', swaps);
+    // console.log('service.1826 getAdminSwaps swaps ', swaps);
     return swaps;
   }
 
@@ -1848,13 +1848,14 @@ class Service {
    * pairId: X/Y => sell X, buy Y
    * buyAmount: amount of target currency to buy from exchange
    */
-  public getAdminBalancer = async (params: any): Promise<{ status: string, result: string }> => {
+  public getAdminBalancer = async (pairId: string, buyAmount: number): Promise<{ status: string, result: string }> => {
     try {
+      const params = {pairId, buyAmount};
       const result = await this.balancer.balanceFunds(params);
       return result;
     } catch (error) {
       this.logger.error(`service.1851 getAdminBalancer error: ${error.message}`);
-      return {status: 'Error', result: `Balance failed with error: ${error.message}`};
+      return {status: 'Error', result: `Balance failed error: ${error.message}`};
     }
   }
 

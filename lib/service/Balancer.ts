@@ -66,14 +66,14 @@ class Balancer {
 
     if(signerSTXBalance < this.balancerConfig.minSTX) {
       this.logger.info(`balancer.52 starting auto STX balance ${signerSTXBalance} < ${this.balancerConfig.minSTX}`);
-      // const balanceResult = await this.balanceFunds({pairId: 'BTC/STX', buyAmount: this.balancerConfig.minSTX*(1+this.balancerConfig.overshootPercentage)})
-      // this.logger.info(`balancer.59 auto STX balanceResult ${balanceResult}`);
+      const balanceResult = await this.balanceFunds({pairId: 'BTC/STX', buyAmount: this.balancerConfig.minSTX*(1+this.balancerConfig.overshootPercentage)})
+      this.logger.info(`balancer.59 auto STX balanceResult ${balanceResult}`);
     }
 
     if(Number(signerBTCBalance) < this.balancerConfig.minBTC) {
       this.logger.info(`balancer.58 starting auto BTC balance ${signerBTCBalance} < ${this.balancerConfig.minBTC}`);
-      // const balanceResult = await this.balanceFunds({pairId: 'STX/BTC', buyAmount: (this.balancerConfig.minBTC/10**8)*(1+this.balancerConfig.overshootPercentage)})
-      // this.logger.info(`balancer.64 auto BTC balanceResult ${balanceResult}`);
+      const balanceResult = await this.balanceFunds({pairId: 'STX/BTC', buyAmount: (this.balancerConfig.minBTC/10**8)*(1+this.balancerConfig.overshootPercentage)})
+      this.logger.info(`balancer.64 auto BTC balanceResult ${balanceResult}`);
     }
   }
 
@@ -91,28 +91,31 @@ class Balancer {
     }
     this.logger.debug('Balancer.18 balanceFunds start ' + JSON.stringify(params));
 
-    const sellCurrency = params.pairId.split('/')[0];
-    const buyCurrency = params.pairId.split('/')[1];
+    const sellCurrency = params["pairId"].split('/')[0];
+    const buyCurrency = params["pairId"].split('/')[1];
     
-    // // get current price
-    // const orderbook = await this.pClient.spot().getSpotBook("BTC-USD", {"size":"10"});
-    // console.log('orderbook ', orderbook);
+    // get current price   
+    const sellRate = (await this.pClient.spot().getSpotTicker(`${sellCurrency}-USD`))['ask'];
+    const buyRate = (await this.pClient.spot().getSpotTicker(`${buyCurrency}-USD`))['bid'];
     
-    const sellRate = (await this.pClient.spot().getSpotTicker(`${sellCurrency}'-USD`))['ask'];
-    const buyRate = (await this.pClient.spot().getSpotTicker(`${buyCurrency}'-USD`))['bid'];
-    
+    // adjust buyAmount
+    let buyAmount = params.buyAmount;
+    if(buyCurrency === 'BTC') {
+      // convert sats -> BTC
+      buyAmount = buyAmount/10**8;
+    }
+
     // calculate amount to sell to end up with target buy amount
-    const smallerBuyAmount = params.buyAmount * this.smallerRate;
-    const usdTopup = params.buyAmount * buyRate;
+    const smallerBuyAmount = buyAmount * this.smallerRate;
+    const usdTopup = buyAmount * buyRate;
     const smallerUsdTopup = usdTopup * this.smallerRate;
     const sellAmount = usdTopup / sellRate;
     this.logger.verbose(`balancer.101 ${sellRate}, ${buyRate}, ${smallerBuyAmount}, ${usdTopup}, ${smallerUsdTopup}, ${sellAmount}`)
-    return {result: "ok", status: "ok"}; 
 
     if(sellCurrency === 'BTC') {
       // get ln invoice from exchange
-      const invoiceResult = await this.authClient.account().getInvoice(sellAmount)
-      console.log('invoice ', invoiceResult['invoice']);
+      const invoiceResult = await this.authClient.account().getInvoice(sellAmount.toString())
+      console.log('balancer.118 invoice ', invoiceResult['invoice']);
 
       // send payment - deposit to exchange
       // pay ln invoice
@@ -131,53 +134,60 @@ class Balancer {
       }
     } else {
       const addressResult = await this.authClient.account().getAddress('STX')
-      const stxaddress = addressResult.find((item) => item.chain === 'STX');
+      const stxaddress = addressResult.find((item) => item.chain === 'STX-Stacks');
       const stxdepositaddress = stxaddress['address'];
-      console.log('stxdepositaddress ', stxdepositaddress);
-      const onchainPaymentResult = await sendSTX(stxdepositaddress, sellAmount);
+      const stxdepositmemo = stxaddress['memo'];
+      console.log('balancer.140 stxdepositaddress, stxdepositmemo, sellAmount ', stxdepositaddress, stxdepositmemo, sellAmount);
+      const onchainPaymentResult = await sendSTX(stxdepositaddress, sellAmount, stxdepositmemo);
       if(onchainPaymentResult === '') {
-        throw new Error('Onchain payment failed');
+        throw new Error('Onchain payment failed ');
       }
     }
 
-    const sellResult = await this.authClient.swap().postOrder({"size":sellAmount, "type":"market", "side":"sell", "order_type": "0", "instrument_id":`${sellCurrency}-USD`});
+    const sellResult = await this.authClient.spot().postOrder({"size":sellAmount.toString(), "type":"market", "side":"sell", "order_type": "0", "instrument_id":`${sellCurrency}-USD`});
     console.log('balancer.76 sellResult ', sellResult);
     if(!sellResult.result) {
-      throw new Error('sell order failed')
+      throw new Error(`sell order failed ${sellResult.message}`)
     }
 
     // buy target currency with smaller usd equivalent
-    const buyResult = await this.authClient.swap().postOrder({"notional":smallerUsdTopup, "type":"market", "side":"buy", "order_type": "0", "instrument_id":`${buyCurrency}-USD`});
-    console.log('postOrder buyResult ', buyResult);
+    const buyResult = await this.authClient.spot().postOrder({"notional":smallerUsdTopup.toString(), "type":"market", "side":"buy", "order_type": "0", "instrument_id":`${buyCurrency}-USD`});
+    console.log('balancer.155 postOrder buyResult ', buyResult);
     if(!buyResult.result) {
-      throw new Error('buy order failed')
+      throw new Error(`buy order failed ${buyResult.message}`)
     }
 
     // transfer funds for withdrawal
-    const transferResult = await this.authClient.swap().postTransfer({"currency":buyCurrency, "amount":smallerBuyAmount, "account_from":"1", "account_to": "6"});
-    console.log('postTransfer transferResult ', transferResult);
+    const transferResult = await this.authClient.spot().postTransfer({"currency":buyCurrency, "amount":smallerBuyAmount.toString(), "account_from":"1", "account_to": "6"});
+    console.log('balancer.162 postTransfer transferResult ', transferResult);
     if(!transferResult.result) {
-      throw new Error('transfer failed')
+      throw new Error(`transfer failed ${transferResult.message}`)
     }
 
     // find minimum withdrawal fee for buyCurrency
     const feeResult = await this.authClient.account().getWithdrawalFee(buyCurrency);
-    console.log('postTransfer feeResult ', feeResult);
+    const withdrawFee = feeResult.find((item) => item.currency === buyCurrency);
+    console.log('postTransfer feeResult, withdrawFee ', feeResult, withdrawFee);
     if(!feeResult.result) {
-      throw new Error('fee retrieval failed')
+      throw new Error(`fee retrieval failed ${feeResult.message}`)
     }
 
     // withdraw to signer wallet
-    this.signerAddress = (await getStacksNetwork()).signerAddress;
-    const withdrawResult = await this.authClient.swap().postWithdrawal({"currency":buyCurrency, "amount":smallerBuyAmount, "destination":"4", "to_address": this.signerAddress, "trade_pwd": this.tradePassword, "fee": feeResult[0]['min_fee']});
+    if(buyCurrency === 'STX') {
+      this.signerAddress = (await getStacksNetwork()).signerAddress;
+    } else {
+      this.signerAddress = await this.service.getAddress('BTC');
+    }
+    
+    const withdrawResult = await this.authClient.spot().postWithdrawal({"currency":buyCurrency, "amount":smallerBuyAmount.toString(), "destination":"4", "to_address": this.signerAddress, "trade_pwd": this.tradePassword, "fee": withdrawFee});
     console.log('postTransfer withdrawResult ', withdrawResult);
     if(!withdrawResult.result) {
-      throw new Error('withdrawal failed')
+      throw new Error(`withdrawal failed ${withdrawResult.message}`)
     }
     
     return {
       status: "OK",
-      result: `Withdrew ${sellAmount} ${sellCurrency}, Sold from rate ${sellRate}, Bought ${smallerBuyAmount} from rate ${buyRate}, Transferred to ${this.signerAddress}`,
+      result: `Withdrew ${sellAmount} ${sellCurrency}, Sold from rate ${sellRate}, Bought ${smallerBuyAmount} ${buyCurrency} from rate ${buyRate}, Transferred to ${this.signerAddress}`,
     }
   }
 }
