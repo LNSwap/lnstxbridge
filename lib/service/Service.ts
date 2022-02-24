@@ -1840,6 +1840,10 @@ class Service {
     return swaps;
   }
 
+  public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number}> => {
+    return this.balancer.getBalancerConfig();
+  }
+
   /**
    * pairId: X/Y => sell X, buy Y
    * buyAmount: amount of target currency to buy from exchange

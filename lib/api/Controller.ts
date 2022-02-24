@@ -616,6 +616,16 @@ class Controller {
     this.successResponse(res, data);
   }
 
+  public getAdminBalancerStatus = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    const data = await this.service.getAdminBalancerConfig();
+    this.successResponse(res, data);
+  }
+
   public getAdminBalancer = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     if(!authHeader || authHeader !== tempAuthorizationHeader) {
@@ -623,9 +633,7 @@ class Controller {
       return;
     }
     const data = await this.service.getAdminBalancer(req.body);
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
 
   public getAdminBalanceOffchain = async (req: Request, res: Response): Promise<void> => {

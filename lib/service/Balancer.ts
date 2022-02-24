@@ -24,6 +24,10 @@ class Balancer {
     this.signerAddress = '';
   }
 
+  public getBalancerConfig = (): {minSTX: number, minBTC: number, overshootPct: number} => {
+    return { minSTX: this.balancerConfig.minSTX, minBTC: this.balancerConfig.minBTC, overshootPct: this.balancerConfig.overshootPercentage };
+  }
+
   public getExchangeBalance = async (currency: string): Promise<string> => {
     if (this.apiKey === '') {
       throw new Error('no API key provided');
@@ -33,7 +37,7 @@ class Balancer {
     // console.log('accounts ', accounts);
     const currencyAccount = accounts.find((item) => item.currency === currency);
     const currencyBalance = currencyAccount['available'];
-    console.log('balancer.22 getExchangeBalance ', currencyBalance, currency, this.tradePassword);
+    // console.log('balancer.22 getExchangeBalance ', currencyBalance, currency);
     return currencyBalance;
   }
 
@@ -49,13 +53,15 @@ class Balancer {
     this.logger.verbose(`balancer.55 signerBTCBalance ${signerBTCBalance}`);
 
     if(signerSTXBalance < this.balancerConfig.minSTX) {
-      const balanceResult = await this.balanceFunds({pairId: 'BTC/STX', buyAmount: this.balancerConfig.minSTX*(1+this.balancerConfig.overshootPercentage)})
-      this.logger.info(`balancer.59 auto STX balanceResult ${balanceResult}`);
+      this.logger.info(`balancer.52 starting auto STX balance ${signerSTXBalance} < ${this.balancerConfig.minSTX}`);
+      // const balanceResult = await this.balanceFunds({pairId: 'BTC/STX', buyAmount: this.balancerConfig.minSTX*(1+this.balancerConfig.overshootPercentage)})
+      // this.logger.info(`balancer.59 auto STX balanceResult ${balanceResult}`);
     }
 
     if(Number(signerBTCBalance) < this.balancerConfig.minBTC) {
-      const balanceResult = await this.balanceFunds({pairId: 'STX/BTC', buyAmount: this.balancerConfig.minBTC*(1+this.balancerConfig.overshootPercentage)})
-      this.logger.info(`balancer.64 auto BTC balanceResult ${balanceResult}`);
+      this.logger.info(`balancer.58 starting auto BTC balance ${signerBTCBalance} < ${this.balancerConfig.minBTC}`);
+      // const balanceResult = await this.balanceFunds({pairId: 'STX/BTC', buyAmount: this.balancerConfig.minBTC*(1+this.balancerConfig.overshootPercentage)})
+      // this.logger.info(`balancer.64 auto BTC balanceResult ${balanceResult}`);
     }
   }
 
@@ -67,6 +73,9 @@ class Balancer {
   public balanceFunds = async (params: {pairId: string, buyAmount: number}): Promise<{result: string, status: string}> => {
     if (this.apiKey === '') {
       throw new Error('no API key provided');
+    }
+    if (params.buyAmount === 0) {
+      throw new Error('Buy Amount can not be 0');
     }
     this.logger.debug('Balancer.18 balanceFunds start ' + JSON.stringify(params));
 
@@ -86,6 +95,7 @@ class Balancer {
     const smallerUsdTopup = usdTopup * this.smallerRate;
     const sellAmount = usdTopup / sellRate;
     this.logger.verbose(`balancer.101 ${sellRate}, ${buyRate}, ${smallerBuyAmount}, ${usdTopup}, ${smallerUsdTopup}, ${sellAmount}`)
+    return {result: "ok", status: "ok"}; 
 
     if(sellCurrency === 'BTC') {
       // get ln invoice from exchange
