@@ -7,7 +7,7 @@ import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { broadcastTransaction, BufferReader, deserializeTransaction, estimateContractFunctionCall, sponsorTransaction } from '@stacks/transactions';
+import { broadcastTransaction, BufferReader, deserializeTransaction, estimateContractFunctionCall, sponsorTransaction, makeSTXTokenTransfer } from '@stacks/transactions';
 
 import { bufferCV, 
   standardPrincipalCV, 
@@ -865,6 +865,45 @@ export const sponsorTx = async (tx:string, minerfee:number) => {
   }
   return txId;
 }
+
+export const sendSTX = async (address:string, amount: string) => {
+  let txId = ''
+  try {
+    const sendAmount = new BigNum(Number(amount)*10**6);
+
+    const txOptions = {
+      recipient: address,
+      amount: sendAmount,
+      senderKey: getStacksNetwork().privateKey,
+      network: stacksNetwork,
+      memo: 'test memo',
+      nonce: new BigNum(nonce), 
+      fee: new BigNum(10000), // TODO: dynamically calculate later
+      anchorMode: AnchorMode.Any,
+    };
+
+    const transaction = await makeSTXTokenTransfer(txOptions);
+
+    // to see the raw serialized tx
+    // const serializedTx = transaction.serialize().toString('hex');
+
+    // broadcasting transaction to the specified network
+    const broadcastResponse = await broadcastTransaction(transaction, stacksNetwork);
+    if(broadcastResponse.error) {
+      console.log(`stacksutils.893 sendstx error: ${broadcastResponse.error} `, broadcastResponse);
+      return 'error: ' + broadcastResponse.error;
+    } else {
+      incrementNonce();
+      const txId = broadcastResponse.txid;
+      console.log('stacksutils.898 sendstx txId ', txId);
+      return txId;
+    }    
+  } catch (error) {
+    console.log('stacksutils.903 sendstx error ', error.message);
+  }
+  return txId;
+}
+
 
 function unHex(input) {
   if(input.slice(0,2) === '0x') {
