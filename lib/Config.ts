@@ -159,6 +159,11 @@ type BalancerConfig = {
   autoBalance: boolean;
 };
 
+type DashboardConfig = {
+  username: string;
+  password: string;
+};
+
 type ConfigType = {
   datadir: string;
 
@@ -180,7 +185,8 @@ type ConfigType = {
   backup: BackupConfig;
   notification: NotificationConfig;
   balancer: BalancerConfig;
-
+  dashboard: DashboardConfig;
+  
   pairs: PairConfig[];
   currencies: CurrencyConfig[];
 
@@ -289,6 +295,11 @@ class Config {
         minBTC: 0,
         overshootPercentage: 10,
         autoBalance: false,
+      },
+
+      dashboard: {
+        username: 'admin',
+        password: 'admin',
       },
 
       pairs: [
@@ -544,6 +555,7 @@ export {
   CurrencyConfig,
   NotificationConfig,
   BalancerConfig,
+  DashboardConfig,
   EthProviderServiceConfig,
   RskProviderServiceConfig,
 };

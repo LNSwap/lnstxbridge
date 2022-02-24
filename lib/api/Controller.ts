@@ -9,8 +9,6 @@ import { SwapUpdate } from '../service/EventHandler';
 import { SwapType, SwapUpdateEvent } from '../consts/Enums';
 import { getChainCurrency, getHexBuffer, getVersion, mapToObject, splitPairId, stringify } from '../Utils';
 
-const tempAuthorizationHeader = process.env.authHeader || 'Basic YWRtaW46YWRtaW4=';
-
 type ApiArgument = {
   name: string,
   type: string,
@@ -597,7 +595,7 @@ class Controller {
   public getAdminSwaps = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     // console.log('getAdminSwaps authHeader ', authHeader, tempAuthorizationHeader);
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -608,7 +606,7 @@ class Controller {
 
   public getAdminReverseSwaps = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -618,7 +616,7 @@ class Controller {
 
   public getAdminBalancerStatus = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -628,7 +626,7 @@ class Controller {
 
   public getAdminBalancer = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -642,7 +640,7 @@ class Controller {
 
   public getAdminBalanceOffchain = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -652,7 +650,7 @@ class Controller {
 
   public getAdminBalanceOnchain = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
@@ -662,7 +660,7 @@ class Controller {
 
   public getAdminBalanceStacks = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== tempAuthorizationHeader) {
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }

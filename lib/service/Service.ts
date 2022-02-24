@@ -7,7 +7,7 @@ import Logger from '../Logger';
 import Swap from '../db/models/Swap';
 import ApiErrors from '../api/Errors';
 import Wallet from '../wallet/Wallet';
-import { ConfigType } from '../Config';
+import { ConfigType, DashboardConfig } from '../Config';
 import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
@@ -94,6 +94,8 @@ class Service {
 
   private balancer: Balancer;
 
+  private dashboardConfig: DashboardConfig;
+
   constructor(
     private logger: Logger,
     config: ConfigType,
@@ -135,6 +137,8 @@ class Service {
     );
 
     this.balancer = new Balancer(this, logger, config.balancer);
+
+    this.dashboardConfig = config.dashboard;
   }
 
   public init = async (configPairs: PairConfig[]): Promise<void> => {
@@ -1842,6 +1846,12 @@ class Service {
 
   public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean}> => {
     return this.balancer.getBalancerConfig();
+  }
+
+  public getAdminDashboardAuth = (): string => {
+    const auth = 'Basic ' + Buffer.from(this.dashboardConfig.username + ':' + this.dashboardConfig.password).toString('base64');
+    // this.logger.verbose(`service.1853 getAdminDashboardAuth ${auth}`);
+    return auth;
   }
 
   /**
