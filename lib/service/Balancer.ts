@@ -42,7 +42,7 @@ class Balancer {
   /**
    * Triggers automated balancing via centralized exchange APIs
    */
-  public balanceFunds = async (params: any): Promise<void> => {
+  public balanceFunds = async (params: any): Promise<{result: string, status: string}> => {
     if (this.apiKey === '') {
       throw new Error('no API key provided');
     }
@@ -87,35 +87,42 @@ class Balancer {
       // buy target currency with smaller usd equivalent
       const buyResult = await this.authClient.swap().postOrder({"notional":smallerUsdTopup, "type":"market", "side":"buy", "order_type": "0", "instrument_id":`${buyCurrency}-USD`});
       console.log('postOrder buyResult ', buyResult);
-      // result['result'] != True:
-
-      // # should have required funds now
-      // result = spotAPI.get_account_info()
-      // print("spotAPI.get_account_info: " + time + json.dumps(result))
-      // logging.info("spotAPI.get_account_info: " + time + json.dumps(result))
+      if(!buyResult.result) {
+        throw new Error('buy order failed')
+      }
 
       // transfer funds for withdrawal
-      // const smallerstxtopup = 1
-      // result = await authClient.swap().postTransfer({"currency":"STX", "amount":smallerstxtopup, "account_from":"1", "account_to": "6"});
-      // console.log('postTransfer result ', result);
-      // // result['result'] != True:
+      const transferResult = await this.authClient.swap().postTransfer({"currency":buyCurrency, "amount":smallerBuyAmount, "account_from":"1", "account_to": "6"});
+      console.log('postTransfer transferResult ', transferResult);
+      if(!transferResult.result) {
+        throw new Error('transfer failed')
+      }
 
-      // check finalstxbalance
-      // const accounts = await authClient.spot().getAccounts();
-      // // console.log('accounts ', accounts);
-      // const stxaccount = accounts.find((item) => item.currency === 'STX');
-      // const finalstxbalance = stxaccount['available'];
-      // console.log('finalstxbalance ', finalstxbalance);
+      // find minimum withdrawal fee for buyCurrency
+      const feeResult = await this.authClient.account().getWithdrawalFee(buyCurrency);
+      console.log('postTransfer feeResult ', feeResult);
+      if(!feeResult.result) {
+        throw new Error('fee retrieval failed')
+      }
 
       // withdraw to signer wallet
-      // result = await authClient.swap().postWithdrawal({"currency":"STX", "amount":smallerstxtopup, "destination":"4", "to_address": signeraddress, "trade_pwd": tradepassword, "fee": "0.5"});
-      // console.log('postTransfer result ', result);
-      // // result['result'] != True:
+      const withdrawResult = await this.authClient.swap().postWithdrawal({"currency":buyCurrency, "amount":smallerBuyAmount, "destination":"4", "to_address": signeraddress, "trade_pwd": this.tradePassword, "fee": feeResult[0]['min_fee']});
+      console.log('postTransfer withdrawResult ', withdrawResult);
+      if(!withdrawResult.result) {
+        throw new Error('withdrawal failed')
+      }
       
-
+      return {
+        status: "OK",
+        result: "successful",
+      }
+    
     } else {
       // get stx address and deposit
-
+      return {
+        status: "OK",
+        result: "successful",
+      }
     }
 
     // topuptarget = 50 
