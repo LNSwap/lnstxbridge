@@ -1840,11 +1840,18 @@ class Service {
     return swaps;
   }
 
-  public getAdminBalancer = async (): Promise<{ data: string; }> => {
+  /**
+   * pairId: X/Y => sell X, buy Y
+   * buyAmount: amount of target currency to buy from exchange
+   */
+  public getAdminBalancer = async (params: any): Promise<{ status: string, result: string }> => {
     // should be able to trigger balancing and return result
-    const data = 'balancer result';
+    
+    const result = 'x exchanged to y for z';
+    const status = 'Balancing done'
     return {
-      data,
+      status,
+      result,
     };
   }
 

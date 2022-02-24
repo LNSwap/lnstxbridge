@@ -622,7 +622,7 @@ class Controller {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
-    const data = await this.service.getAdminBalancer();
+    const data = await this.service.getAdminBalancer(req.body);
     this.successResponse(res, {
       data,
     });
