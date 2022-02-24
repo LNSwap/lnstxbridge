@@ -156,6 +156,7 @@ type BalancerConfig = {
   minSTX: number;
   minBTC: number;
   overshootPercentage: number; // topup percentage on minCurrency value
+  autoBalance: boolean;
 };
 
 type ConfigType = {
@@ -287,6 +288,7 @@ class Config {
         minSTX: 0,
         minBTC: 0,
         overshootPercentage: 10,
+        autoBalance: false,
       },
 
       pairs: [

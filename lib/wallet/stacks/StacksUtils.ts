@@ -72,7 +72,7 @@ export const getGasPrice = async (provider: providers.Provider, gasPrice?: numbe
 };
 
 export const getAddressBalance = async (address:string) => {
-  console.log("started getAddressBalance ", coreApiUrl);
+  // console.log("started getAddressBalance ", coreApiUrl);
   // coreApiUrl = stacksNetwork.coreApiUrl;
 
   // const address = "ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"

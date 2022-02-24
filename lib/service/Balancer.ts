@@ -22,10 +22,22 @@ class Balancer {
     this.authClient = new AuthenticatedClient(this.balancerConfig.apiKey, this.balancerConfig.secretKey, this.balancerConfig.passphrase, this.balancerConfig.apiUri);
     this.smallerRate = 0.95;
     this.signerAddress = '';
+    if(this.balancerConfig.autoBalance) {
+      this.autoBalance();
+    }
   }
 
-  public getBalancerConfig = (): {minSTX: number, minBTC: number, overshootPct: number} => {
-    return { minSTX: this.balancerConfig.minSTX, minBTC: this.balancerConfig.minBTC, overshootPct: this.balancerConfig.overshootPercentage };
+  public autoBalance = () : void => {
+    // auto-balance check every 1 hour = 60*60*1000
+    const autoBalanceInterval=60*1000;
+    this.logger.info(`balancer.33 starting autoBalance every ${autoBalanceInterval} seconds`);
+    setInterval(() => {
+      this.checkBalance();
+    }, autoBalanceInterval);
+  }
+
+  public getBalancerConfig = (): {minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean} => {
+    return { minSTX: this.balancerConfig.minSTX, minBTC: this.balancerConfig.minBTC, overshootPct: this.balancerConfig.overshootPercentage, autoBalance: this.balancerConfig.autoBalance };
   }
 
   public getExchangeBalance = async (currency: string): Promise<string> => {
@@ -44,7 +56,7 @@ class Balancer {
   /**
    * Checks if balancing is needed based on pre-set limits for onchain funds
    */
-  public autoBalancer = async (): Promise<void> => {
+  public checkBalance = async (): Promise<void> => {
     const balanceResult = await getAddressAllBalances();
     const signerSTXBalance = balanceResult['STX']/10**6;
     this.logger.verbose(`balancer.52 signerSTXBalance ${signerSTXBalance}`);
@@ -60,7 +72,7 @@ class Balancer {
 
     if(Number(signerBTCBalance) < this.balancerConfig.minBTC) {
       this.logger.info(`balancer.58 starting auto BTC balance ${signerBTCBalance} < ${this.balancerConfig.minBTC}`);
-      // const balanceResult = await this.balanceFunds({pairId: 'STX/BTC', buyAmount: this.balancerConfig.minBTC*(1+this.balancerConfig.overshootPercentage)})
+      // const balanceResult = await this.balanceFunds({pairId: 'STX/BTC', buyAmount: (this.balancerConfig.minBTC/10**8)*(1+this.balancerConfig.overshootPercentage)})
       // this.logger.info(`balancer.64 auto BTC balanceResult ${balanceResult}`);
     }
   }

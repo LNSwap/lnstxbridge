@@ -1840,7 +1840,7 @@ class Service {
     return swaps;
   }
 
-  public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number}> => {
+  public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean}> => {
     return this.balancer.getBalancerConfig();
   }
 
