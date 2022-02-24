@@ -134,7 +134,7 @@ class Service {
       this.swapManager.nursery,
     );
 
-    this.balancer = new Balancer(logger, config.balancer.apiUri, config.balancer.apiKey, config.balancer.secretKey, config.balancer.passphrase, config.balancer.tradePassword);
+    this.balancer = new Balancer(this, logger, config.balancer);
   }
 
   public init = async (configPairs: PairConfig[]): Promise<void> => {
@@ -1845,14 +1845,13 @@ class Service {
    * buyAmount: amount of target currency to buy from exchange
    */
   public getAdminBalancer = async (params: any): Promise<{ status: string, result: string }> => {
-    // should be able to trigger balancing and return result
-    
-    const result = 'x exchanged to y for z';
-    const status = 'Balancing done'
-    return {
-      status,
-      result,
-    };
+    try {
+      const result = await this.balancer.balanceFunds(params);
+      return result;
+    } catch (error) {
+      this.logger.error(`service.1851 getAdminBalancer error: ${error.message}`);
+      return {status: 'Error', result: `Balance failed with error: ${error.message}`};
+    }
   }
 
   public getAdminBalanceOffchain = async (): Promise<string> => {

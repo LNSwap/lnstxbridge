@@ -153,6 +153,9 @@ type BalancerConfig = {
   secretKey: string;
   passphrase: string;
   tradePassword: string;
+  minSTX: number;
+  minBTC: number;
+  overshootPercentage: number; // topup percentage on minCurrency value
 };
 
 type ConfigType = {
@@ -281,6 +284,9 @@ class Config {
         secretKey: '',
         passphrase: '',
         tradePassword: '',
+        minSTX: 0,
+        minBTC: 0,
+        overshootPercentage: 10,
       },
 
       pairs: [
