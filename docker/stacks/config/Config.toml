@@ -6,11 +6,20 @@ seed = "0000000000000000000000000000000000000000000000000000000000000000"
 local_peer_seed = "0000000000000000000000000000000000000000000000000000000000000000"
 miner = true
 mine_microblocks = true
-microblock_frequency = 3_000
-commit_anchor_block_within = 1_000_000
-wait_time_for_microblocks = 3_000
+microblock_frequency = 100
+wait_time_for_microblocks = 0
 use_test_genesis_chainstate = true
+microblock_attempt_time_ms = 1_000
 
+# https://github.com/stacks-network/stacks-blockchain/blob/7dc20797fb5d815ff4779063c0c0902443a44bb7/testnet/stacks-node/src/tests/neon_integrations.rs#L2811
+#conf.node.mine_microblocks = true;
+#conf.node.wait_time_for_microblocks = 1000;
+#conf.node.microblock_frequency = 1000;
+#conf.miner.microblock_attempt_time_ms = 120_000;
+#conf.node.max_microblocks = 65536;
+#conf.burnchain.max_rbf = 1000000;
+
+#commit_anchor_block_within = 1_000_000
 #mock_mining: false,
 #mine_microblocks: true,
 #microblock_frequency: 30_000,
@@ -25,7 +34,7 @@ events_keys = ["*"]
 [burnchain]
 chain = "bitcoin"
 mode = "mocknet"
-commit_anchor_block_within = 60_000
+commit_anchor_block_within = 120_000
 
 [[ustx_balance]]
 address = "ST3EQ88S02BXXD0T5ZVT3KW947CRMQ1C6DMQY8H19"

@@ -1,4 +1,6 @@
-mkdir -p ./{persistent-data/postgres,persistent-data/stacks-blockchain,bns}
+mkdir -p persistent-data/postgres
+mkdir -p persistent-data/stacks-blockchain
+mkdir -p persistent-data/bns
 export POSTGRES_PASSWORD=postgres
 docker network create stacks-blockchain
 sleep 2
