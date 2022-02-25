@@ -17,6 +17,11 @@ use_test_genesis_chainstate = true
 #max_microblocks: u16::MAX as u64,
 #wait_time_for_microblocks: 30_000,
 
+[[events_observer]]
+endpoint = "stacks-blockchain-api:3700"
+retry_count = 255
+events_keys = ["*"]
+
 [burnchain]
 chain = "bitcoin"
 mode = "mocknet"
@@ -32,8 +37,8 @@ amount = 100000000000000
 
 [[ustx_balance]]
 address = "ST30VXWG00R13WK8RDXBSTHXNWGNKCAQTRYEMA9FK"
-amount = 1000000000
+amount = 100000000000000
 
 [[ustx_balance]]
 address = "ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF"
-amount = 1000000000
+amount = 100000000000000
