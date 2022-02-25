@@ -36,9 +36,10 @@ tasks:
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
   - init: |
-      npm i -g shx rimraf 
-      npm run stacks:mocknet
+      npm i -g shx rimraf postgresql-client
+      npm run stacks:mocknet:microblock
       sleep 180
+    # npm run stacks:mocknet
     command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer

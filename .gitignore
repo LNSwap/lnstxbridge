@@ -79,3 +79,7 @@ lib/Version.ts
 
 # Bitcoin and Litecoin Core RPC cookies
 docker/regtest/data/core/cookies/
+
+# mocknet files
+docker/stacks/persistent-data
+docker/stacks/bns
