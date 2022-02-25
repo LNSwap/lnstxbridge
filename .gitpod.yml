@@ -11,7 +11,7 @@ tasks:
       echo "bronze large spike canoe youth crucial seminar awkward allow frozen client math" > ~/.lnstx/seed.dat
       npm i
       npm run docker:regtest
-      sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
+    # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
     # modify regtest container? to have prune=5000 and use mempool api
     # lnd --lnddir=/root/.lnd-btc --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --restlisten=0.0.0.0:8080 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=127.0.0.1:18443
@@ -89,6 +89,12 @@ tasks:
         sed -i 's#// apiUrl: "http://localhost#apiUrl: "http://localhost#g' /workspace/lnswap-widget/src/config.js
         sed -i 's#gitpodapiurl#https://3999-'"$GITPOD_CORE_URL"'#g' /workspace/lnswap-widget/src/config.js
     command: npm run start
+  - init: |
+        git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
+        cd /workspace/lnstxbridge-dashboard
+        npm i
+        export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
+    command: npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000

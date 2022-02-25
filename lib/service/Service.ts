@@ -7,7 +7,7 @@ import Logger from '../Logger';
 import Swap from '../db/models/Swap';
 import ApiErrors from '../api/Errors';
 import Wallet from '../wallet/Wallet';
-import { ConfigType } from '../Config';
+import { ConfigType, DashboardConfig } from '../Config';
 import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
@@ -55,6 +55,7 @@ import {
   splitPairId,
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
+import Balancer from './Balancer';
 
 // import mempoolJS from "@mempool/mempool.js";
 // import ReverseSwap from 'lib/db/models/ReverseSwap';
@@ -90,6 +91,10 @@ class Service {
   private static MaxInboundLiquidity = 50;
 
   private serviceInvoiceListener;
+
+  private balancer: Balancer;
+
+  private dashboardConfig: DashboardConfig;
 
   constructor(
     private logger: Logger,
@@ -130,6 +135,10 @@ class Service {
       this.currencies,
       this.swapManager.nursery,
     );
+
+    this.balancer = new Balancer(this, logger, config.balancer);
+
+    this.dashboardConfig = config.dashboard;
   }
 
   public init = async (configPairs: PairConfig[]): Promise<void> => {
@@ -171,19 +180,21 @@ class Service {
     await this.rateProvider.init(configPairs);
 
     this.startNFTListener();
+
+    this.balancer.getExchangeBalance('STX');
   }
 
   /**
    * Gets general information about this Boltz instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<GetInfoResponse> => {
-    this.logger.error('service.160 STARTED');
+    // this.logger.error('service.160 STARTED');
     const response = new GetInfoResponse();
     const map = response.getChainsMap();
 
     response.setVersion(getVersion());
 
-    this.logger.error('service.165 - ' + JSON.stringify(this.currencies));
+    // this.logger.error('service.165 - ' + JSON.stringify(this.currencies));
     for (const [symbol, currency] of this.currencies) {
       const chain = new ChainInfo();
       const lnd = new LndInfo();
@@ -211,9 +222,9 @@ class Service {
           chain.setError(formatError(error));
         }
       } else if (currency.stacksClient) {
-        this.logger.error('service.ts 192 TODO');
+        // this.logger.error('service.ts 192 TODO');
         const blockNumber = await getInfo();
-        this.logger.error('blockNumber: ' + blockNumber);
+        this.logger.error('service.216 getInfo stacksClient blockNumber: ' + blockNumber.stacks_tip_height);
       }
 
       if (currency.lndClient) {
@@ -1822,50 +1833,72 @@ class Service {
   }
 
   // admin dashboard
-  public getAdminSwaps = async (): Promise<{ swaps: Swap[]; }> => {
+  public getAdminSwaps = async (): Promise<Swap[]> => {
     const swaps: Swap[] = await this.swapManager.swapRepository.getSwaps();
-    console.log('service.1826 getAdminSwaps swaps ', swaps);
-    return {
-      swaps,
-    };
+    // console.log('service.1826 getAdminSwaps swaps ', swaps);
+    return swaps;
   }
 
-  public getAdminReverseSwaps = async (): Promise<{ swaps: ReverseSwap[]; }> => {
+  public getAdminReverseSwaps = async (): Promise<ReverseSwap[]> => {
     const swaps: ReverseSwap[] = await this.swapManager.reverseSwapRepository.getReverseSwaps();
-    return {
-      swaps,
-    };
+    return swaps;
   }
 
-  public getAdminBalancer = async (): Promise<{ data: string; }> => {
-    // should be able to trigger balancing and return result
-    const data = 'balancer result';
-    return {
-      data,
-    };
+  public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean}> => {
+    return this.balancer.getBalancerConfig();
   }
 
-  public getAdminBalanceOffchain = async (): Promise<{ data: string; }> => {
-    const data = (await this.getBalance()).getBalancesMap();
-    console.log('service.1850 getAdminBalanceOffchain data', data);
-    return {
-      data,
-    };
+  public getAdminDashboardAuth = (): string => {
+    const auth = 'Basic ' + Buffer.from(this.dashboardConfig.username + ':' + this.dashboardConfig.password).toString('base64');
+    // this.logger.verbose(`service.1853 getAdminDashboardAuth ${auth}`);
+    return auth;
   }
 
-  public getAdminBalanceOnchain = async (): Promise<{ data: string; }> => {
-    const data = (await this.getBalance()).getBalancesMap();
-    console.log('service.1859 getAdminBalanceOnchain data', data);
-    return {
-      data,
-    };
+  /**
+   * pairId: X/Y => sell X, buy Y
+   * buyAmount: amount of target currency to buy from exchange
+   */
+  public getAdminBalancer = async (pairId: string, buyAmount: number): Promise<{ status: string, result: string }> => {
+    try {
+      const params = {pairId, buyAmount};
+      const result = await this.balancer.balanceFunds(params);
+      return result;
+    } catch (error) {
+      this.logger.error(`service.1851 getAdminBalancer error: ${error.message}`);
+      return {status: 'Error', result: `Balance failed error: ${error.message}`};
+    }
   }
 
-  public getAdminBalanceStacks = async (): Promise<{ data: string; }> => {
-    const data = JSON.stringify(await getAddressAllBalances());
-    return {
-      data,
-    };
+  public getAdminBalanceOffchain = async (): Promise<string> => {
+    const balances = (await this.getBalance()).getBalancesMap();
+    let balanceLN = '';
+    balances.forEach((balance: Balance) => {
+      const lightningBalance = balance.getLightningBalance();
+      if (lightningBalance) {
+        balanceLN = `${lightningBalance.getLocalBalance()}`;
+      }
+    });
+    return balanceLN;
+  }
+
+  public getAdminBalanceOnchain = async (): Promise<string> => {
+    const balances = (await this.getBalance()).getBalancesMap();
+    let balanceOnchain = ''
+    balances.forEach((balance: Balance, symbol: string) => {
+      if(symbol === 'BTC')
+      balanceOnchain = `${balance.getWalletBalance()!.getTotalBalance()}`;
+    });
+    return balanceOnchain;
+  }
+
+  public getAdminBalanceStacks = async (): Promise<{walletName: string, value: string, address: string}[]> => {
+    const data = await getAddressAllBalances();
+    const signerAddress = (await getStacksNetwork()).signerAddress;
+    let respArray: {walletName: string, value: string, address: string}[] = []
+    Object.keys(data).forEach((key) => {
+      respArray.push({walletName: key, value: data[key], address: signerAddress});
+    })
+    return respArray;
   }
 
 }

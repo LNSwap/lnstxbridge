@@ -592,47 +592,80 @@ class Controller {
     }
   }
 
-  public getAdminSwaps = async (_: Request, res: Response): Promise<void> => {
+  public getAdminSwaps = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    // console.log('getAdminSwaps authHeader ', authHeader, tempAuthorizationHeader);
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminSwaps();
-    console.log('controller.597 getAdminSwaps data ', data);
-    this.successResponse(res, {
-      swaps: data,
-    });
+    // console.log('controller.597 getAdminSwaps data ', data);
+    this.successResponse(res, data);
   }
 
-  public getAdminReverseSwaps = async (_: Request, res: Response): Promise<void> => {
+  public getAdminReverseSwaps = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminReverseSwaps();
-    this.successResponse(res, {
-      swaps: data,
-    });
+    this.successResponse(res, data);
   }
 
-  public getAdminBalancer = async (_: Request, res: Response): Promise<void> => {
-    const data = await this.service.getAdminBalancer();
-    this.successResponse(res, {
-      data,
-    });
+  public getAdminBalancerStatus = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    const data = await this.service.getAdminBalancerConfig();
+    this.successResponse(res, data);
   }
 
-  public getAdminBalanceOffchain = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalancer = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    const { pairId, buyAmount } = this.validateRequest(req.body, [
+      { name: 'pairId', type: 'string' },
+      { name: 'buyAmount', type: 'number' },
+    ]);
+    const data = await this.service.getAdminBalancer(pairId, buyAmount);
+    this.successResponse(res, data);
+  }
+
+  public getAdminBalanceOffchain = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalanceOffchain();
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
 
-  public getAdminBalanceOnchain = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalanceOnchain = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalanceOnchain();
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
 
-  public getAdminBalanceStacks = async (_: Request, res: Response): Promise<void> => {
+  public getAdminBalanceStacks = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
     const data = await this.service.getAdminBalanceStacks();
-    this.successResponse(res, {
-      data,
-    });
+    this.successResponse(res, data);
   }
   
 }
