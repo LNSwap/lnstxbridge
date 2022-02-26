@@ -1,7 +1,11 @@
 [project]
 name = "lnstxbridge"
+authors = []
+description = ""
+telemetry = false
 requirements = []
-costs_version = 1
+analysis = ["check_checker"]
+costs_version = 2
 
 [contracts.claim-for-trait]
 path = "contracts/claim-for-trait.clar"
