@@ -83,3 +83,5 @@ docker/regtest/data/core/cookies/
 # mocknet files
 docker/stacks/persistent-data
 docker/stacks/bns
+
+_clarinet
