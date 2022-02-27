@@ -106,7 +106,7 @@
   },
   "devDependencies": {
     "@boltz/bitcoin-ops": "^2.0.0",
-    "@stacks/blockchain-api-client": "^0.63.0",
+    "@stacks/blockchain-api-client": "^2.1.1",
     "@types/async-lock": "^1.1.2",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.12",

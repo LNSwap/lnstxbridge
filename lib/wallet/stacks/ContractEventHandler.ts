@@ -6,11 +6,21 @@ import Logger from '../../Logger';
 import { parseBuffer, getTx, getInfo, getStacksContractTransactions, getStacksNetwork } from './StacksUtils';
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 // import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
-
+// StacksApiSocketClient
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
 // import ChainTipRepository from 'lib/db/ChainTipRepository';
+
+// testing socket.io client to see if it receives contracttx in microblocks
+// import { io } from 'socket.io-client';
+// const socket = io(getStacksNetwork().coreApiUrl, {
+//   query: {
+//     subscriptions: Array.from(new Set(['address-transaction'])).join(','),
+//   },
+//   transports: [ 'websocket' ]
+// });
+// const sc = new StacksApiSocketClient(socket);
 
 // let network:string = "mocknet";
 // let wsUrl = 'wss://stacks-node-api.mainnet.stacks.co/extended/v1/ws'
@@ -203,9 +213,20 @@ class ContractEventHandler extends EventEmitter {
     //   console.log("stacks contracteventhandler.142 got event ", stringify(event));
     // });
 
+    // this works so microblocks are ok
+    // await client.subscribeMicroblocks(event => {
+    //   console.log('ceh.207 got microblocks: ', event);
+    // });
+
+    // also not fired on microblocks - only on anchor blocks
+    // socket.onAny((eventName, ...args) => {
+    //   console.log('socket.io client got data: ', eventName, args);
+    // });
+    // sc.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP');
+    
     // this.contractAddress -> was working but wrong!
     await client.subscribeAddressTransactions(contract, event => {
-      //works!!
+      //works!! but does not receive microblock events!
       console.log('stacks contracteventhandler.146 got event ', stringify(event));
 
       // failed call
