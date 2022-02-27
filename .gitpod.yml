@@ -36,15 +36,16 @@ tasks:
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
   - init: |
-      npm i -g shx rimraf postgresql-client
+      npm i -g shx rimraf postgresql-client @stacks/cli
+      sleep 60
       npm run stacks:mocknet:microblock
-      sleep 180
+      sleep 120
     # npm run stacks:mocknet
     command: |
       npm run stacks:fund
-      SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer
+      SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF NONCE=1 npm run stacks:fund:signer
       sleep 5
-      SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP npm run stacks:fund:signer
+      SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP NONCE=2 npm run stacks:fund:signer
       sleep 10
       sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v*.clar
       sed -i 's/.sip10swap/.sip10swap_v1/g' contracts/triggerswap_v*.clar
