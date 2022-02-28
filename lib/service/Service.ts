@@ -1749,6 +1749,8 @@ class Service {
   }> => {
     this.logger.verbose(`service.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
 
+    if(!preimageHash.includes('0x')) preimageHash = `0x${preimageHash}`;
+
     // check if any funds locked/claimed into swap contract with preimageHash
     const txData = await this.stacksTransactionRepository.findByPreimageHash(preimageHash);
     console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
