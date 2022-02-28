@@ -542,7 +542,8 @@ class Controller {
       const response = await this.service.updateSwapStatus(id, status, txId, failureReason);
 
       // trigger swap.update so the pendingswapstreams get updated
-      const message = {status, txId, failureReason};
+      const transaction = {id: txId, hex: ''}; // to keep frontend compatibility
+      const message = {status, txId, failureReason, transaction};
       this.service.eventHandler.emit('swap.update', id, message);
 
       this.successResponse(res, response);
