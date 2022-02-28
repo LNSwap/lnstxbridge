@@ -1742,19 +1742,21 @@ class Service {
   }
 
   public getLocked = async (preimageHash: string, swapContractAddress: string, ): Promise<{
-    txData: StacksTransaction,
+    txData: StacksTransaction[],
     // invoice: string,
     // tx: transac,
 
   }> => {
     this.logger.verbose(`service.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
 
+    // preimagehash in stackstxdb should always have 0x because it's parsed from contract call
     if(!preimageHash.includes('0x')) preimageHash = `0x${preimageHash}`;
 
     // check if any funds locked/claimed into swap contract with preimageHash
     const txData = await this.stacksTransactionRepository.findByPreimageHash(preimageHash);
     console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
-    return {txData: txData[0]};
+    // returns relevant txData array - lock/claim/refund
+    return {txData: txData};
   }
 
   // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
