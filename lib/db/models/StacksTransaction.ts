@@ -32,10 +32,6 @@ class StacksTransaction extends Model implements StacksTransactionType {
           unique: true,
           fields: ['preimageHash'],
         },
-        {
-          unique: true,
-          fields: ['claimPrincipal'],
-        },
       ],
     });
   }

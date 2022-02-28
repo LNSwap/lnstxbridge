@@ -340,8 +340,16 @@ class ContractEventHandler extends EventEmitter {
       const swapContract = txData.contract_call.contract_id;
       console.log('checkTx lockFound fetched from contract call: ', preimageHash,amount,claimAddress,refundAddress,timelock);
 
-      // add found lock data to stackstransactionrepository to be consumed by other swap providers
-      this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, 'lock', swapContract);
+      try {
+        // add found lock data to stackstransactionrepository to be consumed by other swap providers
+        // console.log('ceh.344 adding to stacksTransactionRepository ', txid, preimageHash, claimPrincipal, 'lock', swapContract);
+        // const addResult = 
+        await this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, 'lock', swapContract);
+        // console.log('ceh.346 added to stacksTransactionRepository ', addResult );
+      } catch (error) {
+        console.log('ceh.349 add to stacksTransactionRepository error ', error.message);
+      }
+
 
       // got all the data now check if we have the swap
       this.emit(
