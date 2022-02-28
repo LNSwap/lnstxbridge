@@ -28,10 +28,6 @@ class StacksTransaction extends Model implements StacksTransactionType {
       timestamps: false,
       tableName: 'stacksTransactions',
       indexes: [
-        {
-          unique: true,
-          fields: ['preimageHash'],
-        },
       ],
     });
   }
