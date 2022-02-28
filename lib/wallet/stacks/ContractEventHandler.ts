@@ -347,7 +347,7 @@ class ContractEventHandler extends EventEmitter {
         await this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, 'lock', swapContract);
         // console.log('ceh.346 added to stacksTransactionRepository ', addResult );
       } catch (error) {
-        console.log('ceh.349 add to stacksTransactionRepository error ', error.message);
+        console.log('ceh.349 add to stacksTransactionRepository error ', error);
       }
 
 
@@ -378,9 +378,13 @@ class ContractEventHandler extends EventEmitter {
       console.log('claimFound fetched from contract call: ', preimage,hashvalue,amount,claimAddress,refundAddress,timelock);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
 
-      // add found claim data to stackstransactionrepository to be consumed by other swap providers
-      this.stacksTransactionRepository.addClaimTransaction(txid, hashvalue, 'claim', swapContract);
-      
+      try {
+        // add found claim data to stackstransactionrepository to be consumed by other swap providers
+        await this.stacksTransactionRepository.addClaimTransaction(txid, `0x${hashvalue}`, 'claim', swapContract);
+      } catch (error) {
+        console.log('ceh.349 add to stacksTransactionRepository error ', error);
+      }
+
       // got all the data now check if we have the swap
       // getHexBuffer -> good, parseBuffer -> butcher .slice(2)
       this.emit('eth.claim', txid,  getHexBuffer(hashvalue), parseBuffer(preimage));
@@ -397,8 +401,12 @@ class ContractEventHandler extends EventEmitter {
       console.log('refundFound fetched from contract call: ', preimageHash,amount,claimAddress,refundAddress,timelock);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
 
-      // add found lock data to stackstransactionrepository to be consumed by other swap providers
-      this.stacksTransactionRepository.addTransaction(txid, preimageHash, '', 'refund', swapContract);
+      try {
+        // add found lock data to stackstransactionrepository to be consumed by other swap providers
+        await this.stacksTransactionRepository.addTransaction(txid, preimageHash, '', 'refund', swapContract);
+      } catch (error) {
+        console.log('ceh.349 add to stacksTransactionRepository error ', error);
+      }
 
       // got all the data now check if we have the swap
       this.emit('eth.refund', txid, parseBuffer(preimageHash));
