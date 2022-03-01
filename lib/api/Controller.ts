@@ -529,20 +529,24 @@ class Controller {
   // new endpoint for providers to update providerSwap status
   public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id, status, txId, failureReason } = this.validateRequest(req.body, [
+      // console.log('controller.532 updateSwapStatus req.body ', req.body);
+      let { id, status, txId, failureReason, transaction, txHex } = this.validateRequest(req.body, [
         { name: 'id', type: 'string' },
         { name: 'status', type: 'string' },
         { name: 'txId', type: 'string', optional: true },
         { name: 'failureReason', type: 'string', optional: true },
-        // { name: 'claimPrincipal', type: 'string' },
+        { name: 'transaction', type: 'object', optional: true },
+        { name: 'txHex', type: 'string', optional: true },
         // { name: 'swapContractAddress', type: 'string', },
         // { name: 'stxAmount', type: 'number', optional: true },
       ]);
 
       const response = await this.service.updateSwapStatus(id, status, txId, failureReason);
 
+      // console.log('controller.545 updateSwapStatus req.body ', id, status, txId, failureReason, transaction);
+
       // trigger swap.update so the pendingswapstreams get updated
-      const transaction = {id: txId, hex: ''}; // to keep frontend compatibility
+      if(!transaction) transaction = {id: txId, hex: txHex}; // to keep frontend compatibility
       const message = {status, txId, failureReason, transaction};
       this.service.eventHandler.emit('swap.update', id, message);
 

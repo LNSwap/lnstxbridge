@@ -1,5 +1,5 @@
 # LN - STX Bridge with Provider Swap Network
-## Submarine Swaps between assets on Stacks <-> Bitcoin (onchain and Lightning Network)
+## Submarine/Atomic Swaps between assets on Stacks <-> Bitcoin (onchain and Lightning Network)
 
 * This version adds independent provider support such that any entity can register to serve swaps. This app will act as an aggregator to route swap requests to registered swap providers.
 
