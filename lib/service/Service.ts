@@ -1754,7 +1754,7 @@ class Service {
 
     // check if any funds locked/claimed into swap contract with preimageHash
     const txData = await this.stacksTransactionRepository.findByPreimageHash(preimageHash);
-    console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
+    // console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
     // returns relevant txData array - lock/claim/refund
     return {txData: txData};
   }
