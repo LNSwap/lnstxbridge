@@ -7,7 +7,7 @@ import { parseBuffer, getTx, getInfo, getStacksContractTransactions, getStacksNe
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 // import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
 // StacksApiSocketClient
-import { connectWebSocketClient } from '@stacks/blockchain-api-client';
+import { connectWebSocketClient, } from '@stacks/blockchain-api-client';
 import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
 // import ChainTipRepository from 'lib/db/ChainTipRepository';
@@ -223,7 +223,16 @@ class ContractEventHandler extends EventEmitter {
     //   console.log('socket.io client got data: ', eventName, args);
     // });
     // sc.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP');
+    // sc.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF');
     
+    // try to get txns in microblocks with websocket client
+    // await client.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF', event => {
+    //   console.log('got event for ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF ', event);
+    // });
+    // await client.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP', event => {
+    //   console.log('got event for ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP ', event);
+    // });
+
     // this.contractAddress -> was working but wrong!
     await client.subscribeAddressTransactions(contract, event => {
       //works!! but does not receive microblock events!
