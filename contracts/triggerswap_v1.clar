@@ -1,4 +1,4 @@
-;; triggers claimstx from lnswap and claim-for from any nft for trustless LN purchases.
+;; triggers claimstx from lnswap and claim-for from any nft for trustless LN purchases
 
 ;; claim/mint an nft for a principal
 (define-trait claim-for-trait

@@ -1,13 +1,13 @@
 import { BigNumber, providers } from 'ethers';
 import GasNow from './GasNow';
 import { etherDecimals, gweiDecimals } from '../../consts/Consts';
-import { getBiggerBigNumber, getHexBuffer } from '../../Utils';
+import { getBiggerBigNumber, getHexBuffer, getHexString } from '../../Utils';
 // import { RPCClient } from '@stacks/rpc-client';
 import axios from 'axios';
 import { connectWebSocketClient } from '@stacks/blockchain-api-client';
 // TransactionsApi
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
-import { broadcastTransaction, estimateContractFunctionCall } from '@stacks/transactions';
+import { broadcastTransaction, BufferReader, deserializeTransaction, estimateContractFunctionCall, sponsorTransaction, makeSTXTokenTransfer } from '@stacks/transactions';
 
 import { bufferCV, 
   standardPrincipalCV, 
@@ -20,6 +20,7 @@ import { bufferCV,
 import { StacksMocknet, StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { StacksConfig } from 'lib/Config';
 import { EtherSwapValues, Sip10SwapValues } from 'lib/consts/Types';
+import { serializePayload } from '@stacks/transactions/dist/payload';
 
 const BigNum = require('bn.js');
 
@@ -37,6 +38,11 @@ let signerAddress = 'SP13R6D5P5TYE71D81GZQWSD9PGQMQQN54A2YT3BY';
 let nonce = 0;
 let blockHeight = 0;
 let tokens;
+let lockStxCost = 760000;
+let claimStxCost = 760000;
+let refundStxCost = 760000;
+const maxStacksTxFee = 751000;
+console.log('stacksutils.43 setting default lockStxCost, claimStxCost, refundStxCost, maxStacksTxFee ', lockStxCost, claimStxCost, refundStxCost, maxStacksTxFee);
 
 // const apiConfig = new Configuration({
 //   // fetchApi: fetch,
@@ -66,7 +72,7 @@ export const getGasPrice = async (provider: providers.Provider, gasPrice?: numbe
 };
 
 export const getAddressBalance = async (address:string) => {
-  console.log("started getAddressBalance ", coreApiUrl);
+  // console.log("started getAddressBalance ", coreApiUrl);
   // coreApiUrl = stacksNetwork.coreApiUrl;
 
   // const address = "ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
@@ -74,7 +80,7 @@ export const getAddressBalance = async (address:string) => {
   const response = await axios.get(url)
   // const data = await response.json();
   // works!!!
-  console.log("stacksutls  48 test", response.data);
+  // console.log("stacksutls  48 test", response.data);
   return response.data.stx.balance;
 
   // {
@@ -179,7 +185,7 @@ export const setStacksNetwork = (network: string, stacksConfig: StacksConfig, de
 }
 
 export const getStacksNetwork = () => {
-  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight};
+  return {'stacksNetwork': stacksNetwork, 'wsUrl': wsUrl, 'coreApiUrl': coreApiUrl, 'stxSwapAddress': stxSwapAddress, 'privateKey': privateKey, 'signerAddress': signerAddress, 'nonce': nonce, 'blockHeight': blockHeight, 'lockStxCost': lockStxCost, 'claimStxCost': claimStxCost, 'refundStxCost': refundStxCost};
 }
 
 export const getFee = async () => {
@@ -194,19 +200,21 @@ export const getFee = async () => {
   // return response.data;
 }
 
-export const getFeev2 = async (transaction_payload: string) => {
-  
+export const getFeev2 = async (estimated_len: number, transaction_payload: string) => {
   try {
     // console.log("stacksutils.95 getFee ", coreApiUrl);
     let reqobj = {
-      transaction_payload
+      estimated_len,
+      transaction_payload,
     };
     const url = `${coreApiUrl}/v2/fees/transaction`;
+    // console.log("stacksutils 1.getFeev2", url, reqobj);
     const response = await axios.post(url, reqobj);
-    console.log("stacksutils getFeev2", response.data);
+    // console.log("stacksutils 2.getFeev2", response.data);
     return response.data.estimations[0].fee;
-  } catch (e: any) {
-    return "error: " + e.reason;
+  } catch (err) {
+    console.log('getFeev2 err ', err.message)
+    return 500000;
   }
 }
 
@@ -244,19 +252,22 @@ export const getAccountNonce = async (initAddress?: string) => {
     queryAddress = initAddress;
   }
   // console.log(`getAccountInfo ${queryAddress}`);
+
   // https://stacks-node-api.mainnet.stacks.co/extended/v1/address/{principal}/nonces
-  const url = `${coreApiUrl}/extended/v1/address/${queryAddress}/nonces`;
+  // use stacks instance due to nonce issue!
+  // const url = `${coreApiUrl}/extended/v1/address/${queryAddress}/nonces`;
+  const url = `https://stacks-node-api.mainnet.stacks.co/extended/v1/address/${queryAddress}/nonces`;
   try {
     const response = await axios.get(url)
     // console.log("stacksutils getAccountNonce", response.data);
     if (response.data.possible_next_nonce > nonce) {
-      console.log('getAccountNonce updating nonce: ', response.data.possible_next_nonce);
+      console.log('stacksutils.252 getAccountNonce updating nonce: ', response.data.possible_next_nonce);
       nonce = response.data.possible_next_nonce;
     }
     if(response.data.detected_missing_nonces.length > 0) {
       // set nonce to min of missing nonces
       const min = Math.min(...response.data.detected_missing_nonces);
-      console.log(`found missing nonces setting to min `, min);
+      console.log(`stacksutils.258 getAccountNonce found missing nonces setting to min `, min);
       nonce = min;
     }
     return response.data;
@@ -414,91 +425,146 @@ export const listenContract = async (address:string) => {
   */
 }
 
-export const calculateStacksTxFee = async (contract:string, functionName:string) => {
-  // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
-  let contractAddress = contract.split(".")[0];
-  let contractName = contract.split(".")[1];
+export const calculateStacksTxFee = async (contract:string, functionName:string, amount: string, timelock: string, preimageHash?: Buffer, preimage?: Buffer, claimPrincipal?: string) => {
+  try {
+    // STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v3_debug
+    let contractAddress = contract.split(".")[0];
+    let contractName = contract.split(".")[1];
 
-  const postConditionCode = FungibleConditionCode.GreaterEqual;
-  const postConditionAmount = new BigNum(100000);
-  const postConditions = [
-    makeContractSTXPostCondition(
+    amount = unHex(amount)
+    timelock = unHex(timelock)
+    // const preimageorhash = preimageHash ? getHexString(preimageHash) : getHexString(preimage!)
+    const decimalamount = parseInt(amount.toString(),10);
+    // console.log('calculateStacksTxFee.428 start ', functionName, preimageorhash, amount, timelock)
+
+    const postConditionCode = FungibleConditionCode.GreaterEqual;
+    const postConditionAmount = new BigNum(decimalamount);
+    const postConditions = [
+      makeContractSTXPostCondition(
+        contractAddress,
+        contractName,
+        postConditionCode,
+        postConditionAmount
+      )
+    ];
+
+    // Successful claim tx
+    // 0xfcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec
+    // amount
+    // 0x0000000000000000000000000018b1df
+    // claimAddress
+    // 0x01
+    // refundAddress
+    // 0x01
+    // timelock
+    // 0x0000000000000000000000000000405a
+
+    let functionArgs: any[] = [];
+    if(functionName.includes("lockStx")) {
+      functionArgs = [
+        // bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+        // standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
+        bufferCV(preimageHash!),
+        bufferCV(Buffer.from(amount,'hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from(timelock,'hex')),
+        standardPrincipalCV(claimPrincipal!),
+      ];
+    } else if(functionName.includes("refundStx")) {
+      functionArgs = [
+        bufferCV(preimageHash!),
+        bufferCV(Buffer.from(amount,'hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from(timelock,'hex')),
+      ];
+    } else {
+      // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
+      functionArgs = [
+        // bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('01','hex')),
+        // bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
+        bufferCV(preimage!),
+        bufferCV(Buffer.from(amount,'hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from('01','hex')),
+        bufferCV(Buffer.from(timelock,'hex')),
+      ];
+    }
+
+    // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
+
+    const txOptions = {
       contractAddress,
       contractName,
-      postConditionCode,
-      postConditionAmount
-    )
-  ];
+      functionName,
+      functionArgs: functionArgs,
+      senderKey: getStacksNetwork().privateKey,
+      // validateWithAbi: true,
+      network: stacksNetwork,
+      postConditionMode: PostConditionMode.Allow,
+      postConditions,
+      anchorMode: AnchorMode.Any,
+      onFinish: data => {
+        console.log('Stacks claim Transaction:', JSON.stringify(data));
+      }
+    };
 
-  // Successful claim tx
-  // 0xfcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec
-  // amount
-  // 0x0000000000000000000000000018b1df
-  // claimAddress
-  // 0x01
-  // refundAddress
-  // 0x01
-  // timelock
-  // 0x0000000000000000000000000000405a
+    // this.toObject(txOptions)
+    // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
 
-  let functionArgs: any[] = [];
-  if(functionName.includes("lockStx")) {
-    functionArgs = [
-      bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-      bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-      standardPrincipalCV('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF'),
-    ];
-  } else {
-    // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
-    functionArgs = [
-      bufferCV(Buffer.from('fcd0617b0cbabe3a49028d48e544d1510caee1dac31aba29dcecb410e23a4cec', 'hex')),
-      bufferCV(Buffer.from('0000000000000000000000000018b1df','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('01','hex')),
-      bufferCV(Buffer.from('0000000000000000000000000000405a','hex')),
-    ];
+    const transaction = await makeContractCall(txOptions);
+    // console.log("stacksutil.209 transaction: ", transaction, transaction.payload)
+
+    // to see the raw serialized tx
+    const serializedTx = transaction.serialize();
+    // .toString('hex');
+    // console.log('calculateStacksTxFee serializedTx and byteLength ', serializedTx.byteLength, getHexString(serializedTx));
+
+    // resolves to number of microstacks per byte!!!
+    // const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
+    
+    // I think we need to serialize and get the length in bytes and multiply with base fee rate.
+    // const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
+
+    // estimatecontractfunctioncall uses old values I think so trying manually getfeev2
+    const serializedPayload = serializePayload(transaction.payload);
+    const v2fee = await getFeev2(serializedTx.byteLength, getHexString(serializedPayload));
+    // console.log('calculateStacksTxFee v2fees: ', v2fee);
+
+    // Number(totalfee), // stop using old estimate result which gives ~80k-100k mstx
+    const normalizedFee = Math.min(maxStacksTxFee, Number(v2fee));
+    if(functionName.includes('lockStx')) {
+      lockStxCost = normalizedFee;
+    } else if(functionName.includes('claimStx')) {
+      claimStxCost = normalizedFee;
+    } else {
+      refundStxCost = normalizedFee;
+    }
+
+    // totalfee
+    // console.log("stacksutils.503 functionName, estimatedFee, normalizedFee, v2fee: ", functionName, estimateFee, normalizedFee, v2fee);
+    return Number(normalizedFee);
+  } catch (err) {
+    console.log('stacksutils.511 calculateStacksTxFee err ', functionName, err.message);
+    console.log('stacksutils.512 err setting lock/claim/refund costs to default ', 500000);
+    if(functionName.includes('lockStx')) {
+      lockStxCost = 500000;
+    } else if(functionName.includes('claimStx')) {
+      claimStxCost = 500000;
+    } else {
+      refundStxCost = 500000;
+    }
+    return 500000;
   }
 
-  // console.log("stacksutil.231 functionargs: ", functionName, JSON.stringify(functionArgs));
-
-  const txOptions = {
-    contractAddress,
-    contractName,
-    functionName,
-    functionArgs: functionArgs,
-    senderKey: getStacksNetwork().privateKey,
-    validateWithAbi: true,
-    network: stacksNetwork,
-    postConditionMode: PostConditionMode.Allow,
-    postConditions,
-    anchorMode: AnchorMode.Any,
-    onFinish: data => {
-      console.log('Stacks claim Transaction:', JSON.stringify(data));
-    }
-  };
-
-  // this.toObject(txOptions)
-  // console.log("stacks contracthandler.84 txOptions: " + this.toObject(txOptions));
-
-  const transaction = await makeContractCall(txOptions);
-  // console.log("stacksutil.209 transaction: ", transaction)
-
-  // to see the raw serialized tx
-  const serializedTx = transaction.serialize();
-  // .toString('hex');
-  // console.log('serializedTx and byteLength ', serializedTx, serializedTx.byteLength);
-
-  // resolves to number of microstacks per byte!!!
-  const estimateFee = await estimateContractFunctionCall(transaction, stacksNetwork);
-  
-  // I think we need to serialize and get the length in bytes and multiply with base fee rate.
-  const totalfee = BigNumber.from(serializedTx.byteLength).mul(estimateFee);
-
-  // console.log("estimatedFee, totalfee: ", estimateFee, totalfee);
-  return Number(totalfee);
 }
 
 // NOT USED
@@ -762,5 +828,87 @@ export const mintNFTforUser = async (contract:string, functionName:string, userA
     if(error.message) errormsg += error.message;
     console.log("stacksutil.690 mintnft caught error: ", errormsg, error);
     return errormsg;
+  }
+}
+
+export const sponsorTx = async (tx:string, minerfee:number) => {
+  let txId = ''
+  try {
+    const bufferReader = new BufferReader(Buffer.from(tx, 'hex'));
+    const deserializedTx = deserializeTransaction(bufferReader);
+    const sponsorKey = getStacksNetwork().privateKey;
+    const fee = new BigNum(minerfee*10**6);   
+    // console.log('deserializedTx ', deserializedTx);
+
+    const sponsorOptions = {
+      transaction: deserializedTx,
+      sponsorPrivateKey: sponsorKey,
+      sponsorNonce: new BigNum(nonce),
+      network: stacksNetwork,
+      fee,
+    };
+    // console.log('sponsorTx sponsorOptions ', sponsorOptions);
+    
+    const sponsoredTx = await sponsorTransaction(sponsorOptions);  
+    const broadcastResponse = await broadcastTransaction(sponsoredTx, stacksNetwork);
+    if(broadcastResponse.error) {
+      console.log(`stacksutils.788 sponsorTx error: ${broadcastResponse.error} `, broadcastResponse);
+      return 'error: ' + broadcastResponse.error;
+    } else {
+      incrementNonce();
+      const txId = broadcastResponse.txid;
+      console.log('stacksutils.793 sponsorTx txId, minerfee', txId, minerfee);
+      return txId;
+    }    
+  } catch(err) {
+    console.log('catch err sponsorTx ', err);
+  }
+  return txId;
+}
+
+export const sendSTX = async (address:string, amount: number, memo: string) => {
+  let txId = ''
+  try {
+    const sendAmount = new BigNum(amount*10**6);
+
+    const txOptions = {
+      recipient: address,
+      amount: sendAmount,
+      senderKey: getStacksNetwork().privateKey,
+      network: stacksNetwork,
+      memo,
+      nonce: new BigNum(nonce), 
+      fee: new BigNum(10000), // TODO: dynamically calculate fee later
+      anchorMode: AnchorMode.Any,
+    };
+
+    const transaction = await makeSTXTokenTransfer(txOptions);
+
+    // to see the raw serialized tx
+    // const serializedTx = transaction.serialize().toString('hex');
+
+    // broadcasting transaction to the specified network
+    const broadcastResponse = await broadcastTransaction(transaction, stacksNetwork);
+    if(broadcastResponse.error) {
+      console.log(`stacksutils.893 sendstx error: ${broadcastResponse.error} `, broadcastResponse);
+      return 'error: ' + broadcastResponse.error;
+    } else {
+      incrementNonce();
+      const txId = broadcastResponse.txid;
+      console.log('stacksutils.898 sendstx txId ', txId);
+      return txId;
+    }    
+  } catch (error) {
+    console.log('stacksutils.903 sendstx error ', error.message);
+  }
+  return txId;
+}
+
+
+function unHex(input) {
+  if(input.slice(0,2) === '0x') {
+    return input.slice(2)
+  } else {
+    return input
   }
 }

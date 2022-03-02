@@ -8,7 +8,7 @@ require('yargs')
     'rpc.host': {
       describe: 'gRPC service host',
       alias: 'h',
-      default: '127.0.0.1',
+      default: 'localhost',
       type: 'string',
     },
     'rpc.port': {

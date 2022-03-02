@@ -7,6 +7,7 @@ import Poloniex from './exchanges/Poloniex';
 import CoinbasePro from './exchanges/CoinbasePro';
 import Coingecko from './exchanges/Coingecko';
 import ArkadikoOracle from './exchanges/ArkadikoOracle';
+import Okcoin from './exchanges/Okcoin';
 
 class DataAggregator {
   private readonly exchanges: Exchange[] = [
@@ -17,6 +18,7 @@ class DataAggregator {
     new CoinbasePro(),
     new Coingecko(),
     new ArkadikoOracle(),
+    new Okcoin(),
   ];
 
   public readonly pairs = new Set<[string, string]>();
@@ -35,6 +37,7 @@ class DataAggregator {
     const queryRate = async (base: string, quote: string) => {
       const pairId = getPairId({ base, quote });
       const rate = await this.getRate(base, quote);
+      // console.log('dataaggregator.38 getRate base-quote ', base, quote, rate);
 
       if (rate && !isNaN(rate)) {
         rateMap.set(pairId, rate);
@@ -64,6 +67,7 @@ class DataAggregator {
     // Filter all results that are not numeric (failed requests)
     const validResults: number[] = results.filter(result => !isNaN(Number(result)));
     validResults.sort((a, b) => a - b);
+    console.log('dataagg.65 allexchange validResults: ', validResults);
 
     const middle = (validResults.length - 1) / 2;
 

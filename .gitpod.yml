@@ -11,8 +11,11 @@ tasks:
       echo "bronze large spike canoe youth crucial seminar awkward allow frozen client math" > ~/.lnstx/seed.dat
       npm i
       npm run docker:regtest
-      sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
+    # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
+    # modify regtest container? to have prune=5000 and use mempool api
+    # lnd --lnddir=/root/.lnd-btc --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --restlisten=0.0.0.0:8080 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=127.0.0.1:18443
+    # lnd --lnddir=/root/.lnd-btc2 --listen=127.0.0.1:9736 --rpclisten=0.0.0.0:10011 --restlisten=0.0.0.0:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=127.0.0.1:18443
     command: |
       npm run dev
     # rm package-lock.json
@@ -33,19 +36,24 @@ tasks:
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
   - init: |
-      npm i -g shx rimraf 
-      npm run stacks:mocknet
-      sleep 180
+      npm i -g shx rimraf postgresql-client @stacks/cli
+      sleep 60
+      npm run stacks:mocknet:microblock
+      sleep 120
+    # npm run stacks:mocknet
     command: |
       npm run stacks:fund
-      SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF npm run stacks:fund:signer
+      SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF NONCE=1 npm run stacks:fund:signer
       sleep 5
-      SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP npm run stacks:fund:signer
+      SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP NONCE=2 npm run stacks:fund:signer
       sleep 5
-      SIGNER=ST3RXC1Q8MXYKPWRNQ6ZFAWSRY8PKRK8H4BW2F8F npm run stacks:fund:signer
-      sleep 10
-      sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v1.clar
+      SIGNER=ST3RXC1Q8MXYKPWRNQ6ZFAWSRY8PKRK8H4BW2F8F NONCE=3 npm run stacks:fund:signer
+      sleep 5
+      sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v*.clar
+      sed -i 's/.sip10swap/.sip10swap_v1/g' contracts/triggerswap_v*.clar
       npm run stacks:deploy
+      sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v*.clar
+      sed -i 's/.sip10swap_v1/.sip10swap/g' contracts/triggerswap_v*.clar
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
         git clone -b aggregator https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
@@ -59,6 +67,7 @@ tasks:
         sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
         sed -i 's#REACT_APP_BOLTZ_API=https://api.lnswap.org:9002#REACT_APP_BOLTZ_API=${REACT_APP_BOLTZ_API}#g' .env
         npm i    
+      # sed -i 's/REACT_APP_STACKS_NETWORK_TYPE=mainnet/REACT_APP_STACKS_NETWORK_TYPE=mocknet/g' .env
       # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g"  /workspace/lnstxbridge-frontend/src/views/swap/steps/sendTransaction.js
       # sed -i "s#new StacksMocknet()#new StacksMocknet({url: '$REACT_APP_STACKS_API'})#g" /workspace/lnstxbridge-frontend/src/views/reverse/steps/lockingFunds.js
       # git stash
@@ -66,7 +75,7 @@ tasks:
     command: npm run start
   - init: brew install clarinet
     command: |
-        sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v1.clar
+        sed -i 's/.stxswap_v8/.stxswap/g' contracts/triggerswap_v*.clar
         clarinet test
   - init: |
         echo 'npm run compile:watch'
@@ -80,6 +89,7 @@ tasks:
         git clone -b aggregator https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
         cd /workspace/lnswap-widget
         npm i
+        export GITPOD_CORE_URL=${GITPOD_WORKSPACE_URL:8}
         sed -i 's#apiUrl: "https://api.lnswap#// apiUrl: "https://api.lnswap#g' /workspace/lnswap-widget/src/config.js
         sed -i 's#// apiUrl: "http://localhost#apiUrl: "http://localhost#g' /workspace/lnswap-widget/src/config.js
         sed -i 's#/createswap#/zcreateswap#g' /workspace/lnswap-widget/src/components/Widget/Widget.js
@@ -98,6 +108,13 @@ tasks:
         docker cp regtest:/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon ~/.lnstx-client/lnd/admin.macaroon
       # no need - manually set ~/.lnstx-client/boltz.conf providerUrl=https://9003-pseudozach-lnstxbridge-e1iw24tfkhf.ws-us32.gitpod.io
       # sed -i 's#http://localhost:9003#https://9003-`${GITPOD_WORKSPACE_URL:8}`#g' ~/.lnstx-client/boltz.conf
+      # sed -i 's#gitpodapiurl#https://3999-'"$GITPOD_CORE_URL"'#g' /workspace/lnswap-widget/src/config.js
+    command: npm run start
+  - init: |
+        git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
+        cd /workspace/lnstxbridge-dashboard
+        npm i
+        export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
     command: npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:

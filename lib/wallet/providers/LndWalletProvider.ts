@@ -41,6 +41,7 @@ class LndWalletProvider implements WalletProviderInterface {
   }
 
   private handleLndTransaction = async (transactionId: string, address: string, listStartHeight: number): Promise<SentTransaction> => {
+    this.logger.info('lndwallet.44 handleLndTransaction getRawTransactionVerbose');
     const rawTransaction = await this.chainClient.getRawTransactionVerbose(transactionId);
 
     let vout = 0;

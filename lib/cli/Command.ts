@@ -10,7 +10,7 @@ export interface GrpcResponse {
 }
 
 export const loadBoltzClient = (argv: Arguments<any>): BoltzClient => {
-  const certPath = argv.tlscertpath ? argv.tlscertpath : path.join(getServiceDataDir('boltz'), 'tls.cert');
+  const certPath = argv.tlscertpath ? argv.tlscertpath : path.join(getServiceDataDir('lnstx'), 'tls.cert');
   const cert = fs.readFileSync(certPath);
 
   return new BoltzClient(`${argv.rpc.host}:${argv.rpc.port}`, grpc.credentials.createSsl(cert));

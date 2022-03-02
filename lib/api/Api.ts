@@ -5,7 +5,7 @@ import Controller from './Controller';
 import { ApiConfig } from '../Config';
 import Service from '../service/Service';
 
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import * as https from 'https';
 
 class Api {
@@ -37,7 +37,7 @@ class Api {
     await this.controller.init();
 
     await new Promise<void>((resolve) => {
-      if(this.config.sslEnabled) {
+      if(this.config.sslEnabled && existsSync(this.config.sslKey)) {
         const options = {
           key: readFileSync(this.config.sslKey),
           cert: readFileSync(this.config.sslCert),
@@ -80,6 +80,7 @@ class Api {
     this.app.route('/setinvoice').post(controller.setInvoice);
 
     this.app.route('/mintnft').post(controller.mintNFT);
+    this.app.route('/broadcastsponsoredtx').post(controller.broadcastSponsoredTx);
 
     // EventSource streams
     this.app.route('/streamswapstatus').get(controller.streamSwapStatus);
@@ -95,6 +96,15 @@ class Api {
     this.app.route('/zswapstatus').post(controller.zswapStatus);
     // provider -> aggregator
     this.app.route('/updateswapstatus').post(controller.updateSwapStatus);
+    
+    // admin dashboard
+    this.app.route('/api/admin/swaps').get(controller.getAdminSwaps);
+    this.app.route('/api/admin/swaps/reverse').get(controller.getAdminReverseSwaps);
+    this.app.route('/api/admin/balancer/status').get(controller.getAdminBalancerStatus);
+    this.app.route('/api/admin/balancer').post(controller.getAdminBalancer);
+    this.app.route('/api/admin/lnd/balance/offchain').get(controller.getAdminBalanceOffchain);
+    this.app.route('/api/admin/lnd/balance/onchain').get(controller.getAdminBalanceOnchain);
+    this.app.route('/api/admin/stacks/balance').get(controller.getAdminBalanceStacks);
   }
 }
 

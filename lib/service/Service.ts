@@ -7,7 +7,7 @@ import Logger from '../Logger';
 import Swap from '../db/models/Swap';
 import ApiErrors from '../api/Errors';
 import Wallet from '../wallet/Wallet';
-import { ConfigType } from '../Config';
+import { ConfigType, DashboardConfig } from '../Config';
 import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
@@ -25,10 +25,11 @@ import TimeoutDeltaProvider from './TimeoutDeltaProvider';
 import { Network } from '../wallet/ethereum/EthereumManager';
 import RateProvider, { PairType } from '../rates/RateProvider';
 import { getGasPrice } from '../wallet/ethereum/EthereumUtils';
-import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksRawTransaction, mintNFTforUser } from '../wallet/stacks/StacksUtils';
+import { calculateStxOutTx, getAddressAllBalances, getFee, getInfo, getStacksNetwork, getStacksRawTransaction, mintNFTforUser, sponsorTx } from '../wallet/stacks/StacksUtils';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import SwapManager, { ChannelCreationInfo } from '../swap/SwapManager';
-import { etherDecimals, ethereumPrepayMinerFeeGasLimit, gweiDecimals } from '../consts/Consts';
+// etherDecimals, ethereumPrepayMinerFeeGasLimit,
+import { gweiDecimals } from '../consts/Consts';
 import { BaseFeeType, CurrencyType, OrderSide, ServiceInfo, ServiceWarning, SwapUpdateEvent } from '../consts/Enums';
 import {
   Balance,
@@ -59,13 +60,16 @@ import {
   reverseBuffer,
   splitPairId,
 } from '../Utils';
+import ReverseSwap from '../../lib/db/models/ReverseSwap';
+import Balancer from './Balancer';
 
-import mempoolJS from "@mempool/mempool.js";
+// import mempoolJS from "@mempool/mempool.js";
+// import ReverseSwap from 'lib/db/models/ReverseSwap';
+// const { bitcoin: { transactions } } = mempoolJS({
+//   hostname: 'mempool.space'
+// });
+
 import axios from 'axios';
-const { bitcoin: { transactions } } = mempoolJS({
-  hostname: 'mempool.space'
-});
-
 import tor_axios from 'tor-axios'
 const tor = tor_axios.torSetup({
     ip: 'localhost',
@@ -103,6 +107,10 @@ class Service {
   private static MaxInboundLiquidity = 50;
 
   private serviceInvoiceListener;
+
+  private balancer: Balancer;
+
+  private dashboardConfig: DashboardConfig;
 
   constructor(
     private logger: Logger,
@@ -146,6 +154,10 @@ class Service {
       this.currencies,
       this.swapManager.nursery,
     );
+
+    this.balancer = new Balancer(this, logger, config.balancer);
+
+    this.dashboardConfig = config.dashboard;
   }
 
   public init = async (configPairs: PairConfig[]): Promise<void> => {
@@ -187,19 +199,21 @@ class Service {
     await this.rateProvider.init(configPairs);
 
     this.startNFTListener();
+
+    this.balancer.getExchangeBalance('STX');
   }
 
   /**
    * Gets general information about this Boltz instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<GetInfoResponse> => {
-    this.logger.error('service.160 STARTED');
+    // this.logger.error('service.160 STARTED');
     const response = new GetInfoResponse();
     const map = response.getChainsMap();
 
     response.setVersion(getVersion());
 
-    this.logger.error('service.165 - ' + JSON.stringify(this.currencies));
+    // this.logger.error('service.165 - ' + JSON.stringify(this.currencies));
     for (const [symbol, currency] of this.currencies) {
       const chain = new ChainInfo();
       const lnd = new LndInfo();
@@ -227,9 +241,9 @@ class Service {
           chain.setError(formatError(error));
         }
       } else if (currency.stacksClient) {
-        this.logger.error('service.ts 192 TODO');
+        // this.logger.error('service.ts 192 TODO');
         const blockNumber = await getInfo();
-        this.logger.error('blockNumber: ' + blockNumber);
+        this.logger.error('service.216 getInfo stacksClient blockNumber: ' + blockNumber.stacks_tip_height);
       }
 
       if (currency.lndClient) {
@@ -424,16 +438,16 @@ class Service {
       }
     }
 
-    // need blockhash because we're running a pruned node with no -txindex
-    if((await getInfo()).network_id === 1) {
-      const mempoolTx = await transactions.getTx({ txid: transactionHash });
-      return await currency.chainClient.getRawTransactionBlockHash(transactionHash, mempoolTx.status.block_hash);
-    } else {
-      // regtest
-      return await currency.chainClient.getRawTransaction(transactionHash);
-    }
-
-    // return await currency.chainClient.getRawTransaction(transactionHash);
+    // // need blockhash because we're running a pruned node with no -txindex
+    // if((await getInfo()).network_id === 1) {
+    //   const mempoolTx = await transactions.getTx({ txid: transactionHash });
+    //   return await currency.chainClient.getRawTransactionBlockHash(transactionHash, mempoolTx.status.block_hash);
+    // } else {
+    //   // regtest
+    //   return await currency.chainClient.getRawTransaction(transactionHash);
+    // }
+    
+    return await currency.chainClient.getRawTransaction(transactionHash);
   }
 
   /**
@@ -469,7 +483,18 @@ class Service {
     }
 
     const { blocks } = await currency.chainClient.getBlockchainInfo();
+    this.logger.info('service.455 getSwapTransaction getRawTransaction which will fail due to pruned node.');
     const transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
+    
+    // let transactionHex;
+    // // need blockhash because we're running a pruned node with no -txindex
+    // if((await getInfo()).network_id === 1) {
+    //   const mempoolTx = await transactions.getTx({ txid: swap.lockupTransactionId! });
+    //   transactionHex = await currency.chainClient.getRawTransactionBlockHash(swap.lockupTransactionId, mempoolTx.status.block_hash);
+    // } else {
+    //   // regtest
+    //   transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
+    // }
 
     const response: any = {
       transactionHex,
@@ -637,6 +662,45 @@ class Service {
         throw error;
       }
     }
+  }
+
+
+  /**
+   * Broadcast a sponsored tx on Stacks for prepaid reverseswaps
+   */
+   public broadcastSponsoredTx = async (id: string, tx: string): Promise<string> => {
+    const currency = this.getCurrency('STX');
+
+    if (currency.stacksClient === undefined) {
+      throw new Error('stacksClient not found')
+    }
+
+    let reverseSwap: ReverseSwap | null | undefined;
+    reverseSwap = await this.swapManager.reverseSwapRepository.getReverseSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    if (!reverseSwap) {
+      throw new Error(`Reverse swap ${id} not found`);
+    }
+
+    if(!reverseSwap.minerFeeInvoice) {
+      throw new Error(`Reverse swap is not prepaid`);
+    }
+
+    if(reverseSwap.status !== SwapUpdateEvent.TransactionConfirmed) {
+      throw new Error(`Reverse swap is not in correct status`);
+    }
+
+    // sponsor and broadcast tx
+    console.log('s.652 sponsoring and broadcasting id, tx ', id, tx);
+    const txResult = await sponsorTx(tx, reverseSwap.minerFeeOnchainAmount!);
+    console.log('s.658 txResult ', txResult);
+
+    // mark it sponsored - claimtx?
+    return txResult;
   }
 
   /**
@@ -1319,8 +1383,10 @@ class Service {
 
       case CurrencyType.Sip10:
         this.logger.verbose('Sip10 swap args ' +  JSON.stringify(args));
+        if (args.prepayMinerFee === true) {
+          throw ApiErrors.UNSUPPORTED_PARAMETER(sending, 'prepayMinerFee');
+        }
         break;
-
     }
 
     const onchainTimeoutBlockDelta = this.timeoutDeltaProvider.getTimeout(args.pairId, side, true);
@@ -1337,7 +1403,12 @@ class Service {
 
     const rate = getRate(pairRate, side, true);
     const feePercent = this.rateProvider.feeProvider.getPercentageFee(args.pairId)!;
-    const baseFee = this.rateProvider.feeProvider.getBaseFee(sendingCurrency.symbol, BaseFeeType.ReverseLockup);
+    let baseFee = this.rateProvider.feeProvider.getBaseFee(sendingCurrency.symbol, BaseFeeType.ReverseLockup);
+    if(sendingCurrency.symbol === 'STX' || sendingCurrency.symbol === 'USDA') {
+      // convert from mstx to boltz default 10**8
+      baseFee = Math.round(baseFee * 100)
+    }
+    // console.log('service.1375 createreverseswap rate, feePercent, baseFee: ', rate, feePercent, baseFee);
 
     let onchainAmount: number;
     let holdInvoiceAmount: number;
@@ -1372,6 +1443,7 @@ class Service {
       holdInvoiceAmount = Math.ceil(holdInvoiceAmount);
 
       percentageFee = Math.ceil(holdInvoiceAmount * rate * feePercent);
+      // console.log('service.1410 createreverseswap onchainAmount, holdInvoiceAmount, percentageFee: ', onchainAmount, args.onchainAmount + baseFee, holdInvoiceAmount, percentageFee);
     } else {
       throw Errors.NO_AMOUNT_SPECIFIED();
     }
@@ -1383,24 +1455,46 @@ class Service {
 
     const swapIsPrepayMinerFee = this.prepayMinerFee || args.prepayMinerFee === true;
 
+    console.log('s.1369 swapIsPrepayMinerFee ', swapIsPrepayMinerFee);
     if (swapIsPrepayMinerFee) {
       if (sendingCurrency.type === CurrencyType.BitcoinLike) {
         prepayMinerFeeInvoiceAmount = Math.ceil(baseFee / rate);
         holdInvoiceAmount = Math.floor(holdInvoiceAmount - prepayMinerFeeInvoiceAmount);
       } else {
-        const gasPrice = await getGasPrice(sendingCurrency.provider!);
-        prepayMinerFeeOnchainAmount = ethereumPrepayMinerFeeGasLimit.mul(gasPrice).div(etherDecimals).toNumber();
 
-        const sendingAmountRate = sending === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', sending);
+        // // old version
+        // const gasPrice = await getGasPrice(sendingCurrency.provider!);
+        // prepayMinerFeeOnchainAmount = ethereumPrepayMinerFeeGasLimit.mul(gasPrice).div(etherDecimals).toNumber();
 
-        const receivingAmountRate = receiving === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', receiving);
-        prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate);
+        // const sendingAmountRate = sending === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', sending);
 
+        // const receivingAmountRate = receiving === 'ETH' ? 1 : this.rateProvider.rateCalculator.calculateRate('ETH', receiving);
+        // prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate);
+
+        // // If the invoice amount was specified, the onchain and hold invoice amounts need to be adjusted
+        // if (invoiceAmountDefined) {
+        //   onchainAmount -= Math.ceil(prepayMinerFeeOnchainAmount * sendingAmountRate);
+        //   holdInvoiceAmount = Math.floor(holdInvoiceAmount - prepayMinerFeeInvoiceAmount);
+        // }
+
+        // calculate stx claim fee
+        const claimCost = getStacksNetwork().claimStxCost;
+        // const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx'); // in mstx
+
+        prepayMinerFeeOnchainAmount = Math.max(claimCost * 10**-6, 0.5); // stx tx fee in stx
+
+        const sendingAmountRate = sending === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', sending);
+        const receivingAmountRate = receiving === 'STX' ? 1 : this.rateProvider.rateCalculator.calculateRate('STX', receiving);
+        prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate * 10**8); //convert to sats
+        // service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate 87025 5 0.00005008000000000001 1
+        console.log('service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate', prepayMinerFeeOnchainAmount, prepayMinerFeeInvoiceAmount, receivingAmountRate, sendingAmountRate);
+        
         // If the invoice amount was specified, the onchain and hold invoice amounts need to be adjusted
         if (invoiceAmountDefined) {
           onchainAmount -= Math.ceil(prepayMinerFeeOnchainAmount * sendingAmountRate);
           holdInvoiceAmount = Math.floor(holdInvoiceAmount - prepayMinerFeeInvoiceAmount);
         }
+
       }
     }
 
@@ -1986,6 +2080,74 @@ class Service {
     }
   }
 
+  // admin dashboard
+  public getAdminSwaps = async (): Promise<Swap[]> => {
+    const swaps: Swap[] = await this.swapManager.swapRepository.getSwaps();
+    // console.log('service.1826 getAdminSwaps swaps ', swaps);
+    return swaps;
+  }
+
+  public getAdminReverseSwaps = async (): Promise<ReverseSwap[]> => {
+    const swaps: ReverseSwap[] = await this.swapManager.reverseSwapRepository.getReverseSwaps();
+    return swaps;
+  }
+
+  public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean}> => {
+    return this.balancer.getBalancerConfig();
+  }
+
+  public getAdminDashboardAuth = (): string => {
+    const auth = 'Basic ' + Buffer.from(this.dashboardConfig.username + ':' + this.dashboardConfig.password).toString('base64');
+    // this.logger.verbose(`service.1853 getAdminDashboardAuth ${auth}`);
+    return auth;
+  }
+
+  /**
+   * pairId: X/Y => sell X, buy Y
+   * buyAmount: amount of target currency to buy from exchange
+   */
+  public getAdminBalancer = async (pairId: string, buyAmount: number): Promise<{ status: string, result: string }> => {
+    try {
+      const params = {pairId, buyAmount};
+      const result = await this.balancer.balanceFunds(params);
+      return result;
+    } catch (error) {
+      this.logger.error(`service.1851 getAdminBalancer error: ${error.message}`);
+      return {status: 'Error', result: `Balance failed error: ${error.message}`};
+    }
+  }
+
+  public getAdminBalanceOffchain = async (): Promise<string> => {
+    const balances = (await this.getBalance()).getBalancesMap();
+    let balanceLN = '';
+    balances.forEach((balance: Balance) => {
+      const lightningBalance = balance.getLightningBalance();
+      if (lightningBalance) {
+        balanceLN = `${lightningBalance.getLocalBalance()}`;
+      }
+    });
+    return balanceLN;
+  }
+
+  public getAdminBalanceOnchain = async (): Promise<string> => {
+    const balances = (await this.getBalance()).getBalancesMap();
+    let balanceOnchain = ''
+    balances.forEach((balance: Balance, symbol: string) => {
+      if(symbol === 'BTC')
+      balanceOnchain = `${balance.getWalletBalance()!.getTotalBalance()}`;
+    });
+    return balanceOnchain;
+  }
+
+  public getAdminBalanceStacks = async (): Promise<{walletName: string, value: string, address: string}[]> => {
+    const data = await getAddressAllBalances();
+    const signerAddress = (await getStacksNetwork()).signerAddress;
+    let respArray: {walletName: string, value: string, address: string}[] = []
+    Object.keys(data).forEach((key) => {
+      respArray.push({walletName: key, value: data[key], address: signerAddress});
+    })
+    return respArray;
+  }
 
 }
 

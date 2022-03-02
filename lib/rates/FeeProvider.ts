@@ -5,8 +5,9 @@ import DataAggregator from './data/DataAggregator';
 import { BaseFeeType, OrderSide } from '../consts/Enums';
 import { etherDecimals, gweiDecimals } from '../consts/Consts';
 import { getChainCurrency, getPairId, mapToObject, splitPairId, stringify } from '../Utils';
-import { calculateStacksTxFee, getStacksNetwork } from '../wallet/stacks/StacksUtils';
+import { calculateStacksTxFee, getInfo, getStacksNetwork } from '../wallet/stacks/StacksUtils';
 // calculateStxLockFee
+import { randomBytes } from 'crypto';
 
 type ReverseMinerFees = {
   lockup: number;
@@ -180,8 +181,14 @@ class FeeProvider {
       case 'USDA':
       case 'STX': {
         // const relativeFee = feeMap.get(chainCurrency)!;
-        const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx');
-        const lockupCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'lockStx');
+        const preimage = randomBytes(32);
+        const timelock = ((await getInfo()).stacks_tip_height + Math.floor(Math.random()*200)).toString(16).padStart(32, '0');
+        const amount = Math.floor(Math.random()*20000000).toString(16).padStart(32, '0');
+        const dummyPrincipal = getStacksNetwork().stxSwapAddress.split('.')[0];
+        const lockupCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'lockStx', amount, timelock, preimage, undefined, dummyPrincipal);
+        const claimCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'claimStx', amount, timelock, undefined, preimage);
+        const refundCost = await calculateStacksTxFee(getStacksNetwork().stxSwapAddress, 'refundStx', amount, timelock, preimage, undefined);
+        this.logger.verbose(`feeprovider.191 ${chainCurrency}:: lockupCost ${lockupCost}, claimCost ${claimCost}, refundCost ${refundCost}`);
 
         // const dynLockCost = await calculateStxLockFee(getStacksNetwork().stxSwapAddress,'8c0640c4d4f0d5923d441037b2ea7406eb62869db5a085105492ad93eb72773f');
         // const dynClaimCost = await calculateStxClaimFee(getStacksNetwork().stxSwapAddress,'qqwe');

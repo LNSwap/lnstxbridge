@@ -1,7 +1,11 @@
 [project]
 name = "lnstxbridge"
+authors = []
+description = ""
+telemetry = false
 requirements = []
-costs_version = 1
+analysis = ["check_checker"]
+costs_version = 2
 
 [contracts.claim-for-trait]
 path = "contracts/claim-for-trait.clar"
@@ -28,8 +32,8 @@ path = "contracts/stxswap_v9.clar"
 depends_on = []
 
 [contracts.triggerswap]
-path = "contracts/triggerswap_v1.clar"
-depends_on = []
+path = "contracts/triggerswap_v4.clar"
+depends_on = ["sip-010-trait"]
 
 [contracts.usda-token]
 path = "contracts/usda-token.clar"

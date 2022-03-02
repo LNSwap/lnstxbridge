@@ -147,6 +147,23 @@ type NotificationConfig = {
   otpsecretpath: string;
 };
 
+type BalancerConfig = {
+  apiUri: string;
+  apiKey: string;
+  secretKey: string;
+  passphrase: string;
+  tradePassword: string;
+  minSTX: number;
+  minBTC: number;
+  overshootPercentage: number; // topup percentage on minCurrency value
+  autoBalance: boolean;
+};
+
+type DashboardConfig = {
+  username: string;
+  password: string;
+};
+
 type ConfigType = {
   datadir: string;
 
@@ -167,7 +184,9 @@ type ConfigType = {
   rates: RatesConfig;
   backup: BackupConfig;
   notification: NotificationConfig;
-
+  balancer: BalancerConfig;
+  dashboard: DashboardConfig;
+  
   pairs: PairConfig[];
   currencies: CurrencyConfig[];
 
@@ -264,6 +283,23 @@ class Config {
         interval: 1,
 
         otpsecretpath: notification.otpsecretpath,
+      },
+
+      balancer : {
+        apiUri: 'https://www.okcoin.com',
+        apiKey: '',
+        secretKey: '',
+        passphrase: '',
+        tradePassword: '',
+        minSTX: 0,
+        minBTC: 0,
+        overshootPercentage: 10,
+        autoBalance: false,
+      },
+
+      dashboard: {
+        username: 'admin',
+        password: 'admin',
       },
 
       pairs: [
@@ -518,6 +554,8 @@ export {
   StacksConfig,
   CurrencyConfig,
   NotificationConfig,
+  BalancerConfig,
+  DashboardConfig,
   EthProviderServiceConfig,
   RskProviderServiceConfig,
 };

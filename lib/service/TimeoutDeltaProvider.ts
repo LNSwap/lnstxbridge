@@ -18,8 +18,7 @@ class TimeoutDeltaProvider {
     ['BTC', 10],
     ['LTC', 2.5],
     ['ETH', 0.25],
-    ['STX', 10],
-    ['USDA', 10],
+    ['STX', 12],
   ]);
 
   private timeoutDeltas = new Map<string, PairTimeoutBlockDeltas>();
@@ -88,8 +87,9 @@ class TimeoutDeltaProvider {
   private minutesToBlocks = (pair: string, minutes: number) => {
     const calculateBlocks = (symbol: string) => {
       const minutesPerBlock = TimeoutDeltaProvider.getBlockTime(symbol);
-      const blocks = minutes / minutesPerBlock;
+      const blocks = Math.round(minutes / minutesPerBlock);
 
+      console.log('timeoutdeltaprovider.92 blocks ', blocks);
       // Sanity checks to make sure no impossible deltas are set
       if (blocks % 1 !== 0 || blocks < 1) {
         throw Errors.INVALID_TIMEOUT_BLOCK_DELTA();

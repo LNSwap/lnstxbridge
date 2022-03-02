@@ -27,4 +27,8 @@ export default {
     describe: 'whether a token should be claimed',
     type: 'boolean',
   },
+  timeoutBlockHeight: {
+    describe: 'refund timeout',
+    type: 'string',
+  },
 };

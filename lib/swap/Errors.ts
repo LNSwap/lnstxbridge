@@ -71,4 +71,8 @@ export default {
     message: 'transaction fee is too low',
     code: concatErrorCode(ErrorCodePrefix.Swap, 16),
   }),
+  AMOUNT_TOO_LOW_FOR_CHANNELOPEN: (): Error => ({
+    message: 'amount is too low for channel open',
+    code: concatErrorCode(ErrorCodePrefix.Swap, 17),
+  }),
 };

@@ -393,6 +393,7 @@ class StacksNursery extends EventEmitter {
       // 0x000000000000000000000000001e708f
       // *100 + 100 because stx is 10^6 while boltz is 10^8
       const swapamount = (parseInt(etherSwapValues.amount + '',16) * 100) + 100;
+      //  + 100; // this should not be needed - just to protect against compare issues?
       this.logger.verbose('stacksnursery.150 etherSwapValues.amount, swapamount, transactionHash ' + etherSwapValues.amount + ', ' + swapamount + ', ' + transactionHash);
       swap = await this.swapRepository.setLockupTransaction(
         swap,
@@ -446,7 +447,7 @@ class StacksNursery extends EventEmitter {
       // atomic swap locked amount check
       if (swap.baseAmount) {
         console.log('stacksn.447 ', swap.baseAmount); // this is in stx - mul 10^6 to get mstx - 10^8 to get boltz
-        const expectedAmount = BigNumber.from(swap.baseAmount*100000000).mul(etherDecimals);
+        const expectedAmount = BigNumber.from(Math.round(swap.baseAmount*10**8)).mul(etherDecimals);
 
         // 1995138440000000000,
         const bigswapamount = BigNumber.from(swapamount).mul(etherDecimals);

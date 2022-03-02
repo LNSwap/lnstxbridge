@@ -54,7 +54,7 @@ class ArkadikoOracle implements Exchange {
     let usdaperusd = Number(result.data['last-price'].value)/Number(result.data['decimals'].value)
     let btcperusda = lastprice / usdaperusd;
     // result, usdaperusd, 
-    console.log(`ArkadikoOracle.45 getPrice: `, btcperusda)
+    // console.log(`ArkadikoOracle.45 getPrice: `, btcperusda)
     
     // 1 stx = 3000 sats
     // 1 btc = 33156.498673740054 STX -> this is returned from here which is correct on frontend UI
