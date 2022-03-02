@@ -310,6 +310,21 @@ class Controller {
     }
   }
 
+  public zbroadcastSponsoredTx = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id, tx } = this.validateRequest(req.body, [
+        { name: 'id', type: 'string' },
+        { name: 'tx', type: 'string' },
+      ]);
+
+      // const response = await this.service.broadcastSponsoredTx(id, tx);
+      const response = await this.service.forwardSponsoredTx(id, tx);
+      this.successResponse(res, { transactionId: response });
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   public createSwap = async (req: Request, res: Response): Promise<void> => {
     try {
       const { type } = this.validateRequest(req.body, [

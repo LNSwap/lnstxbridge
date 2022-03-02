@@ -96,7 +96,9 @@ class Api {
     this.app.route('/zswapstatus').post(controller.zswapStatus);
     // provider -> aggregator
     this.app.route('/updateswapstatus').post(controller.updateSwapStatus);
-    
+    // frontend -> aggregator -> provider
+    this.app.route('/zbroadcastsponsoredtx').post(controller.zbroadcastSponsoredTx);
+
     // admin dashboard
     this.app.route('/api/admin/swaps').get(controller.getAdminSwaps);
     this.app.route('/api/admin/swaps/reverse').get(controller.getAdminReverseSwaps);

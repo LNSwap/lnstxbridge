@@ -1899,6 +1899,24 @@ class Service {
     return {result: true};
   }
 
+  // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
+  public forwardSponsoredTx = async (id: string, tx: string): Promise<{ transactionId: string }>  => {
+    // check db to find out which provider is doing this swap id
+    // it is better to track swap creation vs full swap status in providerSwap table
+    const providerSwap = await this.providerSwapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    const providerUrl = providerSwap?.providerUrl;
+    const broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
+      id,
+      tx,
+    });
+    return broadcastResponse.data;
+  }
+
   /**
    * Verifies that the requested amount is neither above the maximal nor beneath the minimal
    */
