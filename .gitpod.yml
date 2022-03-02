@@ -39,14 +39,13 @@ tasks:
       npm i -g shx rimraf postgresql-client @stacks/cli
       sleep 60
       npm run stacks:mocknet:microblock
-      sleep 120
+      sleep 60
     # npm run stacks:mocknet
     command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF NONCE=1 npm run stacks:fund:signer
-      sleep 5
       SIGNER=ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP NONCE=2 npm run stacks:fund:signer
-      sleep 10
+      sleep 120
       sed -i 's/.stxswap/.stxswap_v8/g' contracts/triggerswap_v*.clar
       sed -i 's/.sip10swap/.sip10swap_v1/g' contracts/triggerswap_v*.clar
       npm run stacks:deploy
