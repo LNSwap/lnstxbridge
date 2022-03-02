@@ -213,11 +213,6 @@ class ContractEventHandler extends EventEmitter {
     //   console.log("stacks contracteventhandler.142 got event ", stringify(event));
     // });
 
-    // this works so microblocks are ok
-    // await client.subscribeMicroblocks(event => {
-    //   console.log('ceh.207 got microblocks: ', event);
-    // });
-
     // also not fired on microblocks - only on anchor blocks
     // socket.onAny((eventName, ...args) => {
     //   console.log('socket.io client got data: ', eventName, args);
@@ -225,14 +220,21 @@ class ContractEventHandler extends EventEmitter {
     // sc.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP');
     // sc.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF');
     
-    // try to get txns in microblocks with websocket client
-    // await client.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF', event => {
-    //   console.log('got event for ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF ', event);
+    // // this works so microblocks are ok
+    // await client.subscribeMicroblocks(event => {
+    //   this.logger.debug('ceh.207 got microblocks: '+ JSON.stringify(event));
     // });
-    // await client.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP', event => {
-    //   console.log('got event for ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP ', event);
+    // await client.subscribeAddressBalanceUpdates('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF', event => {
+    //   this.logger.debug('got subscribeAddressBalanceUpdates for ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF '+ JSON.stringify(event));
     // });
 
+    // // try to get txns in microblocks with websocket client
+    // await client.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF', event => {
+    //   this.logger.debug('got event for ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF '+ JSON.stringify(event));
+    // });
+    // await client.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP', event => {
+    //   this.logger.debug('got event for ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP '+ JSON.stringify(event));
+    // });
     // this.contractAddress -> was working but wrong!
     await client.subscribeAddressTransactions(contract, event => {
       //works!! but does not receive microblock events!
