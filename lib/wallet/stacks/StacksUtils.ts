@@ -282,7 +282,7 @@ export const incrementNonce = () => {
 }
 
 export const getTx = async (txid:string) => {
-  const url = `${coreApiUrl}/extended/v1/tx/${txid}`;
+  const url = `${coreApiUrl}/extended/v1/tx/${txid}?unanchored=true`;
   const response = await axios.get(url)
   return response.data;
 }
