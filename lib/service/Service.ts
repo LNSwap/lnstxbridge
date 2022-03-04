@@ -2120,6 +2120,16 @@ class Service {
     return auth;
   }
 
+  public getAdminBalancerBalances = async (currency: string): Promise<string> => {
+    try {
+      const result = await this.balancer.getExchangeBalance(currency);
+      return result;
+    } catch (error) {
+      this.logger.error(`service.2128 getAdminBalancerBalances error: ${error.message}`);
+      return `Unable to get ${currency} balance`;
+    }
+  }
+
   /**
    * pairId: X/Y => sell X, buy Y
    * buyAmount: amount of target currency to buy from exchange
