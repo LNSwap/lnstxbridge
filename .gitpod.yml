@@ -42,6 +42,11 @@ tasks:
       sleep 120
     # npm run stacks:mocknet
     command: |
+      echo 'clarinet integrate started!'
+  - init: |
+      echo 'wait until clarinet integrate full starts up'
+      sleep 200
+    command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF NONCE=1 npm run stacks:fund:signer
       sleep 1
