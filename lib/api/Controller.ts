@@ -7,7 +7,7 @@ import SwapNursery from '../swap/SwapNursery';
 // import ServiceErrors from '../service/Errors';
 import { SwapUpdate } from '../service/EventHandler';
 import { SwapType, SwapUpdateEvent } from '../consts/Enums';
-import { getChainCurrency, getHexBuffer, getVersion, mapToObject, splitPairId, stringify } from '../Utils';
+import { getChainCurrency, getHexBuffer, getVersion, mapToObject, parseTomlConfig, splitPairId, stringify } from '../Utils';
 
 type ApiArgument = {
   name: string,
@@ -793,6 +793,17 @@ class Controller {
     this.successResponse(res, data);
   }
   
+  public getAdminConfiguration = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    const data = parseTomlConfig(process.env.APP_FOLDER + '/boltz.conf')
+    console.log('controller.803 parseTomlConfig: ', data);
+    this.successResponse(res, data);
+  }
+
 }
 
 export default Controller;

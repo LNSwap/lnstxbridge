@@ -108,6 +108,7 @@ class Api {
     this.app.route('/api/admin/lnd/balance/offchain').get(controller.getAdminBalanceOffchain);
     this.app.route('/api/admin/lnd/balance/onchain').get(controller.getAdminBalanceOnchain);
     this.app.route('/api/admin/stacks/balance').get(controller.getAdminBalanceStacks);
+    this.app.route('/api/admin/getconfiguration').get(controller.getAdminConfiguration);
   }
 }
 
