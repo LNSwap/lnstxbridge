@@ -759,10 +759,7 @@ class Controller {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
-    const { currency } = this.validateRequest(req.body, [
-      { name: 'currency', type: 'string' },
-    ]);
-    const data = await this.service.getAdminBalancerBalances(currency);
+    const data = await this.service.getAdminBalancerBalances();
     this.successResponse(res, data);
   }
 

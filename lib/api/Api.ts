@@ -103,7 +103,7 @@ class Api {
     this.app.route('/api/admin/swaps').get(controller.getAdminSwaps);
     this.app.route('/api/admin/swaps/reverse').get(controller.getAdminReverseSwaps);
     this.app.route('/api/admin/balancer/status').get(controller.getAdminBalancerStatus);
-    this.app.route('/api/admin/balancer/balances').get(controller.getAdminBalancerStatus);
+    this.app.route('/api/admin/balancer/balances').post(controller.getAdminBalancerBalances);
     this.app.route('/api/admin/balancer').post(controller.getAdminBalancer);
     this.app.route('/api/admin/lnd/balance/offchain').get(controller.getAdminBalanceOffchain);
     this.app.route('/api/admin/lnd/balance/onchain').get(controller.getAdminBalanceOnchain);

@@ -53,6 +53,16 @@ class Balancer {
     return currencyBalance;
   }
 
+  public getExchangeAllBalances = async (): Promise<string> => {
+    if (this.apiKey === '') {
+      throw new Error('no API key provided');
+    }
+    // get account + balances
+    const accounts = await this.authClient.spot().getAccounts();
+    console.log('accounts ', accounts);
+    return accounts;
+  }
+
   /**
    * Checks if balancing is needed based on pre-set limits for onchain funds
    */
