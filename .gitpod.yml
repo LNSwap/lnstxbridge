@@ -120,7 +120,9 @@ tasks:
         cd /workspace/lnstxbridge-dashboard
         npm i
       # export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
-    command: npm run dev
+    command: |
+        export APP_FOLDER=/home/gitpod/.lnstx-client
+        npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000
