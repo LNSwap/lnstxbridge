@@ -45,7 +45,7 @@ tasks:
       echo 'clarinet integrate started!'
   - init: |
       echo 'wait until clarinet integrate full starts up'
-      sleep 240
+      sleep 270
     command: |
       npm run stacks:fund
       SIGNER=ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF NONCE=1 npm run stacks:fund:signer
@@ -114,14 +114,15 @@ tasks:
       # no need - manually set ~/.lnstx-client/boltz.conf providerUrl=https://9003-pseudozach-lnstxbridge-e1iw24tfkhf.ws-us32.gitpod.io
       # sed -i 's#http://localhost:9003#https://9003-`${GITPOD_WORKSPACE_URL:8}`#g' ~/.lnstx-client/boltz.conf
       # sed -i 's#gitpodapiurl#https://3999-'"$GITPOD_CORE_URL"'#g' /workspace/lnswap-widget/src/config.js
-    command: npm run dev
+    command: |
+      export APP_FOLDER=/home/gitpod/.lnstx-client
+      npm run dev
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
         cd /workspace/lnstxbridge-dashboard
         npm i
       # export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
     command: |
-        export APP_FOLDER=/home/gitpod/.lnstx-client
         npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
