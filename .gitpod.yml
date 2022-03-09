@@ -39,7 +39,7 @@ tasks:
       npm i -g shx rimraf postgresql-client @stacks/cli
       sleep 60
       npm run stacks:mocknet:microblock
-      sleep 120
+      sleep 60
     # npm run stacks:mocknet
     command: |
       echo 'clarinet integrate started!'

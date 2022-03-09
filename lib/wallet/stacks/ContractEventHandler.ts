@@ -7,7 +7,7 @@ import { parseBuffer, getTx, getInfo, getStacksContractTransactions, getStacksNe
 import { ERC20SwapValues, EtherSwapValues } from '../../consts/Types';
 // import { formatERC20SwapValues, formatEtherSwapValues } from './ContractUtils';
 // StacksApiSocketClient
-import { connectWebSocketClient } from '@stacks/blockchain-api-client';
+import { connectWebSocketClient, } from '@stacks/blockchain-api-client';
 import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
 // import ChainTipRepository from 'lib/db/ChainTipRepository';
@@ -217,21 +217,34 @@ class ContractEventHandler extends EventEmitter {
     //   console.log("stacks contracteventhandler.142 got event ", stringify(event));
     // });
 
-    // this works so microblocks are ok
-    // await client.subscribeMicroblocks(event => {
-    //   console.log('ceh.207 got microblocks: ', event);
-    // });
-
     // also not fired on microblocks - only on anchor blocks
     // socket.onAny((eventName, ...args) => {
     //   console.log('socket.io client got data: ', eventName, args);
     // });
     // sc.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP');
+    // sc.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF');
     
+    // // this works so microblocks are ok
+    // await client.subscribeMicroblocks(event => {
+    //   this.logger.debug('ceh.207 microblocks: '+ JSON.stringify(event));
+    // });
+    // await client.subscribeBlocks(() => {
+    //   this.logger.debug('ceh.228 anchor block');
+    // });
+    // await client.subscribeAddressBalanceUpdates('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF', event => {
+    //   this.logger.debug('got subscribeAddressBalanceUpdates for ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF '+ JSON.stringify(event));
+    // });
+
+    // try to get txns in microblocks with websocket client
+    // await client.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF', event => {
+    //   this.logger.debug('got event for ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF '+ JSON.stringify(event));
+    // });
+
     // this.contractAddress -> was working but wrong!
+    console.log('ceh.237 subscribeAddressTransactions ', contract);
     await client.subscribeAddressTransactions(contract, event => {
       //works!! but does not receive microblock events!
-      console.log('stacks contracteventhandler.146 got event ', stringify(event));
+      this.logger.info('stacks contracteventhandler.146 got event '+ stringify(event));
 
       // failed call
       // {"address":"STR187KT73T0A8M0DEWDX06TJR2B8WM0WP9VGZY3.stxswap_v2",
@@ -321,6 +334,7 @@ class ContractEventHandler extends EventEmitter {
     let txamount = 0;
     let hashvalue = '';
     const txData = await getTx(txid);
+    // console.log('ceh.330 checkTx txData: ', txData);
     txData.events.forEach(element => {
       // console.log("txData element: ", JSON.stringify(element));
         if(element.contract_log && element.contract_log.value.repr.includes('lock')){

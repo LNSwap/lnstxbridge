@@ -107,6 +107,7 @@ bitcoin_controller_block_time = 120_000
 # bitcoin_node_image_url = "quay.io/hirosystems/bitcoind:devnet"
 # stacks_node_image_url = "localhost:5000/stacks-node:devnet"
 # stacks_api_image_url = "blockstack/stacks-blockchain-api:latest"
+stacks_api_image_url = "hirosystems/stacks-blockchain-api:pr-1089"
 # stacks_explorer_image_url = "blockstack/explorer:latest"
 # bitcoin_explorer_image_url = "quay.io/hirosystems/bitcoin-explorer:devnet"
 # postgres_image_url = "postgres:alpine"
