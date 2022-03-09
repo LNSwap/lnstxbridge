@@ -252,7 +252,7 @@ class Config {
         port: Config.defaultPort,
         sslKey: '/etc/letsencrypt/live/api.lnswap.org/privkey.pem',
         sslCert: '/etc/letsencrypt/live/api.lnswap.org/fullchain.pem',
-        sslEnabled: false,
+        sslEnabled: true,
       },
 
       grpc: {
