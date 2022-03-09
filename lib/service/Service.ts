@@ -62,6 +62,7 @@ import {
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
 import Balancer from './Balancer';
+import fs from 'fs';
 
 // import mempoolJS from "@mempool/mempool.js";
 // import ReverseSwap from 'lib/db/models/ReverseSwap';
@@ -1756,6 +1757,19 @@ class Service {
     // if(stxAmount < 0) {
     //   throw Errors.MINT_COST_MISMATCH();
     // }
+
+    // check if url is in access list - limit providers that can join the network 
+    const ACLfile = '/root/.lnstx/accesslist.txt';
+    if(fs.existsSync(ACLfile)) {
+      const acl = fs.readFileSync(ACLfile);
+      if(acl.includes('localhost')) {
+          this.logger.verbose('provider is in ACL list: ');
+      } else {
+        throw new Error('Provider not in access list.');
+      }
+    } else {
+      throw new Error('Access control not found');
+    }
 
     // check if this url exists already
     const client = await this.clientRepository.findByUrl(url);
