@@ -197,7 +197,7 @@ type ConfigType = {
 
 class Config {
   // Default paths
-  public static defaultDataDir = getServiceDataDir('lnstx');
+  public static defaultDataDir = getServiceDataDir('lnstx-aggregator');
 
   public static defaultConfigPath = 'boltz.conf';
   public static defaultMnemonicPath = 'seed.dat';
@@ -221,7 +221,7 @@ class Config {
    * The constructor sets the default values
    */
   constructor() {
-    this.dataDir = getServiceDataDir('lnstx');
+    this.dataDir = getServiceDataDir('lnstx-aggregator');
 
     const {
       grpc,
