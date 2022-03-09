@@ -115,7 +115,6 @@ tasks:
       # sed -i 's#http://localhost:9003#https://9003-`${GITPOD_WORKSPACE_URL:8}`#g' ~/.lnstx-client/boltz.conf
       # sed -i 's#gitpodapiurl#https://3999-'"$GITPOD_CORE_URL"'#g' /workspace/lnswap-widget/src/config.js
     command: |
-      export APP_FOLDER=/home/gitpod/.lnstx-client
       npm run dev
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
