@@ -214,8 +214,8 @@ class Config {
   private readonly config: ConfigType;
   private readonly dataDir = Config.defaultDataDir;
 
-  public static defaultPort = 9002;
-  // public static defaultPort = 9003;
+  // public static defaultPort = 9002; // original port
+  public static defaultPort = 9007; // aggregator port
 
   /**
    * The constructor sets the default values
