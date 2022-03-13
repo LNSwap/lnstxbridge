@@ -15,6 +15,11 @@ import { etherDecimals } from './consts/Consts';
 //   hostname: 'mempool.space'
 // });
 
+import fs from 'fs';
+import toml from '@iarna/toml';
+import Errors from './consts/Errors';
+import { ConfigType } from './Config';
+
 const {
   p2shOutput,
   p2wshOutput,
@@ -478,3 +483,27 @@ export const getBiggerBigNumber = (a: BigNumber, b: BigNumber): BigNumber => {
 export const hashString = (input: string): string => {
   return getHexString(crypto.sha256(Buffer.from(input, 'utf-8')));
 };
+
+export const parseTomlConfig = (filename: string): any => {
+  if (fs.existsSync(filename)) {
+    try {
+      const tomlFile = fs.readFileSync(filename, 'utf-8');
+      const parsedToml = toml.parse(tomlFile) as ConfigType;
+      parsedToml.configpath = filename;
+      return parsedToml;
+    } catch (error) {
+      throw Errors.COULD_NOT_PARSE_CONFIG(filename, JSON.stringify(error));
+    }
+  }
+}
+
+export const saveTomlConfig = (config: any): any => {
+  try {
+    console.log('utils.501 saveTomlConfig ', config);
+    const configToml = toml.stringify(config);
+    fs.writeFileSync(config.configpath, configToml);
+    return {result: "OK"};
+  } catch (error) {
+    throw new Error("Failed to save config");
+  }
+}

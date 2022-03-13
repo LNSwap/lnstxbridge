@@ -1854,6 +1854,16 @@ class Service {
     return auth;
   }
 
+  public getAdminBalancerBalances = async (): Promise<string> => {
+    try {
+      const result = await this.balancer.getExchangeAllBalances();
+      return result;
+    } catch (error) {
+      this.logger.error(`service.2128 getAdminBalancerBalances error: ${error.message}`);
+      return `Unable to get exchange balances`;
+    }
+  }
+  
   /**
    * pairId: X/Y => sell X, buy Y
    * buyAmount: amount of target currency to buy from exchange

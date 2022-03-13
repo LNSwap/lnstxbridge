@@ -42,7 +42,7 @@ class Api {
           key: readFileSync(this.config.sslKey),
           cert: readFileSync(this.config.sslCert),
         };
-        console.log('sslenabled ', this.config.sslEnabled);
+        // console.log('sslenabled ', this.config.sslEnabled);
         https.createServer(options, this.app).listen(this.config.port, this.config.host, () => {
           this.logger.info(`API server listening on: ${this.config.host}:${this.config.port}`);
           resolve();
@@ -88,11 +88,14 @@ class Api {
     // admin dashboard
     this.app.route('/api/admin/swaps').get(controller.getAdminSwaps);
     this.app.route('/api/admin/swaps/reverse').get(controller.getAdminReverseSwaps);
-    this.app.route('/api/admin/balancer/status').get(controller.getAdminBalancerStatus);
+    this.app.route('/api/admin/balancer/balances').post(controller.getAdminBalancerBalances);
     this.app.route('/api/admin/balancer').post(controller.getAdminBalancer);
     this.app.route('/api/admin/lnd/balance/offchain').get(controller.getAdminBalanceOffchain);
     this.app.route('/api/admin/lnd/balance/onchain').get(controller.getAdminBalanceOnchain);
     this.app.route('/api/admin/stacks/balance').get(controller.getAdminBalanceStacks);
+    this.app.route('/api/admin/getconfiguration').get(controller.getAdminConfiguration);
+    this.app.route('/api/admin/saveconfiguration').post(controller.saveAdminConfiguration);
+    this.app.route('/api/admin/restartapp').post(controller.getAdminRestartApp);
   }
 }
 
