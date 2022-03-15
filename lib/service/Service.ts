@@ -1762,8 +1762,8 @@ class Service {
     const ACLfile = '/root/.lnstx/accesslist.txt';
     if(fs.existsSync(ACLfile)) {
       const acl = fs.readFileSync(ACLfile);
-      if(acl.includes('localhost')) {
-          this.logger.verbose('provider is in ACL list: ');
+      if(acl.includes(url)) {
+          this.logger.verbose('provider is in ACL list: ' + url);
       } else {
         throw new Error('Provider not in access list.');
       }
