@@ -1703,7 +1703,7 @@ class Service {
         }
         reachable = res.data.includes(req['pairId']);
       } catch (error) {
-        console.log('provider unreachable')
+        console.log('provider unreachable: ', provider[0].url);
       }
 
       count++
