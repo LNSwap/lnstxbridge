@@ -1,5 +1,7 @@
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
-// import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
+
+const contractName = "stxswap";
 
   Clarinet.test({
     name: "Ensure that user can lock and claim stx",
@@ -9,7 +11,7 @@ import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarine
       const amount = 1000;
       let block = chain.mineBlock([
         Tx.contractCall(
-          "stxswap",
+          contractName,
           "lockStx",
           [
             `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`, // preimagehash
@@ -25,7 +27,7 @@ import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarine
 
       block = chain.mineBlock([
         Tx.contractCall(
-          "stxswap",
+          contractName,
           "claimStx",
           [
             `0x01`, //preimage
@@ -47,7 +49,7 @@ import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarine
       const amount = 1_000;
       let block = chain.mineBlock([
         Tx.contractCall(
-          "stxswap",
+          contractName,
           "lockStx",
           [
             `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`, // preimagehash
@@ -59,11 +61,23 @@ import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarine
         ),
       ]);
       block.receipts[0].result.expectOk().expectUint(1008);
-    //   console.log(`lock ok `, block, block.receipts[0].events);
+      // console.log(`lock ok `, block, block.receipts[0].events);
+
+      // check the swap before refund
+      const swap = chain.callReadOnlyFn(
+        contractName,
+        "getSwap",
+        [
+          `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`
+        ],
+        wallet_1.address
+      );
+      assertEquals(swap.result, '(some {amount: u1000, claimPrincipal: ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG, initiator: ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5, timelock: u5})');
+     
       chain.mineEmptyBlockUntil(6);
       block = chain.mineBlock([
         Tx.contractCall(
-          "stxswap",
+          contractName,
           "refundStx",
           [
             `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`, // preimagehash
@@ -72,6 +86,7 @@ import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarine
         ),
       ]);
       block.receipts[0].result.expectOk().expectUint(1008);
+
     },
   });
 
