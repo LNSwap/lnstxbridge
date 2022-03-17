@@ -62,7 +62,7 @@ tasks:
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
         git clone -b aggregator https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
-        export REACT_APP_BOLTZ_API=https://9002-${GITPOD_WORKSPACE_URL:8}
+        export REACT_APP_BOLTZ_API=https://9008-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_NETWORK_TYPE=mocknet
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API
