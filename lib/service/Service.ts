@@ -59,10 +59,12 @@ import {
   getVersion,
   reverseBuffer,
   splitPairId,
+  getServiceDataDir,
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
 import Balancer from './Balancer';
 import fs from 'fs';
+import path from 'path';
 
 // import mempoolJS from "@mempool/mempool.js";
 // import ReverseSwap from 'lib/db/models/ReverseSwap';
@@ -1759,7 +1761,9 @@ class Service {
     // }
 
     // check if url is in access list - limit providers that can join the network 
-    const ACLfile = '/root/.lnstx/accesslist.txt';
+    const ACLfile = path.join(getServiceDataDir('lnstx-aggregator'), 'accesslist.txt');
+    console.log('ACLfile ', ACLfile);
+    // const ACLfile = '~/.lnstx/accesslist.txt';
     if(fs.existsSync(ACLfile)) {
       const acl = fs.readFileSync(ACLfile);
       if(acl.includes(url)) {
