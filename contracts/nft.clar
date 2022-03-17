@@ -22,6 +22,10 @@
 (define-public (claim)
   (mint tx-sender))
 
+;; Claim a new NFT with sip10 token
+(define-public (claim-usda)
+  (mint-usda tx-sender))
+
 ;; SIP009: Transfer token to a specified principal
 (define-public (transfer (token-id uint) (sender principal) (recipient principal))
   (if (and
@@ -52,6 +56,25 @@
       )
       (asserts! (< count MINT-LIMIT) (err ERR-ALL-MINTED))
         (match (stx-transfer? (var-get cost-per-mint) tx-sender (as-contract tx-sender))
+          success (begin
+            (try! (nft-mint? cube next-id new-owner))
+            (var-set last-id next-id)
+            (ok next-id)
+          ) 
+          error (err error)
+          )
+          )
+        )
+
+;; Internal - Mint new NFT
+(define-private (mint-usda (new-owner principal))
+  (let (
+        (next-id (+ u1 (var-get last-id)))  
+        (count (var-get last-id))
+      )
+      (asserts! (< count MINT-LIMIT) (err ERR-ALL-MINTED))
+        (match 
+          (contract-call? .usda-token transfer (var-get cost-per-mint) tx-sender (as-contract tx-sender) none)
           success (begin
             (try! (nft-mint? cube next-id new-owner))
             (var-set last-id next-id)

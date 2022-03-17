@@ -13,6 +13,13 @@ Clarinet.test({
         const wallet_2 = accounts.get("wallet_2")!;
         const wallet_3 = accounts.get("wallet_3")!;
         const deployer = accounts.get("deployer")!;
+        
+        // const assetMaps = chain.getAssetsMaps();
+        // console.log(`assetMaps: `, assetMaps);
+        // const stxbalance = assetMaps.assets['STX'][deployer.address];
+        // const usdabalance = assetMaps.assets[".usda-token.usda"][deployer.address];
+        // console.log(`deployer balances: `, stxbalance, usdabalance);
+
         // chain.mineEmptyBlockUntil(150);
         let block = chain.mineBlock([
             Tx.contractCall(
@@ -123,8 +130,14 @@ Clarinet.test({
                 ],
                 wallet_3.address
               ),
+              Tx.contractCall(
+                contractName,
+                "claim-usda",
+                [],
+                deployer.address
+              ),
         ]);
-        // console.log('block ', block, block.receipts[0].events[0]);
+        console.log('block ', block, block.receipts[0].events[0]);
         // assertEquals(block.height, 151);
         block.receipts[0].result.expectOk().expectUint(1);
         block.receipts[1].result.expectOk().expectUint(2);
