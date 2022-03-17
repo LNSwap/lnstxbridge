@@ -131,7 +131,7 @@ ports:
   - port: 3999
     onOpen: open-browser
     visibility: public
-  - port: 9002
+  - port: 9007
     onOpen: ignore
     visibility: public
   - port: 8888
