@@ -136,8 +136,14 @@ Clarinet.test({
                 [],
                 deployer.address
               ),
+              Tx.contractCall(
+                contractName,
+                "claim-usda",
+                [],
+                dummyaddress
+              ),
         ]);
-        console.log('block ', block, block.receipts[0].events[0]);
+        // console.log('block ', block, block.receipts[0].events[0]);
         // assertEquals(block.height, 151);
         block.receipts[0].result.expectOk().expectUint(1);
         block.receipts[1].result.expectOk().expectUint(2);

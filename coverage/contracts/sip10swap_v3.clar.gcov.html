@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2022-03-17 13:56:29</td>
+            <td class="headerValue">2022-03-17 14:53:32</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">3</td>
@@ -65,15 +65,15 @@
 <a name="3"><span class="lineNum">       3 </span>            : (use-trait ft-trait .sip-010-trait.sip-010-trait)</a>
 <a name="4"><span class="lineNum">       4 </span>            : </a>
 <a name="5"><span class="lineNum">       5 </span>            : ;; constants</a>
-<a name="6"><span class="lineNum">       6 </span><span class="lineCov">          8 : (define-constant err-swap-not-found u1000)</span></a>
-<a name="7"><span class="lineNum">       7 </span><span class="lineCov">          8 : (define-constant err-refund-blockheight-not-reached u1001)</span></a>
-<a name="8"><span class="lineNum">       8 </span><span class="lineCov">          8 : (define-constant err-invalid-claimer u1002)</span></a>
-<a name="9"><span class="lineNum">       9 </span><span class="lineCov">          8 : (define-constant err-claim-blockheight-passed u1003)</span></a>
-<a name="10"><span class="lineNum">      10 </span><span class="lineCov">          8 : (define-constant err-invalid-token u1004)</span></a>
-<a name="11"><span class="lineNum">      11 </span><span class="lineCov">          8 : (define-constant err-zero-amount u1005)</span></a>
-<a name="12"><span class="lineNum">      12 </span><span class="lineCov">          8 : (define-constant err-wrong-amount u1006)</span></a>
-<a name="13"><span class="lineNum">      13 </span><span class="lineCov">          8 : (define-constant err-hash-already-exists u1007)</span></a>
-<a name="14"><span class="lineNum">      14 </span><span class="lineCov">          8 : (define-constant ok-success u1008)</span></a>
+<a name="6"><span class="lineNum">       6 </span><span class="lineCov">         10 : (define-constant err-swap-not-found u1000)</span></a>
+<a name="7"><span class="lineNum">       7 </span><span class="lineCov">         10 : (define-constant err-refund-blockheight-not-reached u1001)</span></a>
+<a name="8"><span class="lineNum">       8 </span><span class="lineCov">         10 : (define-constant err-invalid-claimer u1002)</span></a>
+<a name="9"><span class="lineNum">       9 </span><span class="lineCov">         10 : (define-constant err-claim-blockheight-passed u1003)</span></a>
+<a name="10"><span class="lineNum">      10 </span><span class="lineCov">         10 : (define-constant err-invalid-token u1004)</span></a>
+<a name="11"><span class="lineNum">      11 </span><span class="lineCov">         10 : (define-constant err-zero-amount u1005)</span></a>
+<a name="12"><span class="lineNum">      12 </span><span class="lineCov">         10 : (define-constant err-wrong-amount u1006)</span></a>
+<a name="13"><span class="lineNum">      13 </span><span class="lineCov">         10 : (define-constant err-hash-already-exists u1007)</span></a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineCov">         10 : (define-constant ok-success u1008)</span></a>
 <a name="15"><span class="lineNum">      15 </span>            : </a>
 <a name="16"><span class="lineNum">      16 </span>            : ;; map that holds all swaps</a>
 <a name="17"><span class="lineNum">      17 </span>            : (define-map swaps {hash: (buff 32)} {amount: uint, timelock: uint, initiator: principal, claimPrincipal: principal, tokenPrincipal: principal})</a>
@@ -83,14 +83,14 @@
 <a name="21"><span class="lineNum">      21 </span>            : ;; @param preimageHash Preimage hash of the swap</a>
 <a name="22"><span class="lineNum">      22 </span>            : ;; @param timelock Block height after which the locked sip10 can be refunded</a>
 <a name="23"><span class="lineNum">      23 </span>            : (define-public (lockToken (preimageHash (buff 32)) (amount uint) (timelock uint) (claimPrincipal principal) (tokenPrincipal &lt;ft-trait&gt;))</a>
-<a name="24"><span class="lineNum">      24 </span><span class="lineCov">          2 :   (begin</span></a>
-<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          8 :     (asserts! (&gt; amount u0) (err err-zero-amount))</span></a>
-<a name="26"><span class="lineNum">      26 </span><span class="lineCov">         10 :     (asserts! (is-eq (map-get? swaps {hash: preimageHash}) none) (err err-hash-already-exists))</span></a>
-<a name="27"><span class="lineNum">      27 </span><span class="lineCov">         14 :     (unwrap-panic (contract-call? tokenPrincipal transfer amount tx-sender (as-contract tx-sender) none))</span></a>
-<a name="28"><span class="lineNum">      28 </span><span class="lineCov">         14 :     (map-set swaps {hash: preimageHash} {amount: amount, timelock: timelock,  initiator: tx-sender, claimPrincipal: claimPrincipal, tokenPrincipal: (contract-of tokenPrincipal)})</span></a>
-<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          4 :     (print &quot;lock&quot;)</span></a>
-<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          4 :     (print preimageHash)</span></a>
-<a name="31"><span class="lineNum">      31 </span><span class="lineCov">          4 :     (ok ok-success)</span></a>
+<a name="24"><span class="lineNum">      24 </span><span class="lineCov">          3 :   (begin</span></a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">         12 :     (asserts! (&gt; amount u0) (err err-zero-amount))</span></a>
+<a name="26"><span class="lineNum">      26 </span><span class="lineCov">         15 :     (asserts! (is-eq (map-get? swaps {hash: preimageHash}) none) (err err-hash-already-exists))</span></a>
+<a name="27"><span class="lineNum">      27 </span><span class="lineCov">         21 :     (unwrap-panic (contract-call? tokenPrincipal transfer amount tx-sender (as-contract tx-sender) none))</span></a>
+<a name="28"><span class="lineNum">      28 </span><span class="lineCov">         21 :     (map-set swaps {hash: preimageHash} {amount: amount, timelock: timelock,  initiator: tx-sender, claimPrincipal: claimPrincipal, tokenPrincipal: (contract-of tokenPrincipal)})</span></a>
+<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          6 :     (print &quot;lock&quot;)</span></a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          6 :     (print preimageHash)</span></a>
+<a name="31"><span class="lineNum">      31 </span><span class="lineCov">          6 :     (ok ok-success)</span></a>
 <a name="32"><span class="lineNum">      32 </span>            :   )</a>
 <a name="33"><span class="lineNum">      33 </span>            : )</a>
 <a name="34"><span class="lineNum">      34 </span>            : </a>
@@ -99,20 +99,20 @@
 <a name="37"><span class="lineNum">      37 </span>            : ;; @param amount Amount to be claimed - included for transparency</a>
 <a name="38"><span class="lineNum">      38 </span>            : ;; @param tokenPrincipal Token to be claimed - included for transparency</a>
 <a name="39"><span class="lineNum">      39 </span>            : (define-public (claimToken (preimage (buff 32)) (amount uint) (tokenPrincipal &lt;ft-trait&gt;))</a>
-<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          1 :   (let (</span></a>
-<a name="41"><span class="lineNum">      41 </span><span class="lineCov">          1 :     (claimer tx-sender)</span></a>
-<a name="42"><span class="lineNum">      42 </span><span class="lineCov">          2 :     (preimageHash (sha256 preimage))</span></a>
-<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          5 :     (swap (unwrap! (map-get? swaps {hash: preimageHash}) (err err-swap-not-found)))</span></a>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          2 :   (let (</span></a>
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">          2 :     (claimer tx-sender)</span></a>
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">          4 :     (preimageHash (sha256 preimage))</span></a>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">         10 :     (swap (unwrap! (map-get? swaps {hash: preimageHash}) (err err-swap-not-found)))</span></a>
 <a name="44"><span class="lineNum">      44 </span>            :     )</a>
-<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          1 :   (begin</span></a>
-<a name="46"><span class="lineNum">      46 </span><span class="lineCov">          5 :     (asserts! (is-eq claimer (get claimPrincipal swap)) (err err-invalid-claimer))</span></a>
-<a name="47"><span class="lineNum">      47 </span><span class="lineCov">          5 :     (asserts! (is-eq (contract-of tokenPrincipal) (get tokenPrincipal swap)) (err err-invalid-token))</span></a>
-<a name="48"><span class="lineNum">      48 </span><span class="lineCov">          5 :     (asserts! (is-eq (get amount swap) amount) (err err-wrong-amount))</span></a>
-<a name="49"><span class="lineNum">      49 </span><span class="lineCov">          2 :     (map-delete swaps {hash: preimageHash})</span></a>
-<a name="50"><span class="lineNum">      50 </span><span class="lineCov">          7 :     (unwrap-panic (as-contract (contract-call? tokenPrincipal transfer amount tx-sender claimer none)))</span></a>
-<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          2 :     (print &quot;claim&quot;)</span></a>
-<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          2 :     (print preimageHash)</span></a>
-<a name="53"><span class="lineNum">      53 </span><span class="lineCov">          2 :     (ok ok-success)</span></a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          2 :   (begin</span></a>
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">         10 :     (asserts! (is-eq claimer (get claimPrincipal swap)) (err err-invalid-claimer))</span></a>
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">         10 :     (asserts! (is-eq (contract-of tokenPrincipal) (get tokenPrincipal swap)) (err err-invalid-token))</span></a>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">         10 :     (asserts! (is-eq (get amount swap) amount) (err err-wrong-amount))</span></a>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">          4 :     (map-delete swaps {hash: preimageHash})</span></a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">         14 :     (unwrap-panic (as-contract (contract-call? tokenPrincipal transfer amount tx-sender claimer none)))</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          4 :     (print &quot;claim&quot;)</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          4 :     (print preimageHash)</span></a>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">          4 :     (ok ok-success)</span></a>
 <a name="54"><span class="lineNum">      54 </span>            :   ))</a>
 <a name="55"><span class="lineNum">      55 </span>            : )</a>
 <a name="56"><span class="lineNum">      56 </span>            : </a>
