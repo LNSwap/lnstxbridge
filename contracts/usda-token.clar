@@ -55,7 +55,7 @@
 
 ;; dummy token-uri
 (define-public (get-token-uri)
-  (ok (some u"https://heystack.xyz/token-metadata.json")))
+  (ok (some u"https://some.token/token-metadata.json")))
 
 (define-public (gift-tokens (recipient principal))
   (begin

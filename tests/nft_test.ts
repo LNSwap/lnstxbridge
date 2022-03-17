@@ -5,17 +5,6 @@ import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 const contractName = "nft";
 const dummyaddress = "SP3HCNR789SGMN18Y4SYBXBP38NB1BPRFVA9P010M";
 
-Clarinet.test({
-    name: "Ensure that 100 special-ingredient pre-mint is OK",
-    async fn(chain: Chain, accounts: Map<string, Account>) {
-        const wallet_1 = accounts.get("wallet_1")!;
-        const deployer = accounts.get("deployer")!;
-        let assetMaps = chain.getAssetsMaps();
-        console.log('assetMaps ', assetMaps);
-        // assertEquals(assetMaps.assets[".special-ingredient.special-ingredient"][premintaddress], 100);
-    },
-});
-
 // standard sip9 tests
 Clarinet.test({
     name: "Ensure that user can claim/claim-for/transfer/get-owner/get-token-uri/set-cost-per-mint",
