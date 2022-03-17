@@ -1853,16 +1853,15 @@ class Service {
     };
   }
 
-  public getLocked = async (preimageHash: string, swapContractAddress: string, ): Promise<{
+  public getLocked = async (preimageHash: string, swapContractAddress?: string, ): Promise<{
     txData: StacksTransaction[],
     // invoice: string,
     // tx: transac,
-
   }> => {
-    this.logger.verbose(`service.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
+    // this.logger.verbose(`service.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
 
     // preimagehash in stackstxdb should always have 0x because it's parsed from contract call
-    if(!preimageHash.includes('0x')) preimageHash = `0x${preimageHash}`;
+    if(!preimageHash.includes('0x') && swapContractAddress) preimageHash = `0x${preimageHash}`;
 
     // check if any funds locked/claimed into swap contract with preimageHash
     const txData = await this.stacksTransactionRepository.findByPreimageHash(preimageHash);
