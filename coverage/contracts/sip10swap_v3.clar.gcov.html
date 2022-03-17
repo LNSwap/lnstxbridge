@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.lcov - contracts/sip10swap_v3.clar</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">contracts</a> - sip10swap_v3.clar<span style="font-size: 80%;"> (source / <a href="sip10swap_v3.clar.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.lcov</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntry">43</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2022-03-17 11:03:22</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : ;; sip10swap - a Submarine Swap implementation in Clarity </a>
+<a name="2"><span class="lineNum">       2 </span>            : ;; Built as part of https://github.com/stacksgov/Stacks-Grants/issues/204 to enable swaps SIP10 tokens &lt;-&gt; BTC on Lightning Network </a>
+<a name="3"><span class="lineNum">       3 </span>            : (use-trait ft-trait .sip-010-trait.sip-010-trait)</a>
+<a name="4"><span class="lineNum">       4 </span>            : </a>
+<a name="5"><span class="lineNum">       5 </span>            : ;; constants</a>
+<a name="6"><span class="lineNum">       6 </span><span class="lineCov">          9 : (define-constant err-swap-not-found u1000)</span></a>
+<a name="7"><span class="lineNum">       7 </span><span class="lineCov">          9 : (define-constant err-refund-blockheight-not-reached u1001)</span></a>
+<a name="8"><span class="lineNum">       8 </span><span class="lineCov">          9 : (define-constant err-invalid-claimer u1002)</span></a>
+<a name="9"><span class="lineNum">       9 </span><span class="lineCov">          9 : (define-constant err-claim-blockheight-passed u1003)</span></a>
+<a name="10"><span class="lineNum">      10 </span><span class="lineCov">          9 : (define-constant err-invalid-token u1004)</span></a>
+<a name="11"><span class="lineNum">      11 </span><span class="lineCov">          9 : (define-constant err-zero-amount u1005)</span></a>
+<a name="12"><span class="lineNum">      12 </span><span class="lineCov">          9 : (define-constant err-wrong-amount u1006)</span></a>
+<a name="13"><span class="lineNum">      13 </span><span class="lineCov">          9 : (define-constant err-hash-already-exists u1007)</span></a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineCov">          9 : (define-constant ok-success u1008)</span></a>
+<a name="15"><span class="lineNum">      15 </span>            : </a>
+<a name="16"><span class="lineNum">      16 </span>            : ;; map that holds all swaps</a>
+<a name="17"><span class="lineNum">      17 </span>            : (define-map swaps {hash: (buff 32)} {amount: uint, timelock: uint, initiator: principal, claimPrincipal: principal, tokenPrincipal: principal})</a>
+<a name="18"><span class="lineNum">      18 </span>            : </a>
+<a name="19"><span class="lineNum">      19 </span>            : ;; Locks sip10 for a swap in the contract</a>
+<a name="20"><span class="lineNum">      20 </span>            : ;; @notice The amount locked is the sip10 sent in the transaction and the refund address is the initiator of the transaction</a>
+<a name="21"><span class="lineNum">      21 </span>            : ;; @param preimageHash Preimage hash of the swap</a>
+<a name="22"><span class="lineNum">      22 </span>            : ;; @param timelock Block height after which the locked sip10 can be refunded</a>
+<a name="23"><span class="lineNum">      23 </span>            : (define-public (lockToken (preimageHash (buff 32)) (amount uint) (timelock uint) (claimPrincipal principal) (tokenPrincipal &lt;ft-trait&gt;))</a>
+<a name="24"><span class="lineNum">      24 </span><span class="lineCov">          2 :   (begin</span></a>
+<a name="25"><span class="lineNum">      25 </span><span class="lineCov">          8 :     (asserts! (&gt; amount u0) (err err-zero-amount))</span></a>
+<a name="26"><span class="lineNum">      26 </span><span class="lineCov">         10 :     (asserts! (is-eq (map-get? swaps {hash: preimageHash}) none) (err err-hash-already-exists))</span></a>
+<a name="27"><span class="lineNum">      27 </span><span class="lineCov">         14 :     (unwrap-panic (contract-call? tokenPrincipal transfer amount tx-sender (as-contract tx-sender) none))</span></a>
+<a name="28"><span class="lineNum">      28 </span><span class="lineCov">         14 :     (map-set swaps {hash: preimageHash} {amount: amount, timelock: timelock,  initiator: tx-sender, claimPrincipal: claimPrincipal, tokenPrincipal: (contract-of tokenPrincipal)})</span></a>
+<a name="29"><span class="lineNum">      29 </span><span class="lineCov">          4 :     (print &quot;lock&quot;)</span></a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">          4 :     (print preimageHash)</span></a>
+<a name="31"><span class="lineNum">      31 </span><span class="lineCov">          4 :     (ok ok-success)</span></a>
+<a name="32"><span class="lineNum">      32 </span>            :   )</a>
+<a name="33"><span class="lineNum">      33 </span>            : )</a>
+<a name="34"><span class="lineNum">      34 </span>            : </a>
+<a name="35"><span class="lineNum">      35 </span>            : ;; Claims sip10 locked in the contract</a>
+<a name="36"><span class="lineNum">      36 </span>            : ;; @param preimage Preimage of the swap</a>
+<a name="37"><span class="lineNum">      37 </span>            : ;; @param amount Amount to be claimed - included for transparency</a>
+<a name="38"><span class="lineNum">      38 </span>            : ;; @param tokenPrincipal Token to be claimed - included for transparency</a>
+<a name="39"><span class="lineNum">      39 </span>            : (define-public (claimToken (preimage (buff 32)) (amount uint) (tokenPrincipal &lt;ft-trait&gt;))</a>
+<a name="40"><span class="lineNum">      40 </span><span class="lineCov">          1 :   (let (</span></a>
+<a name="41"><span class="lineNum">      41 </span><span class="lineCov">          1 :     (claimer tx-sender)</span></a>
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">          2 :     (preimageHash (sha256 preimage))</span></a>
+<a name="43"><span class="lineNum">      43 </span><span class="lineCov">          5 :     (swap (unwrap! (map-get? swaps {hash: preimageHash}) (err err-swap-not-found)))</span></a>
+<a name="44"><span class="lineNum">      44 </span>            :     )</a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">          1 :   (begin</span></a>
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">          5 :     (asserts! (is-eq claimer (get claimPrincipal swap)) (err err-invalid-claimer))</span></a>
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">          5 :     (asserts! (is-eq (contract-of tokenPrincipal) (get tokenPrincipal swap)) (err err-invalid-token))</span></a>
+<a name="48"><span class="lineNum">      48 </span><span class="lineCov">          5 :     (asserts! (is-eq (get amount swap) amount) (err err-wrong-amount))</span></a>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">          2 :     (map-delete swaps {hash: preimageHash})</span></a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">          7 :     (unwrap-panic (as-contract (contract-call? tokenPrincipal transfer amount tx-sender claimer none)))</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">          2 :     (print &quot;claim&quot;)</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">          2 :     (print preimageHash)</span></a>
+<a name="53"><span class="lineNum">      53 </span><span class="lineCov">          2 :     (ok ok-success)</span></a>
+<a name="54"><span class="lineNum">      54 </span>            :   ))</a>
+<a name="55"><span class="lineNum">      55 </span>            : )</a>
+<a name="56"><span class="lineNum">      56 </span>            : </a>
+<a name="57"><span class="lineNum">      57 </span>            : ;; Refunds sip10 locked in the contract</a>
+<a name="58"><span class="lineNum">      58 </span>            : ;; @param preimageHash Preimage hash of the swap</a>
+<a name="59"><span class="lineNum">      59 </span>            : ;; @param amount Amount locked in the contract for the swap in msip10</a>
+<a name="60"><span class="lineNum">      60 </span>            : ;; @param timelock Block height after which the locked sip10 can be refunded</a>
+<a name="61"><span class="lineNum">      61 </span>            : (define-public (refundToken (preimageHash (buff 32)) (tokenPrincipal &lt;ft-trait&gt;))</a>
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">          1 :   (let (</span></a>
+<a name="63"><span class="lineNum">      63 </span><span class="lineCov">          1 :     (claimer tx-sender)</span></a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">          5 :     (swap (unwrap! (map-get? swaps {hash: preimageHash}) (err err-swap-not-found)))</span></a>
+<a name="65"><span class="lineNum">      65 </span>            :     )</a>
+<a name="66"><span class="lineNum">      66 </span><span class="lineCov">          1 :   (begin</span></a>
+<a name="67"><span class="lineNum">      67 </span><span class="lineCov">          5 :     (asserts! (&gt; block-height (get timelock swap)) (err err-refund-blockheight-not-reached))</span></a>
+<a name="68"><span class="lineNum">      68 </span><span class="lineCov">          5 :     (asserts! (is-eq claimer (get initiator swap)) (err err-invalid-claimer))</span></a>
+<a name="69"><span class="lineNum">      69 </span><span class="lineCov">          5 :     (asserts! (is-eq (contract-of tokenPrincipal) (get tokenPrincipal swap)) (err err-invalid-token))</span></a>
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">          2 :     (map-delete swaps {hash: preimageHash})</span></a>
+<a name="71"><span class="lineNum">      71 </span><span class="lineCov">          8 :     (unwrap-panic (as-contract (contract-call? tokenPrincipal transfer (get amount swap) tx-sender claimer none)))</span></a>
+<a name="72"><span class="lineNum">      72 </span><span class="lineCov">          2 :     (print &quot;refund&quot;)</span></a>
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">          2 :     (print preimageHash)</span></a>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">          2 :     (ok ok-success)</span></a>
+<a name="75"><span class="lineNum">      75 </span>            :   ))</a>
+<a name="76"><span class="lineNum">      76 </span>            : )</a>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.15</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
