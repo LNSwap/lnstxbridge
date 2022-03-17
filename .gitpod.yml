@@ -9,7 +9,7 @@ tasks:
       mkdir ~/.lnstx-aggregator
       cp boltz.conf ~/.lnstx-aggregator/boltz.conf
       echo "bronze large spike canoe youth crucial seminar awkward allow frozen client math" > ~/.lnstx-aggregator/seed.dat
-      echo "http://localhost:9007" > /home/gitpod/.lnstx-aggregator/accesslist.txt
+      echo "http://localhost:9008" > /home/gitpod/.lnstx-aggregator/accesslist.txt
       npm i
       npm run docker:regtest
     # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts

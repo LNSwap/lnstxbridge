@@ -1762,12 +1762,12 @@ class Service {
 
     // check if url is in access list - limit providers that can join the network 
     const ACLfile = path.join(getServiceDataDir('lnstx-aggregator'), 'accesslist.txt');
-    console.log('ACLfile ', ACLfile);
+    // console.log('ACLfile, url ', ACLfile, url);
     // const ACLfile = '~/.lnstx/accesslist.txt';
     if(fs.existsSync(ACLfile)) {
       const acl = fs.readFileSync(ACLfile);
       if(acl.includes(url)) {
-          this.logger.verbose('provider is in ACL list: ' + url);
+        this.logger.verbose('provider is in ACL list: ' + url);
       } else {
         throw new Error('Provider not in access list.');
       }
