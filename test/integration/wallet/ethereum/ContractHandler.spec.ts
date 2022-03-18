@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { randomBytes } from 'crypto';
 import { crypto } from 'bitcoinjs-lib';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';

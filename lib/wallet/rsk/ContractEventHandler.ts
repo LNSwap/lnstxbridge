@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { EventEmitter } from 'events';
 import { BigNumber, Event } from 'ethers';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { join } from 'path';
 import { ContractABIs } from 'boltz-core';
 import { existsSync, readFileSync } from 'fs';
@@ -15,7 +16,7 @@ const Constants = {
 
 const connectEthereum = (providerUrl: string, signerAddress: string): Signer => {
   const provider = new providers.JsonRpcProvider(providerUrl);
-  console.log("connectEthereum signerAddress: ", signerAddress);
+  console.log('connectEthereum signerAddress: ', signerAddress);
   return provider.getSigner(signerAddress);
 };
 

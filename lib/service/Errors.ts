@@ -116,19 +116,19 @@ export default {
     code: concatErrorCode(ErrorCodePrefix.Service, 30),
   }),
   WRONG_RATE: (): Error => ({
-    message: `Exchange rate validation failed`,
+    message: 'Exchange rate validation failed',
     code: concatErrorCode(ErrorCodePrefix.Service, 31),
   }),
   INVALID_PARAMETER: (): Error => ({
-    message: `Invalid parameter received`,
+    message: 'Invalid parameter received',
     code: concatErrorCode(ErrorCodePrefix.Service, 32),
   }),
   MINT_COST_MISMATCH: (): Error => ({
-    message: `Mint cost does not match`,
+    message: 'Mint cost does not match',
     code: concatErrorCode(ErrorCodePrefix.Service, 33),
   }),
   EXCEEDS_SWAP_LIMIT: (): Error => ({
-    message: `Exceeds swap limit`,
+    message: 'Exceeds swap limit',
     code: concatErrorCode(ErrorCodePrefix.Service, 34),
   }),
 };

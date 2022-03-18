@@ -1,21 +1,21 @@
-
+/* eslint-disable import/no-unresolved */
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
 // import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
-const contractName = "usda-token";
+const contractName = 'usda-token';
 
 // standard sip10 tests
 Clarinet.test({
-    name: "Ensure that user can transfer/get-token-uri/set-cost-per-mint",
+    name: 'Ensure that user can transfer/get-token-uri/set-cost-per-mint',
     async fn(chain: Chain, accounts: Map<string, Account>) {
-        const wallet_1 = accounts.get("wallet_1")!;
-        const wallet_2 = accounts.get("wallet_2")!;
-        const wallet_3 = accounts.get("wallet_3")!;
-        const deployer = accounts.get("deployer")!;
-        let block = chain.mineBlock([
+        const wallet_1 = accounts.get('wallet_1')!;
+        const wallet_2 = accounts.get('wallet_2')!;
+        const wallet_3 = accounts.get('wallet_3')!;
+        const deployer = accounts.get('deployer')!;
+        const block = chain.mineBlock([
             Tx.contractCall(
                 contractName,
-                "transfer",
+                'transfer',
                 [
                     types.uint(5000000),
                     types.principal(deployer.address),
@@ -26,7 +26,7 @@ Clarinet.test({
               ),
             Tx.contractCall(
                 contractName,
-                "transfer",
+                'transfer',
                 [
                     types.uint(5000000),
                     types.principal(wallet_3.address),
@@ -37,14 +37,14 @@ Clarinet.test({
             ),
             Tx.contractCall(
                 contractName,
-                "get-token-uri",
+                'get-token-uri',
                 [
                 ],
                 wallet_1.address
               ),
             Tx.contractCall(
                 contractName,
-                "gift-tokens",
+                'gift-tokens',
                 [
                     types.principal(wallet_2.address)
                 ],
@@ -53,7 +53,7 @@ Clarinet.test({
         ]);
         const totalSupply = chain.callReadOnlyFn(
             contractName,
-            "get-total-supply",
+            'get-total-supply',
             [
             ],
             wallet_1.address
@@ -62,25 +62,25 @@ Clarinet.test({
 
         const assetName = chain.callReadOnlyFn(
             contractName,
-            "get-name",
+            'get-name',
             [
             ],
             wallet_1.address
         );
-        assetName.result.expectOk().expectAscii("USDA");
-        
+        assetName.result.expectOk().expectAscii('USDA');
+
         const assetSymbol = chain.callReadOnlyFn(
             contractName,
-            "get-symbol",
+            'get-symbol',
             [
             ],
             wallet_1.address
         );
-        assetSymbol.result.expectOk().expectAscii("USDA");
+        assetSymbol.result.expectOk().expectAscii('USDA');
 
         const assetDecimals = chain.callReadOnlyFn(
             contractName,
-            "get-decimals",
+            'get-decimals',
             [
             ],
             wallet_1.address
@@ -89,7 +89,7 @@ Clarinet.test({
 
         const userBalance = chain.callReadOnlyFn(
             contractName,
-            "get-balance",
+            'get-balance',
             [
                 types.principal(deployer.address)
             ],
@@ -100,7 +100,7 @@ Clarinet.test({
         // console.log('block ', block, block.receipts[0].events[0]);
         block.receipts[0].result.expectOk().expectBool(true);
         block.receipts[1].result.expectErr().expectUint(1);
-        block.receipts[2].result.expectOk().expectSome().expectUtf8("https://some.token/token-metadata.json");
+        block.receipts[2].result.expectOk().expectSome().expectUtf8('https://some.token/token-metadata.json');
         block.receipts[3].result.expectOk().expectBool(true);
     },
 });

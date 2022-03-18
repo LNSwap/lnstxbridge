@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { BigNumber, ContractTransaction } from 'ethers';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
@@ -111,9 +112,9 @@ class ContractHandler {
   ): Promise<ContractTransaction> => {
     this.logger.debug(`Locking ${amount} ${token.symbol} with preimage hash: ${getHexString(preimageHash)}`);
     claimAddress = claimAddress.toLowerCase();
-    let tokenlc = token.getTokenAddress().toLowerCase();
-    this.logger.error("contracthandler erc20swap lock: " + preimageHash + "," + amount + "," + tokenlc + "," + claimAddress + "," + timeLock);
-    
+    const tokenlc = token.getTokenAddress().toLowerCase();
+    this.logger.error('contracthandler erc20swap lock: ' + preimageHash + ',' + amount + ',' + tokenlc + ',' + claimAddress + ',' + timeLock);
+
     return this.erc20Swap.lock(
       preimageHash,
       amount,

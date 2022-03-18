@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { BigNumber, ContractTransaction } from 'ethers';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
@@ -13,7 +14,7 @@ import SIP10WalletProvider from '../providers/SIP10WalletProvider';
 // import { contractPrincipalCV } from '@blockstack/stacks-transactions';
 // import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
 
-const BigNum = require('bn.js');
+import BigNum from 'bn.js';
 
 // let networkconf:string = "mocknet";
 // let network = new StacksTestnet();
@@ -97,7 +98,7 @@ class ContractHandler {
 
     console.log('contracthandler.85: ',this.contractAddress, this.contractName, postConditionCode, postConditionAmount);
 
-    
+
     const swapamount = decimalamount.toString(16).split('.')[0] + '';
     const paddedamount = swapamount.padStart(32, '0');
     const tl1 = timeLock.toString(16);
@@ -172,7 +173,7 @@ class ContractHandler {
 
     // from atomic swap
     // Claiming 000000000000000000000000004c4b40 Stx with preimage cdf07179b2ece93ccb76cd4f6fb2ab1c65621c4988bae4f4de8503e64c1eaf0f and timelock 1123
-    
+
     // need to add a way to handle this as well - happens when coming from attemptsettleswap - invoice.pending
     // Claiming 26101488000000000000 Stx with preimage 7a5227e168a41dc5d311e3eacaa8c9a19de070ab5e258134a02b2cdbaa6e00ee and timelock 44337
     if(!amount.toString().includes('0x') && !amount.toString().includes('.') && amount.toString().length < 32) {
@@ -182,7 +183,7 @@ class ContractHandler {
       decimalamount = parseInt(amount.toString(),16);
     }
     if(!timeLock.toString().includes('0x')) {
-      theTimelock = timeLock.toString(16).padStart(32, '0')
+      theTimelock = timeLock.toString(16).padStart(32, '0');
     } else {
       theTimelock = timeLock;
     }
@@ -278,7 +279,7 @@ class ContractHandler {
     const transaction = await makeContractCall(txOptions);
     return broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
 
-    
+
 
     // this is from connect
     // return await openContractCall(txOptions);
@@ -387,16 +388,16 @@ class ContractHandler {
   }
 
 
-  public toObject = (data) => {
-    // JSON.parse(
-    return JSON.stringify(data, (key, value) => {
-        console.log('key, value: ', key, value);
-        typeof value === 'bigint'
-            ? value.toString()
-            : value; // return everything else unchanged
-          }
-    );
-  }
+  // public toObject = (data) => {
+  //   // JSON.parse(
+  //   return JSON.stringify(data, (key, value) => {
+  //       console.log('key, value: ', key, value);
+  //       typeof value === 'bigint'
+  //           ? value.toString()
+  //           : value; // return everything else unchanged
+  //         }
+  //   );
+  // }
 
   public lockupToken = async (
     token: SIP10WalletProvider,
@@ -436,7 +437,7 @@ class ContractHandler {
 
     console.log('contracthandler.403: ',this.contractAddress, this.contractName, postConditionCode, postConditionAmount);
 
-    
+
     const swapamount = decimalamount.toString(16).split('.')[0] + '';
     const paddedamount = swapamount.padStart(32, '0');
     const tl1 = timeLock.toString(16);

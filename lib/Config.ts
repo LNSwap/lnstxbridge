@@ -186,7 +186,7 @@ type ConfigType = {
   notification: NotificationConfig;
   balancer: BalancerConfig;
   dashboard: DashboardConfig;
-  
+
   pairs: PairConfig[];
   currencies: CurrencyConfig[];
 

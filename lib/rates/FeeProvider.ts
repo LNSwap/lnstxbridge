@@ -193,7 +193,7 @@ class FeeProvider {
         // const dynLockCost = await calculateStxLockFee(getStacksNetwork().stxSwapAddress,'8c0640c4d4f0d5923d441037b2ea7406eb62869db5a085105492ad93eb72773f');
         // const dynClaimCost = await calculateStxClaimFee(getStacksNetwork().stxSwapAddress,'qqwe');
         // this.logger.debug(`feeprovider.186 dynLockCost: ${dynLockCost}`);
-        
+
         // const claimCost = this.calculateEtherGasCost(relativeFee, FeeProvider.gasUsage.EtherSwap.claim);
         // claimcost is wrong for STX but that should be OK.
         // this.logger.error("feeprovider.181 TODO: NO CLAIM/LOCK FEE estimation yet!! -relativeFee, stxclaimCost " + relativeFee + ", " +claimCost)

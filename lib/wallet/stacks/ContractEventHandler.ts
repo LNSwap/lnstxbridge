@@ -223,7 +223,7 @@ class ContractEventHandler extends EventEmitter {
     // });
     // sc.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP');
     // sc.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF');
-    
+
     // // this works so microblocks are ok
     // await client.subscribeMicroblocks(event => {
     //   this.logger.debug('ceh.207 microblocks: '+ JSON.stringify(event));
@@ -382,7 +382,7 @@ class ContractEventHandler extends EventEmitter {
       try {
         // add found lock data to stackstransactionrepository to be consumed by other swap providers
         // console.log('ceh.344 adding to stacksTransactionRepository ', txid, preimageHash, claimPrincipal, 'lock', swapContract);
-        // const addResult = 
+        // const addResult =
         await this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, 'lock', swapContract);
         // console.log('ceh.346 added to stacksTransactionRepository ', addResult );
       } catch (error) {

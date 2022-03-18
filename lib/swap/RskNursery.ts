@@ -62,7 +62,7 @@ class RskNursery extends EventEmitter {
 
     this.listenBlocks();
 
-    this.logger.error("RskNursery listeners are starting...");
+    this.logger.error('RskNursery listeners are starting...');
     this.listenEtherSwap();
     this.listenERC20Swap();
   }
@@ -117,7 +117,7 @@ class RskNursery extends EventEmitter {
       transactionHash,
       etherSwapValues,
     ) => {
-      this.logger.error("RskNursery listenEtherSwap eth.lockup enter");
+      this.logger.error('RskNursery listenEtherSwap eth.lockup enter');
       let swap = await this.swapRepository.getSwap({
         preimageHash: {
           [Op.eq]: getHexString(etherSwapValues.preimageHash),
@@ -150,7 +150,7 @@ class RskNursery extends EventEmitter {
         true,
       );
 
-      this.logger.error("rsknursery listenetherswap claimAddress, this.rskmanageraddress: " + etherSwapValues.claimAddress + ", " + this.rskManager.address + ", " + JSON.stringify(etherSwapValues));
+      this.logger.error('rsknursery listenetherswap claimAddress, this.rskmanageraddress: ' + etherSwapValues.claimAddress + ', ' + this.rskManager.address + ', ' + JSON.stringify(etherSwapValues));
       if (etherSwapValues.claimAddress !== this.rskManager.address) {
         this.emit(
           'lockup.failed',
@@ -186,7 +186,7 @@ class RskNursery extends EventEmitter {
     });
 
     this.rskManager.contractEventHandler.on('eth.claim', async (transactionHash, preimageHash, preimage) => {
-      this.logger.error("rsknursery.189 on 'eth.claim " + transactionHash+ ", " + preimageHash + ", " + preimage);
+      this.logger.error("rsknursery.189 on 'eth.claim " + transactionHash+ ', ' + preimageHash + ', ' + preimage);
       const reverseSwap = await this.reverseSwapRepository.getReverseSwap({
         preimageHash: {
           [Op.eq]: getHexString(preimageHash),
@@ -363,7 +363,7 @@ class RskNursery extends EventEmitter {
       return wallet;
     }
 
-    this.logger.error("getEthereumWallet returning empty!!");
+    this.logger.error('getEthereumWallet returning empty!!');
     return;
   }
 }

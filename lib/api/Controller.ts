@@ -561,6 +561,7 @@ class Controller {
   public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
     try {
       // console.log('controller.532 updateSwapStatus req.body ', req.body);
+      // eslint-disable-next-line prefer-const
       let { id, status, txId, failureReason, transaction, txHex } = this.validateRequest(req.body, [
         { name: 'id', type: 'string' },
         { name: 'status', type: 'string' },
@@ -794,7 +795,7 @@ class Controller {
     const data = await this.service.getAdminBalanceStacks();
     this.successResponse(res, data);
   }
-  
+
   public getAdminConfiguration = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
@@ -802,7 +803,7 @@ class Controller {
       return;
     }
     // const data = parseTomlConfig(process.env.APP_FOLDER + '/boltz.conf')
-    const data = parseTomlConfig(path.join(Config.defaultDataDir, Config.defaultConfigPath))
+    const data = parseTomlConfig(path.join(Config.defaultDataDir, Config.defaultConfigPath));
     console.log('controller.803 parseTomlConfig: ', data);
     this.successResponse(res, data);
   }

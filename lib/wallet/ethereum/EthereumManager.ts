@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { ContractABIs } from 'boltz-core';
 import { ERC20 } from 'boltz-core/typechain/ERC20';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
@@ -183,7 +184,7 @@ class EthereumManager {
 
     if (allowance.isZero()) {
       this.logger.verbose(`Setting allowance of ${erc20Wallet.symbol}`);
-      this.logger.error("erc20 allowance approve: " + this.ethereumConfig.erc20SwapAddress + " to value " + constants.MaxUint256);
+      this.logger.error('erc20 allowance approve: ' + this.ethereumConfig.erc20SwapAddress + ' to value ' + constants.MaxUint256);
 
       const { transactionId } = await erc20Wallet.approve(
         this.ethereumConfig.erc20SwapAddress,

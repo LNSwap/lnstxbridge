@@ -73,14 +73,14 @@ import path from 'path';
 // });
 
 import axios from 'axios';
-import tor_axios from 'tor-axios'
+import tor_axios from 'tor-axios';
 const tor = tor_axios.torSetup({
     ip: 'localhost',
     port: 9050,
-})
+});
 
 // increase listenerlimit
-require('events').EventEmitter.defaultMaxListeners = 100;
+// require('events').EventEmitter.defaultMaxListeners = 100;
 
 type LndNodeInfo = {
   nodeKey: string,
@@ -449,7 +449,7 @@ class Service {
     //   // regtest
     //   return await currency.chainClient.getRawTransaction(transactionHash);
     // }
-    
+
     return await currency.chainClient.getRawTransaction(transactionHash);
   }
 
@@ -488,7 +488,7 @@ class Service {
     const { blocks } = await currency.chainClient.getBlockchainInfo();
     this.logger.info('service.455 getSwapTransaction getRawTransaction which will fail due to pruned node.');
     const transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
-    
+
     // let transactionHex;
     // // need blockhash because we're running a pruned node with no -txindex
     // if((await getInfo()).network_id === 1) {
@@ -675,11 +675,11 @@ class Service {
     const currency = this.getCurrency('STX');
 
     if (currency.stacksClient === undefined) {
-      throw new Error('stacksClient not found')
+      throw new Error('stacksClient not found');
     }
 
-    let reverseSwap: ReverseSwap | null | undefined;
-    reverseSwap = await this.swapManager.reverseSwapRepository.getReverseSwap({
+    // let reverseSwap: ReverseSwap | null | undefined;
+    const reverseSwap = await this.swapManager.reverseSwapRepository.getReverseSwap({
       id: {
         [Op.eq]: id,
       },
@@ -690,11 +690,11 @@ class Service {
     }
 
     if(!reverseSwap.minerFeeInvoice) {
-      throw new Error(`Reverse swap is not prepaid`);
+      throw new Error('Reverse swap is not prepaid');
     }
 
     if(reverseSwap.status !== SwapUpdateEvent.TransactionConfirmed) {
-      throw new Error(`Reverse swap is not in correct status`);
+      throw new Error('Reverse swap is not in correct status');
     }
 
     // sponsor and broadcast tx
@@ -1409,7 +1409,7 @@ class Service {
     let baseFee = this.rateProvider.feeProvider.getBaseFee(sendingCurrency.symbol, BaseFeeType.ReverseLockup);
     if(sendingCurrency.symbol === 'STX' || sendingCurrency.symbol === 'USDA') {
       // convert from mstx to boltz default 10**8
-      baseFee = Math.round(baseFee * 100)
+      baseFee = Math.round(baseFee * 100);
     }
     // console.log('service.1375 createreverseswap rate, feePercent, baseFee: ', rate, feePercent, baseFee);
 
@@ -1491,7 +1491,7 @@ class Service {
         prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate * 10**8); //convert to sats
         // service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate 87025 5 0.00005008000000000001 1
         console.log('service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate', prepayMinerFeeOnchainAmount, prepayMinerFeeInvoiceAmount, receivingAmountRate, sendingAmountRate);
-        
+
         // If the invoice amount was specified, the onchain and hold invoice amounts need to be adjusted
         if (invoiceAmountDefined) {
           onchainAmount -= Math.ceil(prepayMinerFeeOnchainAmount * sendingAmountRate);
@@ -1687,15 +1687,15 @@ class Service {
     let reachable = false;
     do {
       if(count > allClients.length) {
-        throw new Error('No providers found')
+        throw new Error('No providers found');
       }
       provider = await this.clientRepository.findRandom();
-      providerPairs = JSON.parse(provider[0].pairs)
+      providerPairs = JSON.parse(provider[0].pairs);
       // console.log('provider pair data: ', providerPairs, req,)
       // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
 
       try {
-        let res
+        let res;
         if(provider[0].url.includes('.onion')) {
           res = await tor.get(`${provider[0].url}/getpairs`);
         } else {
@@ -1706,9 +1706,9 @@ class Service {
         console.log('provider unreachable: ', provider[0].url);
       }
 
-      count++
-    } while (provider[0].pairs.includes(req['pairId']) && 
-      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] && 
+      count++;
+    } while (provider[0].pairs.includes(req['pairId']) &&
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] &&
       req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] &&
       reachable);
 
@@ -1740,7 +1740,7 @@ class Service {
         providerUrl: provider[0].url,
         status: 'swap.created',
       });
-      
+
     } catch (error) {
       console.log('service.1593 error ', error.message);
       this.clientRepository.incrementFailure(provider[0], 1);
@@ -1749,6 +1749,7 @@ class Service {
     return {response: data};
   };
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object,): Promise<{
     // id: string,
     // invoice: string,
@@ -1760,7 +1761,7 @@ class Service {
     //   throw Errors.MINT_COST_MISMATCH();
     // }
 
-    // check if url is in access list - limit providers that can join the network 
+    // check if url is in access list - limit providers that can join the network
     const ACLfile = path.join(getServiceDataDir('lnstx-aggregator'), 'accesslist.txt');
     // console.log('ACLfile, url ', ACLfile, url);
     // const ACLfile = '~/.lnstx/accesslist.txt';
@@ -2053,7 +2054,7 @@ class Service {
 
   private startNFTListener = () => {
     if(!this.serviceInvoiceListener) {
-      this.logger.verbose(`s.1675 startNFTListener starting serviceInvoiceListener`);
+      this.logger.verbose('s.1675 startNFTListener starting serviceInvoiceListener');
 
       const currency = this.getCurrency('BTC');
       this.serviceInvoiceListener = currency.lndClient!.on('invoice.settled', async (settledInvoice: string) => {
@@ -2143,7 +2144,7 @@ class Service {
       return result;
     } catch (error) {
       this.logger.error(`service.2128 getAdminBalancerBalances error: ${error.message}`);
-      return `Unable to get exchange balances`;
+      return 'Unable to get exchange balances';
     }
   }
 
@@ -2176,7 +2177,7 @@ class Service {
 
   public getAdminBalanceOnchain = async (): Promise<string> => {
     const balances = (await this.getBalance()).getBalancesMap();
-    let balanceOnchain = ''
+    let balanceOnchain = '';
     balances.forEach((balance: Balance, symbol: string) => {
       if(symbol === 'BTC')
       balanceOnchain = `${balance.getWalletBalance()!.getTotalBalance()}`;
@@ -2187,10 +2188,10 @@ class Service {
   public getAdminBalanceStacks = async (): Promise<{walletName: string, value: string, address: string}[]> => {
     const data = await getAddressAllBalances();
     const signerAddress = (await getStacksNetwork()).signerAddress;
-    let respArray: {walletName: string, value: string, address: string}[] = []
+    const respArray: {walletName: string, value: string, address: string}[] = [];
     Object.keys(data).forEach((key) => {
       respArray.push({walletName: key, value: data[key], address: signerAddress});
-    })
+    });
     return respArray;
   }
 

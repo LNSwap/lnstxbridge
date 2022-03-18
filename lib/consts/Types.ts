@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { BigNumber } from 'ethers';
 import { ERC20 } from 'boltz-core/typechain/ERC20';
 import { SwapUpdateEvent } from './Enums';

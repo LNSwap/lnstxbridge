@@ -31,13 +31,13 @@ class ArkadikoOracle implements Exchange {
   private static readonly API = 'https://api.coingecko.com/api/v3';
 
   public async getPrice(baseAsset: string, quoteAsset: string): Promise<number> {
-    if(baseAsset !== "BTC" || quoteAsset !== "USDA") {
-      throw "error";
+    if(baseAsset !== 'BTC' || quoteAsset !== 'USDA') {
+      throw 'error';
     }
     // BTC USDA
     // console.log("ArkadikoOracle.10 getPrice baseAsset quoteAsset: ", baseAsset, quoteAsset);
-    let longerquoteasset = this.longerName(quoteAsset);
-    let longerbaseasset = this.longerName(baseAsset);
+    const longerquoteasset = this.longerName(quoteAsset);
+    const longerbaseasset = this.longerName(baseAsset);
     // let lowerbaseasset = baseAsset.toLowerCase();
     // let lowerbaseasset = this.longerName(baseAsset);
     const pair = `${longerbaseasset}&vs_currencies=${longerquoteasset}`;
@@ -51,11 +51,11 @@ class ArkadikoOracle implements Exchange {
     const result:any = await callReadOnlyFunction(options);
     // console.log(`ArkadikoOracle.45 getPrice: `, result, cvToJSON(result));
 
-    let usdaperusd = Number(result.data['last-price'].value)/Number(result.data['decimals'].value)
-    let btcperusda = lastprice / usdaperusd;
-    // result, usdaperusd, 
+    const usdaperusd = Number(result.data['last-price'].value)/Number(result.data['decimals'].value);
+    const btcperusda = lastprice / usdaperusd;
+    // result, usdaperusd,
     // console.log(`ArkadikoOracle.45 getPrice: `, btcperusda)
-    
+
     // 1 stx = 3000 sats
     // 1 btc = 33156.498673740054 STX -> this is returned from here which is correct on frontend UI
     return Number(btcperusda);
@@ -75,7 +75,7 @@ class ArkadikoOracle implements Exchange {
       case 'USDA': return 'usd';
 
       default: return asset;
-    }    
+    }
   }
 
   // private parseAsset = (asset: string) => {

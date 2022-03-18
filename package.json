@@ -12,6 +12,7 @@
     "start": "node bin/boltzd",
     "dev": "npm run compile && npm run start",
     "lint": "eslint --max-warnings 0 --ext .ts .",
+    "lint:fix": "eslint --fix --ext .ts .",
     "docker:regtest": "./docker/regtest/startRegtest.sh",
     "docker:regtest:mine": "docker exec -it regtest bitcoin-cli -regtest -generate 1",
     "docker:regtest:fund": "lnclibtc2 newaddress p2wkh | jq '.address' | xargs | ./dockercmd.sh ",
@@ -67,7 +68,7 @@
     "dist/**/!(tsconfig.tsbuildinfo)"
   ],
   "engines": {
-    "node": ">=10.21.0"
+    "node": ">=11.0.0"
   },
   "dependencies": {
     "@boltz/bolt11": "^1.2.7",

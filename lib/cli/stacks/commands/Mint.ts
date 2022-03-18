@@ -20,13 +20,13 @@ import BuilderComponents from '../../BuilderComponents';
 // makeContractCall, , broadcastTransaction, estimateContractFunctionCall
 // bufferCV
 import { AnchorMode, PostConditionMode, makeContractCall, broadcastTransaction } from '@stacks/transactions';
-import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
+import { StacksMocknet, StacksMainnet } from '@stacks/network';
 // import { getHexString } from '../../../Utils';
 import { getAccountNonce } from '../../../wallet/stacks/StacksUtils';
 import { standardPrincipalCV } from '@blockstack/stacks-transactions';
 // import StacksManager from '../../../wallet/stacks/StacksManager';
 
-const BigNum = require('bn.js');
+import BigNum from 'bn.js';
 
 // let networkconf:string = "mocknet";
 // let network = new StacksTestnet();
@@ -52,13 +52,13 @@ export const builder = {
   token: BuilderComponents.token,
 };
 
-let networkconf:string = "mocknet";
-let network = new StacksTestnet();
-if(networkconf=="mainnet"){
-  network = new StacksMainnet();
-} else if(networkconf=="mocknet") {
-  network = new StacksMocknet()
-}
+// const networkconf = 'mocknet';
+// let network = new StacksTestnet();
+// if(networkconf=='mainnet'){
+//   network = new StacksMainnet();
+// } else if(networkconf=='mocknet') {
+let network = new StacksMocknet();
+// }
 
 let contractAddress:string;
 let contractName:string;
@@ -74,15 +74,15 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 
   // ./bin/boltz-stacks mint nftAddress userAddress mainnet privkey <customfee in microstx> <customnonce>
   // ./bin/boltz-stacks mint SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stacks-roots-v2 SP3BWAHYMTHQZHSB8N49AXQNTYWBACQBAN8Z4QFRD mainnet <privkey>
-  let allargs = process.argv.slice(2);
+  const allargs = process.argv.slice(2);
   // [ 'lock', 'asd', 'qwe', 'zxc' ]
-  console.log("stx refund: ", allargs, argv);
+  console.log('stx refund: ', allargs, argv);
 
-  const selectednetwork = allargs[3]
-  if(selectednetwork=="mainnet"){
+  const selectednetwork = allargs[3];
+  if(selectednetwork=='mainnet'){
     network = new StacksMainnet();
-  } else if(selectednetwork=="mocknet") {
-    network = new StacksMocknet()
+  } else if(selectednetwork=='mocknet') {
+    network = new StacksMocknet();
   }
 
   const nftAddress = allargs[1];
@@ -100,7 +100,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     customnonce = parseInt(allargs[10]);
   }
 
-  
+
   const userAddress = allargs[2];
   console.log('mint nftAddress, userAddress:: ', contractAddress, contractName, userAddress, selectednetwork, privkey, customfee, customnonce);
   // return;
@@ -171,7 +171,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     // bufferCV(Buffer.from('01','hex')),
     // bufferCV(Buffer.from(origtimelock,'hex')),
   ];
-  console.log("stacks contracthandler.306 mint functionargs: " + JSON.stringify(functionArgs));
+  console.log('stacks contracthandler.306 mint functionargs: ' + JSON.stringify(functionArgs));
 
   // const functionArgs = [
   //   bufferCV(preimageHash),
@@ -182,7 +182,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // ];
 
   // const stacksNetworkData = getStacksNetwork();
-  
+
   // console.log('got accountNonce ', accountNonce);
   const txOptions = {
     contractAddress: contractAddress,
@@ -381,7 +381,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 
 //   const transaction = await makeContractCall(txOptions);
 //   return broadcastTransaction(transaction, network);
- 
+
 
 //   // this is from connect
 //   // return await openContractCall(txOptions);
@@ -398,7 +398,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 //       if (typeof value === 'undefined') {
 //         console.log("key, value: ", key, value)
 //       }
-      
+
 //       typeof value === 'bigint'
 //           ? value.toString()
 //           : value // return everything else unchanged

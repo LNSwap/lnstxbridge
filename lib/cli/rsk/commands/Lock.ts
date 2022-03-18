@@ -33,7 +33,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   const amount = BigNumber.from(argv.amount).mul(etherDecimals);
 
   const boltzAddress = await getBoltzAddress();
-  console.log("boltzAddress: ", boltzAddress);
+  console.log('boltzAddress: ', boltzAddress);
 
   if (boltzAddress === undefined) {
     console.log('Could not lock coins because the address of Boltz could not be queried');
@@ -43,9 +43,9 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   let transaction: ContractTransaction;
 
   if (argv.token) {
-    console.log("rsk erc20Swap.lock to erc20SwapAddress: ", Constants.erc20SwapAddress);
+    console.log('rsk erc20Swap.lock to erc20SwapAddress: ', Constants.erc20SwapAddress);
     await token.approve(Constants.erc20SwapAddress, amount);
-    console.log("rsk erc20Swap.lock after approve: ", preimageHash, amount, Constants.erc20TokenAddress, boltzAddress, argv.timelock);
+    console.log('rsk erc20Swap.lock after approve: ', preimageHash, amount, Constants.erc20TokenAddress, boltzAddress, argv.timelock);
     transaction = await erc20Swap.lock(
       preimageHash,
       amount,
@@ -54,7 +54,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
       argv.timelock,
     );
   } else {
-    console.log("rsk etherSwap.lock to claimAddress: ", boltzAddress);
+    console.log('rsk etherSwap.lock to claimAddress: ', boltzAddress);
     transaction = await etherSwap.lock(
       preimageHash,
       boltzAddress,

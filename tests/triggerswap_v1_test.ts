@@ -1,21 +1,22 @@
+/* eslint-disable import/no-unresolved */
 import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
 // import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
-const contractName = "stxswap";
+const contractName = 'stxswap';
 
 Clarinet.test({
-    name: "Ensure that user can lock and trigger stx transfer to another address",
+    name: 'Ensure that user can lock and trigger stx transfer to another address',
     async fn(chain: Chain, accounts: Map<string, Account>) {
-      const wallet_1 = accounts.get("wallet_1")!;
-      const wallet_2 = accounts.get("wallet_2")!;
-      const wallet_3 = accounts.get("wallet_3")!;
+      const wallet_1 = accounts.get('wallet_1')!;
+      const wallet_2 = accounts.get('wallet_2')!;
+      const wallet_3 = accounts.get('wallet_3')!;
       const amount = 1_000;
       let block = chain.mineBlock([
         Tx.contractCall(
           contractName,
-          "lockStx",
+          'lockStx',
           [
-            `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`, // preimagehash
+            '0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', // preimagehash
             types.uint(amount),
             types.uint(5),
             types.principal(wallet_2.address),
@@ -28,13 +29,13 @@ Clarinet.test({
 
       block = chain.mineBlock([
         Tx.contractCall(
-          "triggerswap",
-          "triggerTransferStx",
+          'triggerswap',
+          'triggerTransferStx',
           [
-            `0x01`, //preimage
+            '0x01', //preimage
             types.uint(amount),
             types.principal(wallet_3.address),
-            types.ascii("Buy: 4167 Code: 7e28eac65f")
+            types.ascii('Buy: 4167 Code: 7e28eac65f')
           ],
           wallet_2.address
         ),
@@ -45,19 +46,19 @@ Clarinet.test({
   });
 
   Clarinet.test({
-    name: "Ensure that user can lock and triggerstx to claim an nft",
+    name: 'Ensure that user can lock and triggerstx to claim an nft',
     async fn(chain: Chain, accounts: Map<string, Account>) {
-      const deployer = accounts.get("deployer")!;
-      const wallet_1 = accounts.get("wallet_1")!;
-      const wallet_2 = accounts.get("wallet_2")!;
-      const wallet_3 = accounts.get("wallet_3")!;
+      const deployer = accounts.get('deployer')!;
+      const wallet_1 = accounts.get('wallet_1')!;
+      const wallet_2 = accounts.get('wallet_2')!;
+      // const wallet_3 = accounts.get('wallet_3')!;
       const amount = 1_000;
       let block = chain.mineBlock([
         Tx.contractCall(
           contractName,
-          "lockStx",
+          'lockStx',
           [
-            `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`, // preimagehash
+            '0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', // preimagehash
             types.uint(amount),
             types.uint(5),
             types.principal(wallet_2.address),
@@ -70,10 +71,10 @@ Clarinet.test({
 
       block = chain.mineBlock([
         Tx.contractCall(
-          "triggerswap",
-          "triggerStx",
+          'triggerswap',
+          'triggerStx',
           [
-            `0x01`, //preimage
+            '0x01', //preimage
             types.uint(amount),
             types.principal(deployer.address + '.nft'),
           ],
@@ -86,11 +87,11 @@ Clarinet.test({
   });
 
   Clarinet.test({
-    name: "Ensure that user can lock and triggersip10 to mint nft with sip10 token",
+    name: 'Ensure that user can lock and triggersip10 to mint nft with sip10 token',
     async fn(chain: Chain, accounts: Map<string, Account>) {
-      const deployer = accounts.get("deployer")!;
-      const wallet_1 = accounts.get("wallet_1")!;
-      const wallet_2 = accounts.get("wallet_2")!;
+      const deployer = accounts.get('deployer')!;
+      // const wallet_1 = accounts.get('wallet_1')!;
+      const wallet_2 = accounts.get('wallet_2')!;
     //   console.log(`wallet address: `, accounts);
 
       // const assetMaps = chain.getAssetsMaps();
@@ -105,10 +106,10 @@ Clarinet.test({
     //   console.log(`amount `, `0x${amount.toString(16).padStart(16, "0")}`);
       let block = chain.mineBlock([
         Tx.contractCall(
-          "sip10swap",
-          "lockToken",
+          'sip10swap',
+          'lockToken',
           [
-            `0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a`, // preimagehash
+            '0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', // preimagehash
             types.uint(amount),
             types.uint(5), // timelock
             types.principal(wallet_2.address), // claimPrincipal
@@ -122,10 +123,10 @@ Clarinet.test({
 
       block = chain.mineBlock([
         Tx.contractCall(
-          "triggerswap",
-          "triggerSip10",
+          'triggerswap',
+          'triggerSip10',
           [
-            `0x01`, //preimage
+            '0x01', //preimage
             types.uint(amount),
             types.principal(deployer.address + '.usda-token'),
             types.principal(deployer.address + '.nft'),

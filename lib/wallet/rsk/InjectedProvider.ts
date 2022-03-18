@@ -27,7 +27,7 @@ class InjectedProvider implements providers.Provider {
   private static readonly requestTimeout = 5000;
 
   constructor(private logger: Logger, config: RskConfig) {
-    this.logger.error(`Rsk injectedprovider constructor: ` + JSON.stringify(config));
+    this.logger.error('Rsk injectedprovider constructor: ' + JSON.stringify(config));
     if (config.providerEndpoint) {
       this.providers.set(EthProviderService.Websocket, new providers.WebSocketProvider(config.providerEndpoint));
       // this is processed
@@ -74,7 +74,7 @@ class InjectedProvider implements providers.Provider {
     addEthProvider(EthProviderService.Alchemy, config.alchemy);
 
     if (this.providers.size === 0) {
-      this.logger.error(`NO_PROVIDER_SPECIFIED: `);
+      this.logger.error('NO_PROVIDER_SPECIFIED: ');
       throw Errors.NO_PROVIDER_SPECIFIED();
     }
   }
@@ -86,7 +86,7 @@ class InjectedProvider implements providers.Provider {
 
     for (const [providerName, provider] of this.providers) {
       try {
-        this.logger.error(`rsk injectedprovider getNetwork: ` + providerName + " " + JSON.stringify(provider));
+        this.logger.error('rsk injectedprovider getNetwork: ' + providerName + ' ' + JSON.stringify(provider));
         const network = await provider.getNetwork();
         this.logConnectedProvider(providerName, network);
         networks.push(network);
@@ -153,7 +153,7 @@ class InjectedProvider implements providers.Provider {
   }
 
   public getLogs = (filter: providers.Filter): Promise<Array<providers.Log>> => {
-    this.logger.error("rsk injectedprovider getLogs " + JSON.stringify(filter));
+    this.logger.error('rsk injectedprovider getLogs ' + JSON.stringify(filter));
     return this.forwardMethod('getLogs', filter);
   }
 
@@ -338,7 +338,7 @@ class InjectedProvider implements providers.Provider {
       } catch (error) {
         const formattedError = formatError(error);
 
-        this.logger.error("inside forwardMethod");
+        this.logger.error('inside forwardMethod');
         this.logger.warn(`Request to ${providerName} Web3 provider failed: ${method}: ${formattedError}`);
         errors.push(formattedError);
       }

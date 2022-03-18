@@ -96,7 +96,7 @@ class StacksManager {
   public init = async (mnemonic: string, chainTipRepository: ChainTipRepository): Promise<Map<string, Wallet>> => {
     // this.logger.info('StacksManager.90 INIT injectedprovider');
     await this.provider.init();
-    
+
     let chainId = ChainID.Testnet;
     if(this.stacksConfig.providerEndpoint.includes('mainnet')){
       chainId = ChainID.Mainnet;
@@ -119,23 +119,23 @@ class StacksManager {
     this.stacksClient = true;
 
     // this.logger.error('stacksmanager init network, '+ network);
-  
+
     const signer = await deriveRootKeychainFromMnemonic(mnemonic);
-    this.logger.verbose("stacksmanager.105 got signer: " + JSON.stringify(signer));
+    this.logger.verbose('stacksmanager.105 got signer: ' + JSON.stringify(signer));
     // const signer = EthersWallet.fromMnemonic(mnemonic).connect(this.provider);
     // this.address = await signer.getAddress();
 
     // looks like this is bitcoin address
     this.btcAddress = await getAddress(signer);
 
-    
+
     const derivedData = await deriveStxAddressChain(chainId)(signer);
-    this.logger.verbose("stacksmanager.117 derivedData "+ JSON.stringify(derivedData));
+    this.logger.verbose('stacksmanager.117 derivedData '+ JSON.stringify(derivedData));
     this.address = derivedData.address;
     this.privateKey = derivedData.privateKey;
 
     const signerAccountInfo = await getAccountInfo(derivedData.address);
-    this.logger.verbose("stacksmanager.137 signerAccountInfo "+ JSON.stringify(signerAccountInfo));
+    this.logger.verbose('stacksmanager.137 signerAccountInfo '+ JSON.stringify(signerAccountInfo));
 
 
     this.stxswapaddress = this.stacksConfig.stxSwapAddress;
@@ -156,7 +156,7 @@ class StacksManager {
 
     // const currentBlock = await signer.provider!.getBlockNumber();
     const currentBlock = info.stacks_tip_height;
-    this.logger.verbose("StacksManager currentBlock: "+ currentBlock);
+    this.logger.verbose('StacksManager currentBlock: '+ currentBlock);
     const chainTip = await chainTipRepository.findOrCreateTip('STX', currentBlock);
 
     setStacksNetwork(this.stacksConfig.providerEndpoint, this.stacksConfig, derivedData.privateKey, derivedData.address, signerAccountInfo.nonce, currentBlock);
@@ -284,7 +284,7 @@ class StacksManager {
   // }
 
   // public somefunc = async (): Promise<Number> => {
-    
+
   //   return 0;
   // }
 
@@ -292,7 +292,7 @@ class StacksManager {
 
 async function checkblockheight (chainTipRepository, chainTip) {
   const info = await getInfo();
-  console.log("Checking for Stacks block height: " + info.stacks_tip_height);
+  console.log('Checking for Stacks block height: ' + info.stacks_tip_height);
   chainTipRepository.updateTip(chainTip, info.stacks_tip_height);
 
   // trigger checking of expiredswaps on new blocks

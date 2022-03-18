@@ -215,7 +215,7 @@ class ZmqClient extends EventEmitter {
           //   console.log('zmq.212 regtest ');
           //   transactionData = await this.getRawTransactionVerbose(id);
           // }
-  
+
           // Check whether the transaction got confirmed or added to the mempool
           if (transactionData.confirmations) {
             // when astransaction mempool -> conf

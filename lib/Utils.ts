@@ -495,4 +495,4 @@ export const parseTomlConfig = (filename: string): any => {
       throw Errors.COULD_NOT_PARSE_CONFIG(filename, JSON.stringify(error));
     }
   }
-}
+};

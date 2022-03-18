@@ -58,13 +58,13 @@ class StacksWalletProvider implements WalletProviderInterface {
       // fee: new BigNum(200), // set a tx fee if you don't want the builder to estimate
       anchorMode: AnchorMode.Any,
     };
-    
+
     const transaction = await makeSTXTokenTransfer(txOptions);
-    
+
     // to see the raw serialized tx
     const serializedTx = transaction.serialize().toString('hex');
-    this.logger.debug("stackswalletprovider.64 sendToAddress serializedTx: " + serializedTx);
-    
+    this.logger.debug('stackswalletprovider.64 sendToAddress serializedTx: ' + serializedTx);
+
     // broadcasting transaction to the specified network
     const broadcastResponse = await broadcastTransaction(transaction, getStacksNetwork().stacksNetwork);
     const txId = broadcastResponse.txid;
@@ -76,10 +76,10 @@ class StacksWalletProvider implements WalletProviderInterface {
 
   // address: string, gasPrice?: number
   public sweepWallet = async (): Promise<SentTransaction> => {
-    this.logger.error("stackswalletprovider.77 TODO: sweepWallet not implemented!");
+    this.logger.error('stackswalletprovider.77 TODO: sweepWallet not implemented!');
 
     return {
-      transactionId: "transaction.hash",
+      transactionId: 'transaction.hash',
     };
 
     // const balance = await this.signer.getBalance();

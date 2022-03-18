@@ -16,13 +16,13 @@ import { CurrencyType, SwapUpdateEvent } from '../consts/Enums';
 import { ERC20SwapValues, EtherSwapValues, SwapUpdate } from '../consts/Types';
 import { getChainCurrency, getHexString, splitPairId, stringify } from '../Utils';
 // import ERC20WalletProvider from '../wallet/providers/ERC20WalletProvider';
-import StacksManager from 'lib/wallet/stacks/StacksManager';
+import StacksManager from '../wallet/stacks/StacksManager';
 import { TxBroadcastResult } from '@stacks/transactions';
 import { getStacksNetwork, getTx, incrementNonce } from '../wallet/stacks/StacksUtils';
 import type { Transaction } from '@stacks/stacks-blockchain-api-types';
 import { io } from 'socket.io-client';
 import * as stacks from '@stacks/blockchain-api-client';
-import SIP10WalletProvider from 'lib/wallet/providers/SIP10WalletProvider';
+import SIP10WalletProvider from '../wallet/providers/SIP10WalletProvider';
 
 const socket = io(getStacksNetwork().coreApiUrl, {
   query: {
@@ -133,9 +133,9 @@ class StacksNursery extends EventEmitter {
       // }
 
       try {
-        this.logger.error('stacksnurseryr.98 mempoolReverseSwap ' + mempoolReverseSwap.transactionId)
+        this.logger.error('stacksnurseryr.98 mempoolReverseSwap ' + mempoolReverseSwap.transactionId);
         // const transaction = await this.stacksManager.provider.getTransaction(mempoolReverseSwap.transactionId!);
-        const transaction = await getTx(mempoolReverseSwap.transactionId!)
+        const transaction = await getTx(mempoolReverseSwap.transactionId!);
         this.logger.debug(`Found pending Stx lockup transaction of Reverse Swap ${mempoolReverseSwap.id}: ${mempoolReverseSwap.transactionId}, ${transaction}`);
         // this.listenContractTransaction(mempoolReverseSwap, transaction);
         // this.listenStacksContractTransaction(mempoolReverseSwap, transaction);
@@ -226,7 +226,7 @@ class StacksNursery extends EventEmitter {
 
   public checkStacksTransaction = async (reverseSwap: ReverseSwap, transaction: Transaction): Promise<void> => {
     // transaction.wait(1).then(async () => {
-      this.logger.error('stacksnursery.154 checkStacksTransaction tx: '+ JSON.stringify(transaction) + ', ' + stringify(reverseSwap))
+      this.logger.error('stacksnursery.154 checkStacksTransaction tx: '+ JSON.stringify(transaction) + ', ' + stringify(reverseSwap));
       if(transaction.tx_status !== 'success') {
         this.emit(
           'lockup.failedToSend',
