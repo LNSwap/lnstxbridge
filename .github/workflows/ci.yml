@@ -20,6 +20,9 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Install Global Dependencies
+        run: npm -g install @stacks/cli
+
       - name: Install dependencies
         run: npm ci
 
@@ -27,7 +30,7 @@ jobs:
         run: npm run docker:regtest && npm run stacks:mocknet
 
       - name: Deploy Stacks contracts
-        run: sleep 240 && npm run stacks:fund && sleep 30 && npm run stacks:deploy
+        run: sleep 240 && npm run stacks:fund:old && sleep 30 && npm run stacks:deploy
 
       - name: Compile
         run: npm run compile
