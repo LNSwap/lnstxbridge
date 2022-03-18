@@ -58,7 +58,7 @@ Clarinet.test({
             ],
             wallet_1.address
         );
-        totalSupply.result.expectOk().expectUint(4000000000);
+        totalSupply.result.expectOk().expectUint(5000000000);
 
         const assetName = chain.callReadOnlyFn(
             contractName,

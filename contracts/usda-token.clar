@@ -14,6 +14,7 @@
 (ft-mint? usda u1000000000 contract-creator)
 (ft-mint? usda u1000000000 'ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF)
 (ft-mint? usda u1000000000 'ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP)
+(ft-mint? usda u1000000000 'ST3RXC1Q8MXYKPWRNQ6ZFAWSRY8PKRK8H4BW2F8F)
 
 ;; ---------------------------------------------------------
 ;; SIP-10 Functions
