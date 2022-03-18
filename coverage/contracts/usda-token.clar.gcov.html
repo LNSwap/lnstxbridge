@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2022-03-17 14:53:32</td>
+            <td class="headerValue">2022-03-17 20:59:28</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">8</td>
@@ -64,18 +64,18 @@
 <a name="2"><span class="lineNum">       2 </span>            : ;; mainnet sip10 trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE</a>
 <a name="3"><span class="lineNum">       3 </span>            : (impl-trait .sip-010-trait.sip-010-trait)</a>
 <a name="4"><span class="lineNum">       4 </span>            : </a>
-<a name="5"><span class="lineNum">       5 </span><span class="lineCov">         10 : (define-constant contract-creator tx-sender)</span></a>
+<a name="5"><span class="lineNum">       5 </span><span class="lineCov">         15 : (define-constant contract-creator tx-sender)</span></a>
 <a name="6"><span class="lineNum">       6 </span>            : </a>
 <a name="7"><span class="lineNum">       7 </span>            : ;; Defines the USDA Stablecoin according to the SIP-010 Standard</a>
 <a name="8"><span class="lineNum">       8 </span>            : (define-fungible-token usda)</a>
 <a name="9"><span class="lineNum">       9 </span>            : </a>
 <a name="10"><span class="lineNum">      10 </span>            : ;; errors</a>
-<a name="11"><span class="lineNum">      11 </span><span class="lineCov">         10 : (define-constant ERR-NOT-AUTHORIZED u401)</span></a>
+<a name="11"><span class="lineNum">      11 </span><span class="lineCov">         15 : (define-constant ERR-NOT-AUTHORIZED u401)</span></a>
 <a name="12"><span class="lineNum">      12 </span>            : </a>
 <a name="13"><span class="lineNum">      13 </span>            : ;; Mint initial token</a>
-<a name="14"><span class="lineNum">      14 </span><span class="lineCov">         30 : (ft-mint? usda u1000000000 contract-creator)</span></a>
-<a name="15"><span class="lineNum">      15 </span><span class="lineCov">         30 : (ft-mint? usda u1000000000 'ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF)</span></a>
-<a name="16"><span class="lineNum">      16 </span><span class="lineCov">         30 : (ft-mint? usda u1000000000 'ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP)</span></a>
+<a name="14"><span class="lineNum">      14 </span><span class="lineCov">         45 : (ft-mint? usda u1000000000 contract-creator)</span></a>
+<a name="15"><span class="lineNum">      15 </span><span class="lineCov">         45 : (ft-mint? usda u1000000000 'ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF)</span></a>
+<a name="16"><span class="lineNum">      16 </span><span class="lineCov">         45 : (ft-mint? usda u1000000000 'ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP)</span></a>
 <a name="17"><span class="lineNum">      17 </span>            : </a>
 <a name="18"><span class="lineNum">      18 </span>            : ;; ---------------------------------------------------------</a>
 <a name="19"><span class="lineNum">      19 </span>            : ;; SIP-10 Functions</a>
