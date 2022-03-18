@@ -27,7 +27,7 @@ tasks:
     command: >
       alias lnclibtc2='docker exec -it regtest lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc2/tls.cert --macaroonpath=/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon'
       alias lnclibtc1='docker exec -it regtest lncli --rpcserver=127.0.0.1:10009 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'
-      alias btccli='docker exec -it regtest /usr/bin/bitcon-cli '
+      alias btccli='docker exec -it regtest sh -c "/usr/bin/bitcon-cli"'
       echo 'lnclibtc2 newaddress p2wkh'
       echo "bitcoin-cli send '{\"bcrt1q93rsj05zw3pvf8pa4gpjaypy5x5mqws49as43t\":10}'"
       echo 'bitcoin-cli -regtest -generate 1'
@@ -63,7 +63,7 @@ tasks:
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
         git clone -b aggregator https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
-        export REACT_APP_BOLTZ_API=https://9008-${GITPOD_WORKSPACE_URL:8}
+        export REACT_APP_BOLTZ_API=https://9007-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_NETWORK_TYPE=mocknet
         gp env REACT_APP_BOLTZ_API=$REACT_APP_BOLTZ_API

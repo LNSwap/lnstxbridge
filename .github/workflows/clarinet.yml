@@ -1,4 +1,4 @@
-name: CI
+name: Clarity CI
 on: [push]
 jobs:
   tests:
