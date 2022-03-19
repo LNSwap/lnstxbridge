@@ -4,7 +4,7 @@ tasks:
   - init: |
       echo 'init script' 
       echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
-      sudo apt update && sudo apt install rsync --assume-yes
+      sudo apt update && sudo apt install rsync lcov --assume-yes
       nvm install 14
       mkdir ~/.lnstx-aggregator
       cp boltz.conf ~/.lnstx-aggregator/boltz.conf
@@ -37,7 +37,7 @@ tasks:
     # echo "alias lnclibtc2='lncli --rpcserver=127.0.0.1:10011 --tlscertpath=/root/.lnd-btc/tls.cert --macaroonpath=/root/.lnd-btc/data/chain/bitcoin/regtest/admin.macaroon'"
     # docker stop regtest &&  docker rm regtest && npm run docker:regtest
   - init: |
-      npm i -g shx rimraf postgresql-client @stacks/cli lcov
+      npm i -g shx rimraf postgresql-client @stacks/cli
       sleep 60
       npm run stacks:mocknet:microblock
       sleep 60
