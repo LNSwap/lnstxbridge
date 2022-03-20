@@ -6,7 +6,8 @@ import { Transaction, crypto } from 'bitcoinjs-lib';
 import Logger from '../../../lib/Logger';
 import Errors from '../../../lib/chain/Errors';
 import FakedChainClient from './FakeChainClient';
-import { getHexString, reverseBuffer } from '../../../lib/Utils';
+// reverseBuffer
+import { getHexString,  } from '../../../lib/Utils';
 import { generateAddress, waitForFunctionToBeTrue, wait } from '../../Utils';
 import ZmqClient, { ZmqNotification, filters } from '../../../lib/chain/ZmqClient';
 
@@ -43,10 +44,10 @@ describe('ZmqClient', () => {
   let rawBlock: ZmqPublisher;
   let hashBlock: ZmqPublisher;
 
-  const sendHashBlock = (height?: number, orphan = false) => {
-    const { hash } = chainClient.generateBlock(height, orphan);
-    hashBlock.sendMessage(reverseBuffer(hash));
-  };
+  // const sendHashBlock = (height?: number, orphan = false) => {
+  //   const { hash } = chainClient.generateBlock(height, orphan);
+  //   hashBlock.sendMessage(reverseBuffer(hash));
+  // };
 
   // Variables and functions related to transactions
   const { outputScript } = generateAddress(OutputType.Bech32);
@@ -284,48 +285,48 @@ describe('ZmqClient', () => {
     await wait(10);
   });
 
-  test('should handle hashblock notifications', async () => {
-    let blockHeight = 0;
+  // test('should handle hashblock notifications', async () => {
+  //   let blockHeight = 0;
 
-    zmqClient.on('block', (height) => {
-      blockHeight = height;
-    });
+  //   zmqClient.on('block', (height) => {
+  //     blockHeight = height;
+  //   });
 
-    for (let i = 0; i < blocksToGenerate; i += 1) {
-      sendHashBlock();
-    }
+  //   for (let i = 0; i < blocksToGenerate; i += 1) {
+  //     sendHashBlock();
+  //   }
 
-    await waitForFunctionToBeTrue(() => {
-      return blockHeight === chainClient.bestBlockHeight;
-    });
+  //   await waitForFunctionToBeTrue(() => {
+  //     return blockHeight === chainClient.bestBlockHeight;
+  //   });
 
-    // Generate an orphan and make sure that the blockHeight did not increase
-    sendHashBlock(1, true);
+  //   // Generate an orphan and make sure that the blockHeight did not increase
+  //   sendHashBlock(1, true);
 
-    await wait(10);
+  //   await wait(10);
 
-    expect(blockHeight).toEqual(chainClient.bestBlockHeight);
-  });
+  //   expect(blockHeight).toEqual(chainClient.bestBlockHeight);
+  // });
 
-  test('should handle hashblock reorganizations', async () => {
-    let blockHeight = chainClient.bestBlockHeight;
+  // test('should handle hashblock reorganizations', async () => {
+  //   let blockHeight = chainClient.bestBlockHeight;
 
-    zmqClient.on('block', (height) => {
-      expect(height).toEqual(blockHeight + 1);
-      blockHeight = height;
-    });
+  //   zmqClient.on('block', (height) => {
+  //     expect(height).toEqual(blockHeight + 1);
+  //     blockHeight = height;
+  //   });
 
-    const reorgHeight = chainClient.bestBlockHeight - 5;
-    for (let i = 0; i <= blocksToGenerate; i += 1) {
-      sendHashBlock(reorgHeight + i);
-    }
+  //   const reorgHeight = chainClient.bestBlockHeight - 5;
+  //   for (let i = 0; i <= blocksToGenerate; i += 1) {
+  //     sendHashBlock(reorgHeight + i);
+  //   }
 
-    await waitForFunctionToBeTrue(() => {
-      return blockHeight === chainClient.bestBlockHeight;
-    });
+  //   await waitForFunctionToBeTrue(() => {
+  //     return blockHeight === chainClient.bestBlockHeight;
+  //   });
 
-    expect(blockHeight).toEqual(reorgHeight + blocksToGenerate);
-  });
+  //   expect(blockHeight).toEqual(reorgHeight + blocksToGenerate);
+  // });
 
   test('should reject connecting to addresses that are not ZMQ publishers', async () => {
     expect(ZmqClient['connectTimeout']).toEqual(1000);

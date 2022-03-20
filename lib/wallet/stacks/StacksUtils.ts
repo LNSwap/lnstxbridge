@@ -111,7 +111,10 @@ export const getAddressAllBalances = async (initAddress?:string):Promise<any> =>
   const response = await axios.get(url);
   // console.log("getAddressAllBalances ", response.data, response.data.stx);
   // console.log("getAddressAllBalances tokens", tokens);
-  const usdaContractAddress = tokens.find((item) => item.symbol === 'USDA').contractAddress;
+  let usdaContractAddress = 'SP2C2YFP12AJZB4MABJBAJ55XECVS7E4PMMZ89YZR.usda-token';
+  if(tokens && tokens.length > 0) {
+    usdaContractAddress = tokens.find((item) => item.symbol === 'USDA').contractAddress;
+  }
   const respobj = {STX: response.data.stx.balance};
   if (JSON.stringify(response.data.fungible_tokens).length > 2) {
     respobj['USDA'] = response.data.fungible_tokens[usdaContractAddress+'::usda'].balance;
