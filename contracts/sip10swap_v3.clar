@@ -1,5 +1,7 @@
-;; sip10swap - a Submarine Swap implementation in Clarity 
-;; Built as part of https://github.com/stacksgov/Stacks-Grants/issues/204 to enable swaps SIP10 tokens <-> BTC on Lightning Network 
+;; sip10swap - a Submarine Swap implementation in Clarity to enable swaps SIP10 tokens <-> BTC on Lightning Network 
+
+;; mainnet 
+;; (use-trait ft-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
 (use-trait ft-trait .sip-010-trait.sip-010-trait)
 
 ;; constants

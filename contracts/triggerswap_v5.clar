@@ -1,3 +1,4 @@
+;; LNSwap external atomic swap triggers
 ;; triggers claim from lnswap contracts and mint/transfer to any contract/principal for trustless LN -> STX interaction.
 
 (define-trait claim-trait
@@ -12,7 +13,7 @@
   )
 )
 
-;; TODO: update .stxswap -> .stxswap_v8/sip10swap_v1
+;; TODO: update .stxswap -> .stxswap_v10/sip10swap_v3
 ;; mainnet 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait
 (use-trait ft-trait .sip-010-trait.sip-010-trait)
 

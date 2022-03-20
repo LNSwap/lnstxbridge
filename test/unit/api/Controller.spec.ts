@@ -323,7 +323,7 @@ describe('Controller', () => {
     expect(mockGetContracts).toHaveBeenCalledTimes(1);
 
     expect(res.status).toHaveBeenCalledWith(501);
-    expect(res.json).toHaveBeenCalledWith({"error": "Cannot read property 'network' of undefined"});
+    expect(res.json).toHaveBeenCalledWith({'error': "Cannot read property 'network' of undefined"});
     //   {
     //   ethereum: {
     //     network: getContracts.ethereum.network,

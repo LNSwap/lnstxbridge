@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-commented-out-tests */
 import getPort from 'get-port';
 import zmq, { Socket } from 'zeromq';
 import { randomBytes } from 'crypto';
