@@ -104,7 +104,8 @@ tasks:
   - init: |
         git clone https://github.com/pseudozach/lnstxbridge-client /workspace/lnstxbridge-client
         cd /workspace/lnstxbridge-client
-        sleep 120
+        sleep 150
+        nvm use 14
         npm i
         sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
         mkdir ~/.lnstx-client
@@ -113,6 +114,7 @@ tasks:
         mkdir ~/.lnstx-client/lnd
         docker cp regtest:/root/.lnd-btc2/tls.cert ~/.lnstx-client/lnd/tls.cert
         docker cp regtest:/root/.lnd-btc2/data/chain/bitcoin/regtest/admin.macaroon ~/.lnstx-client/lnd/admin.macaroon
+        nvm use 14
         npm run docker:regtest:fund
       # no need - manually set ~/.lnstx-client/boltz.conf providerUrl=https://9003-pseudozach-lnstxbridge-e1iw24tfkhf.ws-us32.gitpod.io
       # sed -i 's#http://localhost:9003#https://9003-`${GITPOD_WORKSPACE_URL:8}`#g' ~/.lnstx-client/boltz.conf
