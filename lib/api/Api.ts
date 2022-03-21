@@ -69,18 +69,18 @@ class Api {
     // POST requests
     this.app.route('/routinghints').post(controller.routingHints);
 
-    this.app.route('/swapstatus').post(controller.swapStatus);
+    this.app.route('/swapstatus').post(controller.zswapStatus);
     this.app.route('/swaprates').post(controller.swapRates);
 
     this.app.route('/gettransaction').post(controller.getTransaction);
     this.app.route('/getswaptransaction').post(controller.getSwapTransaction);
     this.app.route('/broadcasttransaction').post(controller.broadcastTransaction);
 
-    this.app.route('/createswap').post(controller.createSwap);
+    this.app.route('/createswap').post(controller.zcreateSwap);
     this.app.route('/setinvoice').post(controller.setInvoice);
 
     this.app.route('/mintnft').post(controller.mintNFT);
-    this.app.route('/broadcastsponsoredtx').post(controller.broadcastSponsoredTx);
+    this.app.route('/broadcastsponsoredtx').post(controller.zbroadcastSponsoredTx);
 
     // EventSource streams
     this.app.route('/streamswapstatus').get(controller.streamSwapStatus);
