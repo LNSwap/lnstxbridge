@@ -32,6 +32,11 @@ const socket = io(getStacksNetwork().coreApiUrl, {
 });
 const sc = new stacks.StacksApiSocketClient(socket);
 
+// stop jest error
+if (process.env.NODE_ENV === 'test') {
+  sc.socket.close();
+}
+
 interface StacksNursery {
   // EtherSwap
   on(event: 'eth.lockup', listener: (swap: Swap, transactionHash: string, etherSwapValues: EtherSwapValues) => void): this;

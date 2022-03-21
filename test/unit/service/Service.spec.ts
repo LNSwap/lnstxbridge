@@ -469,7 +469,7 @@ describe('Service', () => {
         interval: Number.MAX_SAFE_INTEGER,
       },
       currencies: [],
-      balancer: {apiKey: '123'}
+      // balancer: {apiKey: '123', secretKey: '123', passphrase: '123'}
     } as any as ConfigType,
     mockedWalletManager(),
     currencies,
