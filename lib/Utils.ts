@@ -497,13 +497,14 @@ export const parseTomlConfig = (filename: string): any => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const saveTomlConfig = (config: any): any => {
   try {
     console.log('utils.501 saveTomlConfig ', config);
     const configToml = toml.stringify(config);
     fs.writeFileSync(config.configpath, configToml);
-    return {result: "OK"};
+    return {result: 'OK'};
   } catch (error) {
-    throw new Error("Failed to save config");
+    throw new Error('Failed to save config');
   }
-}
+};

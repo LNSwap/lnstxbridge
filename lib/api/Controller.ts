@@ -795,7 +795,7 @@ class Controller {
     const data = await this.service.getAdminBalanceStacks();
     this.successResponse(res, data);
   }
-  
+
   public getAdminConfiguration = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
@@ -803,7 +803,7 @@ class Controller {
       return;
     }
     // console.log('controller.694: ', Config.defaultDataDir, Config.defaultConfigPath, path.join(Config.defaultDataDir, Config.defaultConfigPath));
-    const data = parseTomlConfig(path.join(Config.defaultDataDir, Config.defaultConfigPath))
+    const data = parseTomlConfig(path.join(Config.defaultDataDir, Config.defaultConfigPath));
     // console.log('controller.803 parseTomlConfig: ', data);
     this.successResponse(res, data);
   }
@@ -818,7 +818,7 @@ class Controller {
     const { config } = this.validateRequest(req.body, [
       { name: 'config', type: 'object' },
     ]);
-    const data = saveTomlConfig(config)
+    const data = saveTomlConfig(config);
     console.log('controller.705 saveTomlConfig: ', data);
     this.successResponse(res, data);
   }
@@ -830,17 +830,19 @@ class Controller {
       return;
     }
     setTimeout(function () {
-        process.on("exit", function () {
-            require("child_process").spawn(process.argv.shift(), process.argv, {
+        process.on('exit', function () {
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            require('child_process').spawn(process.argv.shift(), process.argv, {
                 cwd: process.cwd(),
                 detached : true,
-                stdio: "inherit"
+                stdio: 'inherit'
             });
         });
         console.log('controller.729 restarting the app...');
+        // eslint-disable-next-line no-process-exit
         process.exit();
     }, 5000);
-    this.successResponse(res, "OK");
+    this.successResponse(res, 'OK');
   }
 }
 
