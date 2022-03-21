@@ -16,6 +16,9 @@ class Balancer {
   private signerAddress: string;
 
   constructor(private service: Service, private logger: Logger, private balancerConfig: BalancerConfig) {
+    if(!this.balancerConfig.apiKey || !this.balancerConfig.secretKey || !this.balancerConfig.passphrase) {
+      throw new Error('Missing configuration for Balancer');
+    }
     this.apiKey = this.balancerConfig.apiKey;
     this.tradePassword = this.balancerConfig.tradePassword;
     this.authClient = AuthenticatedClient(this.balancerConfig.apiKey, this.balancerConfig.secretKey, this.balancerConfig.passphrase, this.balancerConfig.apiUri);

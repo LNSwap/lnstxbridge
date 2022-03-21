@@ -111,7 +111,7 @@ class Service {
 
   private serviceInvoiceListener;
 
-  private balancer: Balancer;
+  private balancer: Balancer | undefined;
 
   private dashboardConfig: DashboardConfig;
 
@@ -158,7 +158,11 @@ class Service {
       this.swapManager.nursery,
     );
 
-    this.balancer = new Balancer(this, logger, config.balancer);
+    try {
+      this.balancer = new Balancer(this, logger, config.balancer);
+    } catch (error) {
+      this.logger.error(`Balancer failed to init: ${error.message}`);
+    }
 
     this.dashboardConfig = config.dashboard;
   }
@@ -203,6 +207,7 @@ class Service {
 
     this.startNFTListener();
 
+    if(this.balancer)
     this.balancer.getExchangeBalance('STX');
   }
 
@@ -2129,6 +2134,7 @@ class Service {
   }
 
   public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean}> => {
+    if(!this.balancer) throw new Error('Balancer not configured');
     return this.balancer.getBalancerConfig();
   }
 
@@ -2139,6 +2145,7 @@ class Service {
   }
 
   public getAdminBalancerBalances = async (): Promise<string> => {
+    if(!this.balancer) throw new Error('Balancer not configured');
     try {
       const result = await this.balancer.getExchangeAllBalances();
       return result;
@@ -2153,6 +2160,7 @@ class Service {
    * buyAmount: amount of target currency to buy from exchange
    */
   public getAdminBalancer = async (pairId: string, buyAmount: number): Promise<{ status: string, result: string }> => {
+    if(!this.balancer) throw new Error('Balancer not configured');
     try {
       const params = {pairId, buyAmount};
       const result = await this.balancer.balanceFunds(params);
