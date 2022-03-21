@@ -20,6 +20,11 @@ import { ConfigType } from './Config';
 //   hostname: 'mempool.space'
 // });
 
+import fs from 'fs';
+import toml from '@iarna/toml';
+import Errors from './consts/Errors';
+import { ConfigType } from './Config';
+
 const {
   p2shOutput,
   p2wshOutput,
@@ -496,3 +501,14 @@ export const parseTomlConfig = (filename: string): any => {
     }
   }
 };
+
+export const saveTomlConfig = (config: any): any => {
+  try {
+    console.log('utils.501 saveTomlConfig ', config);
+    const configToml = toml.stringify(config);
+    fs.writeFileSync(config.configpath, configToml);
+    return {result: "OK"};
+  } catch (error) {
+    throw new Error("Failed to save config");
+  }
+}

@@ -7,7 +7,7 @@ import SwapNursery from '../swap/SwapNursery';
 // import ServiceErrors from '../service/Errors';
 import { SwapUpdate } from '../service/EventHandler';
 import { SwapType, SwapUpdateEvent } from '../consts/Enums';
-import { getChainCurrency, getHexBuffer, getVersion, mapToObject, parseTomlConfig, splitPairId, stringify } from '../Utils';
+import { getChainCurrency, getHexBuffer, getVersion, mapToObject, parseTomlConfig, saveTomlConfig, splitPairId, stringify } from '../Utils';
 import Config from '../Config';
 import path from 'path';
 
@@ -742,6 +742,16 @@ class Controller {
     this.successResponse(res, data);
   }
 
+  public getAdminBalancerBalances = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    const data = await this.service.getAdminBalancerBalances();
+    this.successResponse(res, data);
+  }
+
   public getAdminBalancer = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
@@ -795,19 +805,53 @@ class Controller {
     const data = await this.service.getAdminBalanceStacks();
     this.successResponse(res, data);
   }
-
+  
   public getAdminConfiguration = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
       this.errorResponse(req, res, 'unauthorized');
       return;
     }
-    // const data = parseTomlConfig(process.env.APP_FOLDER + '/boltz.conf')
-    const data = parseTomlConfig(path.join(Config.defaultDataDir, Config.defaultConfigPath));
-    console.log('controller.803 parseTomlConfig: ', data);
+    // console.log('controller.694: ', Config.defaultDataDir, Config.defaultConfigPath, path.join(Config.defaultDataDir, Config.defaultConfigPath));
+    const data = parseTomlConfig(path.join(Config.defaultDataDir, Config.defaultConfigPath))
+    // console.log('controller.803 parseTomlConfig: ', data);
     this.successResponse(res, data);
   }
 
+  public saveAdminConfiguration = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    console.log('controller.704 saveAdminConfiguration ', req.body);
+    const { config } = this.validateRequest(req.body, [
+      { name: 'config', type: 'object' },
+    ]);
+    const data = saveTomlConfig(config)
+    console.log('controller.705 saveTomlConfig: ', data);
+    this.successResponse(res, data);
+  }
+
+  public getAdminRestartApp = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    setTimeout(function () {
+        process.on("exit", function () {
+            require("child_process").spawn(process.argv.shift(), process.argv, {
+                cwd: process.cwd(),
+                detached : true,
+                stdio: "inherit"
+            });
+        });
+        console.log('controller.729 restarting the app...');
+        process.exit();
+    }, 5000);
+    this.successResponse(res, "OK");
+  }
 }
 
 export default Controller;
