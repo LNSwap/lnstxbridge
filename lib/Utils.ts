@@ -20,11 +20,6 @@ import { ConfigType } from './Config';
 //   hostname: 'mempool.space'
 // });
 
-import fs from 'fs';
-import toml from '@iarna/toml';
-import Errors from './consts/Errors';
-import { ConfigType } from './Config';
-
 const {
   p2shOutput,
   p2wshOutput,

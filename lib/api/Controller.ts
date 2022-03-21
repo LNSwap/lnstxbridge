@@ -766,16 +766,6 @@ class Controller {
     this.successResponse(res, data);
   }
 
-  public getAdminBalancerBalances = async (req: Request, res: Response): Promise<void> => {
-    const authHeader = req.headers['authorization'];
-    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
-      this.errorResponse(req, res, 'unauthorized');
-      return;
-    }
-    const data = await this.service.getAdminBalancerBalances();
-    this.successResponse(res, data);
-  }
-
   public getAdminBalanceOffchain = async (req: Request, res: Response): Promise<void> => {
     const authHeader = req.headers['authorization'];
     if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {

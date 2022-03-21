@@ -73,7 +73,7 @@ import path from 'path';
 // });
 
 import axios from 'axios';
-import tor_axios from 'tor-axios';
+const tor_axios = require('tor-axios');
 const tor = tor_axios.torSetup({
     ip: 'localhost',
     port: 9050,
