@@ -53,7 +53,7 @@ class SwapRepository {
     });
   }
 
-  // invoice: string, expectedAmount: number, fee: number, 
+  // invoice: string, expectedAmount: number, fee: number,
   public setAcceptZeroConf = (swap: Swap, acceptZeroConf: boolean): Promise<Swap> => {
     return swap.update({
       acceptZeroConf,
@@ -96,7 +96,7 @@ class SwapRepository {
     });
   }
 
-  // minerFee: number, 
+  // minerFee: number,
   public setTransactionRefunded = (reverseSwap: Swap, failureReason: string): Promise<Swap> => {
     return reverseSwap.update({
       failureReason,

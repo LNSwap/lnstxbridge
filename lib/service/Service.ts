@@ -11,6 +11,12 @@ import { ConfigType, DashboardConfig } from '../Config';
 import EventHandler from './EventHandler';
 import { PairConfig } from '../consts/Types';
 import PairRepository from '../db/PairRepository';
+import ClientRepository from '../db/ClientRepository';
+import StacksTransactionRepository from '../db/StacksTransactionRepository';
+import StacksTransaction from '../db/models/StacksTransaction';
+import ProviderSwapRepository from '../db/ProviderSwapRepository';
+// import {PairType as PT} from '../db/models/Client';
+// import PairType from "../db/models/Client"
 import DirectSwapRepository from '../db/DirectSwapRepository';
 import { encodeBip21 } from './PaymentRequestUtils';
 import InvoiceExpiryHelper from './InvoiceExpiryHelper';
@@ -53,9 +59,12 @@ import {
   getVersion,
   reverseBuffer,
   splitPairId,
+  getServiceDataDir,
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
 import Balancer from './Balancer';
+import fs from 'fs';
+import path from 'path';
 
 // import mempoolJS from "@mempool/mempool.js";
 // import ReverseSwap from 'lib/db/models/ReverseSwap';
@@ -63,8 +72,15 @@ import Balancer from './Balancer';
 //   hostname: 'mempool.space'
 // });
 
+import axios from 'axios';
+import tor_axios from 'tor-axios';
+const tor = tor_axios.torSetup({
+    ip: 'localhost',
+    port: 9050,
+});
+
 // increase listenerlimit
-require('events').EventEmitter.defaultMaxListeners = 100;
+// require('events').EventEmitter.defaultMaxListeners = 100;
 
 type LndNodeInfo = {
   nodeKey: string,
@@ -82,6 +98,9 @@ class Service {
 
   private pairRepository: PairRepository;
   private directSwapRepository: DirectSwapRepository;
+  private clientRepository: ClientRepository;
+  private stacksTransactionRepository: StacksTransactionRepository;
+  private providerSwapRepository: ProviderSwapRepository;
 
   private timeoutDeltaProvider: TimeoutDeltaProvider;
 
@@ -92,7 +111,7 @@ class Service {
 
   private serviceInvoiceListener;
 
-  private balancer: Balancer;
+  private balancer: Balancer | undefined;
 
   private dashboardConfig: DashboardConfig;
 
@@ -106,8 +125,11 @@ class Service {
     this.logger.debug(`Prepay miner fee for Reverse Swaps is ${this.prepayMinerFee ? 'enabled' : 'disabled' }`);
 
     this.pairRepository = new PairRepository();
+    this.clientRepository = new ClientRepository();
+    this.stacksTransactionRepository = new StacksTransactionRepository();
     this.directSwapRepository = new DirectSwapRepository();
     this.timeoutDeltaProvider = new TimeoutDeltaProvider(this.logger, config);
+    this.providerSwapRepository = new ProviderSwapRepository();
 
     console.log('service.ts 88');
     this.rateProvider = new RateProvider(
@@ -136,7 +158,11 @@ class Service {
       this.swapManager.nursery,
     );
 
-    this.balancer = new Balancer(this, logger, config.balancer);
+    try {
+      this.balancer = new Balancer(this, logger, config.balancer);
+    } catch (error) {
+      this.logger.error(`Balancer failed to init: ${error.message}`);
+    }
 
     this.dashboardConfig = config.dashboard;
   }
@@ -171,7 +197,7 @@ class Service {
         this.logger.silly(`Added pair to database: ${id}`);
       }
     }
-    
+
     this.logger.verbose('Updated pairs in the database');
 
     this.timeoutDeltaProvider.init(configPairs);
@@ -181,6 +207,7 @@ class Service {
 
     this.startNFTListener();
 
+    if(this.balancer)
     this.balancer.getExchangeBalance('STX');
   }
 
@@ -427,7 +454,7 @@ class Service {
     //   // regtest
     //   return await currency.chainClient.getRawTransaction(transactionHash);
     // }
-    
+
     return await currency.chainClient.getRawTransaction(transactionHash);
   }
 
@@ -466,7 +493,7 @@ class Service {
     const { blocks } = await currency.chainClient.getBlockchainInfo();
     this.logger.info('service.455 getSwapTransaction getRawTransaction which will fail due to pruned node.');
     const transactionHex = await currency.chainClient.getRawTransaction(swap.lockupTransactionId);
-    
+
     // let transactionHex;
     // // need blockhash because we're running a pruned node with no -txindex
     // if((await getInfo()).network_id === 1) {
@@ -653,11 +680,11 @@ class Service {
     const currency = this.getCurrency('STX');
 
     if (currency.stacksClient === undefined) {
-      throw new Error('stacksClient not found')
+      throw new Error('stacksClient not found');
     }
 
-    let reverseSwap: ReverseSwap | null | undefined;
-    reverseSwap = await this.swapManager.reverseSwapRepository.getReverseSwap({
+    // let reverseSwap: ReverseSwap | null | undefined;
+    const reverseSwap = await this.swapManager.reverseSwapRepository.getReverseSwap({
       id: {
         [Op.eq]: id,
       },
@@ -668,11 +695,11 @@ class Service {
     }
 
     if(!reverseSwap.minerFeeInvoice) {
-      throw new Error(`Reverse swap is not prepaid`);
+      throw new Error('Reverse swap is not prepaid');
     }
 
     if(reverseSwap.status !== SwapUpdateEvent.TransactionConfirmed) {
-      throw new Error(`Reverse swap is not in correct status`);
+      throw new Error('Reverse swap is not in correct status');
     }
 
     // sponsor and broadcast tx
@@ -818,12 +845,12 @@ class Service {
       // verify client-side input
       if (args.quoteAmount && (args.requestedAmount != Math.floor(args.quoteAmount*10**6))) {
         console.log('s.730 VERIFICATION FAILED requestedAmount vs quoteAmount', args.requestedAmount, args.quoteAmount*10**6, args.requestedAmount !== args.quoteAmount*10**6);
-        throw Errors.INVALID_PARAMETER()
+        throw Errors.INVALID_PARAMETER();
       }
       if (expectedAmount < response.submarineSwap.invoiceAmount/10**8) {
         console.log('s.733 VERIFICATION FAILED expectedAmount (user will lock) vs invoiceAmount (operator will pay) ', expectedAmount, response.submarineSwap.invoiceAmount/10**8);
-        throw Errors.WRONG_RATE()
-      }      
+        throw Errors.WRONG_RATE();
+      }
 
       // acceptZeroConf = true;
       bip21 = encodeBip21(
@@ -860,7 +887,7 @@ class Service {
 
       // console.log('TODO: more validation NEEDED'); //done
       if (response.onchainAmount && args.quoteAmount && (args.quoteAmount > response.onchainAmount/100)) {
-        throw Errors.WRONG_RATE()
+        throw Errors.WRONG_RATE();
       }
 
     } else {
@@ -1029,7 +1056,7 @@ class Service {
         throw Errors.WRONG_RATE();
       }
 
-      console.log('s.899 ', 'user requested ', requestedAmount, ' stx/usda for ',  )
+      console.log('s.899 ', 'user requested ', requestedAmount, ' stx/usda for ',  );
 
     } else {
       // requested amount in mstx
@@ -1039,7 +1066,7 @@ class Service {
       invoiceAmount = this.calculateOnchainAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       console.log('s.784 requestedAmount, onchainAmount, invoiceAmount', requestedAmount, onchainAmount, invoiceAmount);
 
-      
+
 
       // let originvoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       // invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
@@ -1055,7 +1082,7 @@ class Service {
       // if (this.catchRates((requestedAmount*rate)/10**6, invoiceAmount/10**8)){
       //   throw Errors.WRONG_RATE();
       // }
-      
+
       console.log('s.902 getManualRates: ', {
         onchainAmount: swap.onchainAmount,
         submarineSwap: {
@@ -1084,11 +1111,11 @@ class Service {
    public catchRates = (operatorSide: number, userSide: number): boolean => {
     // operatorSide = requestedAmount*rate - lnswap is sending this
     // userSide = invoiceAmount calculated in backend - lnswap is receiving this
-    
+
     // Accept spread due to fees
     if (operatorSide*1.01 > userSide ) {
       console.log('s.940 caught rate issue');
-      // 
+      //
       // || amountOne < amountTwo*0.97
       // throw Errors.WRONG_RATE();
       return true;
@@ -1387,7 +1414,7 @@ class Service {
     let baseFee = this.rateProvider.feeProvider.getBaseFee(sendingCurrency.symbol, BaseFeeType.ReverseLockup);
     if(sendingCurrency.symbol === 'STX' || sendingCurrency.symbol === 'USDA') {
       // convert from mstx to boltz default 10**8
-      baseFee = Math.round(baseFee * 100)
+      baseFee = Math.round(baseFee * 100);
     }
     // console.log('service.1375 createreverseswap rate, feePercent, baseFee: ', rate, feePercent, baseFee);
 
@@ -1469,7 +1496,7 @@ class Service {
         prepayMinerFeeInvoiceAmount = Math.ceil(prepayMinerFeeOnchainAmount * receivingAmountRate * 10**8); //convert to sats
         // service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate 87025 5 0.00005008000000000001 1
         console.log('service.1397 prepayMinerFeeOnchainAmount prepayMinerFeeInvoiceAmount receivingAmountRate sendingAmountRate', prepayMinerFeeOnchainAmount, prepayMinerFeeInvoiceAmount, receivingAmountRate, sendingAmountRate);
-        
+
         // If the invoice amount was specified, the onchain and hold invoice amounts need to be adjusted
         if (invoiceAmountDefined) {
           onchainAmount -= Math.ceil(prepayMinerFeeOnchainAmount * sendingAmountRate);
@@ -1591,16 +1618,16 @@ class Service {
 
     if(stxAmount < 0) {
       throw Errors.MINT_COST_MISMATCH();
-    } 
+    }
 
     // check contract signature to see how much it would cost to mint
     // find a previous call of the same function and add up stx transfers of that call
     const mintCostStx = stxAmount * 10**6; // 10000000;
     const calcMintCostStx = await calculateStxOutTx(nftAddress, contractSignature!);
     if(calcMintCostStx && calcMintCostStx > mintCostStx) {
-      this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);  
+      this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);
       throw Errors.MINT_COST_MISMATCH();
-    } 
+    }
     // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
 
     // TODO: maybe add whitelisted NFT contracts to avoid issues?
@@ -1621,7 +1648,7 @@ class Service {
     this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
 
     // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
-    const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
+    const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate);
     // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
     this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
 
@@ -1633,7 +1660,7 @@ class Service {
     const id = generateId();
     this.directSwapRepository.addDirectSwap({
       id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
-    })
+    });
     this.eventHandler.emitSwapCreation(id);
 
     // listen to invoice payment
@@ -1647,9 +1674,271 @@ class Service {
     return {
       id,
       invoice: invoice!.paymentRequest
-    }
+    };
   }
 
+  public forwardSwap = async (req: string, swapType: string): Promise<{
+    // id: string,
+    // invoice: string,
+    response: any,
+  }> => {
+
+    const allClients = await this.clientRepository.getAll();
+
+    // check if this provider supports pair + amount
+    let count = 0;
+    let provider;
+    let providerPairs;
+    let reachable = false;
+    do {
+      if(count > allClients.length) {
+        throw new Error('No providers found');
+      }
+      provider = await this.clientRepository.findRandom();
+      providerPairs = JSON.parse(provider[0].pairs);
+      // console.log('provider pair data: ', providerPairs, req,)
+      // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
+
+      try {
+        let res;
+        if(provider[0].url.includes('.onion')) {
+          res = await tor.get(`${provider[0].url}/getpairs`);
+        } else {
+          res = await axios.get(`${provider[0].url}/getpairs`);
+        }
+        reachable = res.data.includes(req['pairId']);
+      } catch (error) {
+        console.log('provider unreachable: ', provider[0].url);
+      }
+
+      count++;
+    } while (provider[0].pairs.includes(req['pairId']) &&
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] &&
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] &&
+      reachable);
+
+    // const allProviders = await this.clientRepository.getAll();
+    // console.log('service.1582 allProviders ', allProviders);
+    // var randomProvider = allProviders[Math.floor(Math.random()*allProviders.length)];
+    // console.log('service.1582 randomProvider ', randomProvider);
+
+    if(provider.length == 0) {
+      throw new Error('No providers found');
+    }
+
+    let data;
+    try {
+      console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req);
+      let response;
+      if(provider[0].url.includes('.onion')) {
+        response = await tor.post(`${provider[0].url}/createswap`, req);
+      } else {
+        response = await axios.post(`${provider[0].url}/createswap`, req);
+      }
+      data = response.data;
+
+      console.log('service.1602 response.data ', response.data);
+
+      // once created save info to aggregator db
+      this.providerSwapRepository.addProviderSwap({
+        id: response.data.id,
+        providerUrl: provider[0].url,
+        status: 'swap.created',
+      });
+
+    } catch (error) {
+      console.log('service.1593 error ', error.message);
+      this.clientRepository.incrementFailure(provider[0], 1);
+    }
+
+    return {response: data};
+  };
+
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object,): Promise<{
+    // id: string,
+    // invoice: string,
+    result: boolean,
+  }> => {
+    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)}`);
+
+    // if(stxAmount < 0) {
+    //   throw Errors.MINT_COST_MISMATCH();
+    // }
+
+    // check if url is in access list - limit providers that can join the network
+    const ACLfile = path.join(getServiceDataDir('lnstx-aggregator'), 'accesslist.txt');
+    // console.log('ACLfile, url ', ACLfile, url);
+    // const ACLfile = '~/.lnstx/accesslist.txt';
+    if(fs.existsSync(ACLfile)) {
+      const acl = fs.readFileSync(ACLfile);
+      if(acl.includes(url)) {
+        this.logger.verbose('provider is in ACL list: ' + url);
+      } else {
+        throw new Error('Provider not in access list.');
+      }
+    } else {
+      throw new Error('Access control not found');
+    }
+
+    // check if this url exists already
+    const client = await this.clientRepository.findByUrl(url);
+    // console.log('service.1614 checking if url exist in clientdb already ', client);
+    const strPairs = JSON.stringify(pairs);
+    // dont reject re-registration just update?
+    if(client.length > 0) {
+      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs);
+      // throw new Error('Client url exists already');
+    } else {
+      const id = generateId();
+      // save to db as a potential swap provider
+      await this.clientRepository.addClient({
+        id,
+        stacksAddress,
+        nodeId,
+        url,
+        pairs: strPairs,
+        success: 0,
+        fail: 0,
+      });
+    }
+
+    // // check contract signature to see how much it would cost to mint
+    // // find a previous call of the same function and add up stx transfers of that call
+    // const mintCostStx = stxAmount * 10**6; // 10000000;
+    // const calcMintCostStx = await calculateStxOutTx(nftAddress, contractSignature!);
+    // if(calcMintCostStx && calcMintCostStx > mintCostStx) {
+    //   this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);
+    //   throw Errors.MINT_COST_MISMATCH();
+    // }
+    // // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
+
+    // // TODO: maybe add whitelisted NFT contracts to avoid issues?
+
+    // // add a check to make sure lnswap signer has enough funds before creating swap
+    // const signerBalances = await getAddressAllBalances();
+    // console.log('s.1504 signerBalances ', signerBalances);
+    // if (mintCostStx > signerBalances['STX']) {
+    //   throw Errors.EXCEEDS_SWAP_LIMIT();
+    // }
+
+    // // convert to BTC + fees + generate LN invoice
+    // const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');
+    // this.logger.verbose(`s.1488 sendingAmountRate ${sendingAmountRate}`); //18878.610534264677
+
+    // const percentageFee = this.rateProvider.feeProvider.getPercentageFee('BTC/STX');
+    // const baseFee = this.rateProvider.feeProvider.getBaseFee('STX', BaseFeeType.NormalClaim);
+    // this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
+
+    // // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
+    // const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
+    // // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
+    // this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
+
+    // const currency = this.getCurrency('BTC');
+    // const invoice = await currency.lndClient?.addInvoice(invoiceAmount, undefined, `Mint NFT for ${nftAddress}`);
+    // this.logger.verbose(`s.1499 mintNFT invoice ${invoice?.paymentRequest}`);
+
+    // // create swap + enter info in db in a new table
+    // const id = generateId();
+    // this.directSwapRepository.addDirectSwap({
+    //   id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
+    // })
+    // this.eventHandler.emitSwapCreation(id);
+
+    // // listen to invoice payment
+    // this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
+    // // dont subscribe to each invoice separately - subscribing to all in lndclient
+    // // currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
+
+    // // call contract so user gets NFT upon LN payment
+    // // listener is started at the beginning which will handle this.
+
+    return {
+      result: true,
+    };
+  }
+
+  public getLocked = async (preimageHash: string, swapContractAddress?: string, ): Promise<{
+    txData: StacksTransaction[],
+    // invoice: string,
+    // tx: transac,
+  }> => {
+    // this.logger.verbose(`service.1670 getLocked with ${preimageHash}, ${swapContractAddress}, `);
+
+    // preimagehash in stackstxdb should always have 0x because it's parsed from contract call
+    if(!preimageHash.includes('0x') && swapContractAddress) preimageHash = `0x${preimageHash}`;
+
+    // check if any funds locked/claimed into swap contract with preimageHash
+    const txData = await this.stacksTransactionRepository.findByPreimageHash(preimageHash);
+    // console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
+    // returns relevant txData array - lock/claim/refund
+    return {txData: txData};
+  }
+
+  // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
+  public getPendingSwapInfos = async (id: string): Promise<{
+    // txData: StacksTransaction,
+    swapStatus: string,
+    // tx: transac,
+    // result: boolean,
+  }>  => {
+    // check db to find out which provider is doing this swap id
+    // it is better to track swap creation vs full swap status in providerSwap table
+    const providerSwap = await this.providerSwapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    const providerUrl = providerSwap?.providerUrl;
+    const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+      id,
+    });
+    return {swapStatus: swapStatus.data};
+  }
+
+  // this is for provider to update the swap status
+  public updateSwapStatus = async (id: string, status: string, txId?: string, failureReason?: string, ): Promise<{
+    // txData: StacksTransaction,
+    // invoice: string,
+    // tx: transac,
+    result: boolean,
+  }> => {
+    this.logger.verbose(`s.1711 updateSwapStatus with ${id}, ${status}, `);
+
+    const providerSwap = await this.providerSwapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    if(!providerSwap) {
+      throw new Error('providerSwap not found!');
+    }
+    // update the zswapstatus from provider to user - providerSwapRepository = just id + status
+    await this.providerSwapRepository.setSwapStatus(providerSwap, status, txId, failureReason);
+
+    return {result: true};
+  }
+
+  // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?
+  public forwardSponsoredTx = async (id: string, tx: string): Promise<{ transactionId: string }>  => {
+    // check db to find out which provider is doing this swap id
+    // it is better to track swap creation vs full swap status in providerSwap table
+    const providerSwap = await this.providerSwapRepository.getSwap({
+      id: {
+        [Op.eq]: id,
+      },
+    });
+
+    const providerUrl = providerSwap?.providerUrl;
+    const broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
+      id,
+      tx,
+    });
+    return broadcastResponse.data;
+  }
 
   /**
    * Verifies that the requested amount is neither above the maximal nor beneath the minimal
@@ -1770,7 +2059,7 @@ class Service {
 
   private startNFTListener = () => {
     if(!this.serviceInvoiceListener) {
-      this.logger.verbose(`s.1675 startNFTListener starting serviceInvoiceListener`);
+      this.logger.verbose('s.1675 startNFTListener starting serviceInvoiceListener');
 
       const currency = this.getCurrency('BTC');
       this.serviceInvoiceListener = currency.lndClient!.on('invoice.settled', async (settledInvoice: string) => {
@@ -1792,7 +2081,7 @@ class Service {
             await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
             this.logger.verbose(`s.1533 directSwap ${directSwap.id} updated with txId ${txId}`);
             this.eventHandler.emitSwapNftMinted(directSwap.id, txId);
-          } 
+          }
           if (txId.includes('error')) {
             this.logger.error(`s.1561 directSwap ${directSwap.id} failed with error ${txId}`);
             await this.directSwapRepository.setSwapStatus(directSwap, 'transaction.failed', txId, txId);
@@ -1821,7 +2110,7 @@ class Service {
         //     await this.directSwapRepository.setSwapStatus(directSwap, 'nft.minted', undefined, txId);
         //     this.logger.verbose(`s.1533 directSwap ${id} updated with txId ${txId}`);
         //     this.eventHandler.emitSwapNftMinted(id, txId);
-        //   } 
+        //   }
         //   if (directSwap && txId.includes('error')) {
         //     this.logger.error(`s.1561 directSwap ${id} failed with error ${txId}`);
         //     await this.directSwapRepository.setSwapStatus(directSwap, 'transaction.failed', txId, txId);
@@ -1845,6 +2134,7 @@ class Service {
   }
 
   public getAdminBalancerConfig = async (): Promise<{minSTX: number, minBTC: number, overshootPct: number, autoBalance: boolean}> => {
+    if(!this.balancer) throw new Error('Balancer not configured');
     return this.balancer.getBalancerConfig();
   }
 
@@ -1855,20 +2145,22 @@ class Service {
   }
 
   public getAdminBalancerBalances = async (): Promise<string> => {
+    if(!this.balancer) throw new Error('Balancer not configured');
     try {
       const result = await this.balancer.getExchangeAllBalances();
       return result;
     } catch (error) {
       this.logger.error(`service.2128 getAdminBalancerBalances error: ${error.message}`);
-      return `Unable to get exchange balances`;
+      return 'Unable to get exchange balances';
     }
   }
-  
+
   /**
    * pairId: X/Y => sell X, buy Y
    * buyAmount: amount of target currency to buy from exchange
    */
   public getAdminBalancer = async (pairId: string, buyAmount: number): Promise<{ status: string, result: string }> => {
+    if(!this.balancer) throw new Error('Balancer not configured');
     try {
       const params = {pairId, buyAmount};
       const result = await this.balancer.balanceFunds(params);
@@ -1893,7 +2185,7 @@ class Service {
 
   public getAdminBalanceOnchain = async (): Promise<string> => {
     const balances = (await this.getBalance()).getBalancesMap();
-    let balanceOnchain = ''
+    let balanceOnchain = '';
     balances.forEach((balance: Balance, symbol: string) => {
       if(symbol === 'BTC')
       balanceOnchain = `${balance.getWalletBalance()!.getTotalBalance()}`;
@@ -1904,10 +2196,10 @@ class Service {
   public getAdminBalanceStacks = async (): Promise<{walletName: string, value: string, address: string}[]> => {
     const data = await getAddressAllBalances();
     const signerAddress = (await getStacksNetwork()).signerAddress;
-    let respArray: {walletName: string, value: string, address: string}[] = []
+    const respArray: {walletName: string, value: string, address: string}[] = [];
     Object.keys(data).forEach((key) => {
       respArray.push({walletName: key, value: data[key], address: signerAddress});
-    })
+    });
     return respArray;
   }
 

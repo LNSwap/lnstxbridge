@@ -11,6 +11,7 @@ import { connectWebSocketClient, } from '@stacks/blockchain-api-client';
 import { getHexBuffer, getHexString, stringify } from '../../../lib/Utils';
 import { crypto } from 'bitcoinjs-lib';
 // import ChainTipRepository from 'lib/db/ChainTipRepository';
+import StacksTransactionRepository from '../../db/StacksTransactionRepository';
 
 // testing socket.io client to see if it receives contracttx in microblocks
 // import { io } from 'socket.io-client';
@@ -64,6 +65,8 @@ class ContractEventHandler extends EventEmitter {
   private sip10contractAddress!: string;
   private sip10contractName!: string;
 
+  private stacksTransactionRepository!: StacksTransactionRepository;
+
   constructor(
     private logger: Logger,
   ) {
@@ -85,6 +88,7 @@ class ContractEventHandler extends EventEmitter {
     this.logger.verbose('Stacks Starting contract event subscriptions');
     this.subscribeContractEvents(contract);
     this.subscribeTokenContractEvents(sip10contract);
+    this.stacksTransactionRepository = new StacksTransactionRepository();
   }
 
   public rescan = async (startHeight: number): Promise<void> => {
@@ -219,7 +223,7 @@ class ContractEventHandler extends EventEmitter {
     // });
     // sc.subscribeAddressTransactions('ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP');
     // sc.subscribeAddressTransactions('ST27SD3H5TTZXPBFXHN1ZNMFJ3HNE2070QX7ZN4FF');
-    
+
     // // this works so microblocks are ok
     // await client.subscribeMicroblocks(event => {
     //   this.logger.debug('ceh.207 microblocks: '+ JSON.stringify(event));
@@ -368,10 +372,23 @@ class ContractEventHandler extends EventEmitter {
       // get data from contract call
       const preimageHash = txData.contract_call.function_args.filter(a=>a.name=='preimageHash')[0].repr;
       const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
-      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
-      const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
+      // const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
+      // const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
       const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
-      console.log('checkTx lockFound fetched from contract call: ', preimageHash,amount,claimAddress,refundAddress,timelock);
+      const claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=='claimPrincipal')[0].repr;
+      const swapContract = txData.contract_call.contract_id;
+      console.log('checkTx lockFound fetched from contract call: ', preimageHash,amount,timelock);
+
+      try {
+        // add found lock data to stackstransactionrepository to be consumed by other swap providers
+        // console.log('ceh.344 adding to stacksTransactionRepository ', txid, preimageHash, claimPrincipal, 'lock', swapContract);
+        // const addResult =
+        await this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, 'lock', swapContract);
+        // console.log('ceh.346 added to stacksTransactionRepository ', addResult );
+      } catch (error) {
+        console.log('ceh.349 add to stacksTransactionRepository error ', error);
+      }
+
 
       // got all the data now check if we have the swap
       this.emit(
@@ -379,8 +396,8 @@ class ContractEventHandler extends EventEmitter {
         txid,
         {
           amount,
-          claimAddress,
-          refundAddress,
+          claimAddress:'',
+          refundAddress:'',
           preimageHash: parseBuffer(preimageHash),
           timelock: timelock,
         },
@@ -391,13 +408,22 @@ class ContractEventHandler extends EventEmitter {
       // get data from contract call
       const preimage = txData.contract_call.function_args.filter(a=>a.name=='preimage')[0].repr;
       const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
-      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
-      const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
-      const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
+      // const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
+      // const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
+      // const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
+      const swapContract = txData.contract_call.contract_id;
       hashvalue = getHexString(crypto.sha256(getHexBuffer(preimage.slice(2))));
       // this is correct now
-      console.log('claimFound fetched from contract call: ', preimage,hashvalue,amount,claimAddress,refundAddress,timelock);
+      // timelock
+      console.log('claimFound fetched from contract call: ', preimage,hashvalue,amount);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
+
+      try {
+        // add found claim data to stackstransactionrepository to be consumed by other swap providers
+        await this.stacksTransactionRepository.addClaimTransaction(txid, `0x${hashvalue}`, 'claim', swapContract);
+      } catch (error) {
+        console.log('ceh.349 add to stacksTransactionRepository error ', error);
+      }
 
       // got all the data now check if we have the swap
       // getHexBuffer -> good, parseBuffer -> butcher .slice(2)
@@ -407,12 +433,21 @@ class ContractEventHandler extends EventEmitter {
     if(refundFound) {
       // get data from contract call
       const preimageHash = txData.contract_call.function_args.filter(a=>a.name=='preimageHash')[0].repr;
-      const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
-      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
-      const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
-      const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
-      console.log('refundFound fetched from contract call: ', preimageHash,amount,claimAddress,refundAddress,timelock);
+      // const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
+      // const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
+      // const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
+      // const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
+      const swapContract = txData.contract_call.contract_id;
+      // ,amount,timelock
+      console.log('refundFound fetched from contract call: ', preimageHash);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
+
+      try {
+        // add found lock data to stackstransactionrepository to be consumed by other swap providers
+        await this.stacksTransactionRepository.addTransaction(txid, preimageHash, '', 'refund', swapContract);
+      } catch (error) {
+        console.log('ceh.349 add to stacksTransactionRepository error ', error);
+      }
 
       // got all the data now check if we have the swap
       this.emit('eth.refund', txid, parseBuffer(preimageHash));
@@ -560,12 +595,16 @@ class ContractEventHandler extends EventEmitter {
       // get data from contract call
       const preimageHash = txData.contract_call.function_args.filter(a=>a.name=='preimageHash')[0].repr;
       const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
-      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
-      const tokenAddress = txData.contract_call.function_args.filter(a=>a.name=='tokenAddress')[0].repr;
+      // const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
+      // const tokenAddress = txData.contract_call.function_args.filter(a=>a.name=='tokenAddress')[0].repr;
       const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
       const tokenPrincipal = txData.contract_call.function_args.filter(a=>a.name=='tokenPrincipal')[0].repr;
       const claimPrincipal = txData.contract_call.function_args.filter(a=>a.name=='claimPrincipal')[0].repr;
-      console.log('checkTokenTx lockFound fetched from contract call: ', preimageHash,amount,claimAddress,tokenAddress,timelock);
+      const swapContract = txData.contract_call.contract_id;
+      console.log('checkTokenTx lockFound fetched from contract call: ', preimageHash,amount,timelock);
+
+      // add found lock data to stackstransactionrepository to be consumed by other swap providers
+      this.stacksTransactionRepository.addTransaction(txid, preimageHash, claimPrincipal, 'lock', swapContract);
 
       // got all the data now check if we have the swap
       this.emit(
@@ -574,9 +613,9 @@ class ContractEventHandler extends EventEmitter {
         txid,
         {
           amount,
-          tokenAddress,
-          claimAddress, //dummy
-          refundAddress: claimAddress,  //dummy
+          tokenAddress:'',
+          claimAddress:'', //dummy
+          refundAddress: '',  //dummy
           preimageHash: parseBuffer(preimageHash),
           timelock: timelock,
         },
@@ -589,12 +628,13 @@ class ContractEventHandler extends EventEmitter {
       // get data from contract call
       const preimage = txData.contract_call.function_args.filter(a=>a.name=='preimage')[0].repr;
       const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
-      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
-      const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
-      const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
+      // const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
+      // const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
+      // const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
       hashvalue = getHexString(crypto.sha256(getHexBuffer(preimage.slice(2))));
       // this is correct now
-      console.log('claimFound fetched from contract call: ', preimage,hashvalue,amount,claimAddress,refundAddress,timelock);
+      // timelock
+      console.log('claimFound fetched from contract call: ', preimage,hashvalue,amount,);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
 
       // got all the data now check if we have the swap
@@ -605,11 +645,12 @@ class ContractEventHandler extends EventEmitter {
     if(refundFound) {
       // get data from contract call
       const preimageHash = txData.contract_call.function_args.filter(a=>a.name=='preimageHash')[0].repr;
-      const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
-      const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
-      const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
-      const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
-      console.log('refundFound fetched from contract call: ', preimageHash,amount,claimAddress,refundAddress,timelock);
+      // const amount = txData.contract_call.function_args.filter(a=>a.name=='amount')[0].repr;
+      // const claimAddress = txData.contract_call.function_args.filter(a=>a.name=='claimAddress')[0].repr;
+      // const refundAddress = txData.contract_call.function_args.filter(a=>a.name=='refundAddress')[0].repr;
+      // const timelock = txData.contract_call.function_args.filter(a=>a.name=='timelock')[0].repr;
+      // ,amount,timelock
+      console.log('refundFound fetched from contract call: ', preimageHash);
       // let preimageHash = txData.contract_call.function_args.filter(a=>a.name=="preimageHash")[0].repr
 
       // got all the data now check if we have the swap

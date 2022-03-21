@@ -186,7 +186,7 @@ type ConfigType = {
   notification: NotificationConfig;
   balancer: BalancerConfig;
   dashboard: DashboardConfig;
-  
+
   pairs: PairConfig[];
   currencies: CurrencyConfig[];
 
@@ -197,7 +197,7 @@ type ConfigType = {
 
 class Config {
   // Default paths
-  public static defaultDataDir = getServiceDataDir('lnstx');
+  public static defaultDataDir = getServiceDataDir('lnstx-aggregator');
 
   public static defaultConfigPath = 'boltz.conf';
   public static defaultMnemonicPath = 'seed.dat';
@@ -214,14 +214,14 @@ class Config {
   private readonly config: ConfigType;
   private readonly dataDir = Config.defaultDataDir;
 
-  public static defaultPort = 9002;
-  // public static defaultPort = 9003;
+  // public static defaultPort = 9002; // original port
+  public static defaultPort = 9007; // aggregator port
 
   /**
    * The constructor sets the default values
    */
   constructor() {
-    this.dataDir = getServiceDataDir('lnstx');
+    this.dataDir = getServiceDataDir('lnstx-aggregator');
 
     const {
       grpc,

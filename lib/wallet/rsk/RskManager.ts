@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { ContractABIs } from 'boltz-core';
 import { ERC20 } from 'boltz-core/typechain/ERC20';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
@@ -98,7 +99,7 @@ class RskManager {
     this.logger.verbose(`Using Rsk signer: ${this.address}`);
 
     const currentBlock = await signer.provider!.getBlockNumber();
-    this.logger.error("RskManager currentBlock: "+ currentBlock);
+    this.logger.error('RskManager currentBlock: '+ currentBlock);
     const chainTip = await chainTipRepository.findOrCreateTip('RBTC', currentBlock);
 
     this.contractHandler.init(this.etherSwap, this.erc20Swap);

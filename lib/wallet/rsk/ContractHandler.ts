@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { BigNumber, ContractTransaction } from 'ethers';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
@@ -73,7 +74,7 @@ class ContractHandler {
     timelock: number,
   ): Promise<ContractTransaction> => {
     this.logger.debug(`Claiming Rbtc with preimage: ${getHexString(preimage)}`);
-    this.logger.error("claim data: " + refundAddress);
+    this.logger.error('claim data: ' + refundAddress);
     return this.etherSwap.claim(
       preimage,
       amount,

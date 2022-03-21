@@ -7,8 +7,8 @@ class Coingecko implements Exchange {
   public async getPrice(baseAsset: string, quoteAsset: string): Promise<number> {
     // BTC SOV
     // console.log("getPrice baseAsset quoteAsset: ", baseAsset, quoteAsset);
-    let longerquoteasset = this.longerName(quoteAsset);
-    let lowerbaseasset = baseAsset.toLowerCase();
+    const longerquoteasset = this.longerName(quoteAsset);
+    const lowerbaseasset = baseAsset.toLowerCase();
     const pair = `${this.longerName(quoteAsset)}&vs_currencies=${baseAsset}`;
     const response = await makeRequest(`${Coingecko.API}/simple/price?ids=${pair}`);
     // console.log("response: ", response, response[longerquoteasset]);
@@ -32,7 +32,7 @@ class Coingecko implements Exchange {
       case 'STX': return 'blockstack';
 
       default: return asset;
-    }    
+    }
   }
 
   // private parseAsset = (asset: string) => {

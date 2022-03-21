@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { ContractABIs } from 'boltz-core';
 import { ERC20 } from 'boltz-core/typechain/ERC20';
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';

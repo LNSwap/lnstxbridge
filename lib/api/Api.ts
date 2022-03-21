@@ -69,21 +69,35 @@ class Api {
     // POST requests
     this.app.route('/routinghints').post(controller.routingHints);
 
-    this.app.route('/swapstatus').post(controller.swapStatus);
+    this.app.route('/swapstatus').post(controller.zswapStatus);
     this.app.route('/swaprates').post(controller.swapRates);
 
     this.app.route('/gettransaction').post(controller.getTransaction);
     this.app.route('/getswaptransaction').post(controller.getSwapTransaction);
     this.app.route('/broadcasttransaction').post(controller.broadcastTransaction);
 
-    this.app.route('/createswap').post(controller.createSwap);
+    this.app.route('/createswap').post(controller.zcreateSwap);
     this.app.route('/setinvoice').post(controller.setInvoice);
 
     this.app.route('/mintnft').post(controller.mintNFT);
-    this.app.route('/broadcastsponsoredtx').post(controller.broadcastSponsoredTx);
+    this.app.route('/broadcastsponsoredtx').post(controller.zbroadcastSponsoredTx);
 
     // EventSource streams
     this.app.route('/streamswapstatus').get(controller.streamSwapStatus);
+
+    // aggregator endpoints
+    // provider -> aggregator
+    this.app.route('/registerclient').post(controller.registerClient);
+    // frontend -> aggregator -> provider
+    this.app.route('/zcreateswap').post(controller.zcreateSwap);
+    // provider -> aggregator
+    this.app.route('/getlocked').post(controller.getLocked);
+    // frontend -> aggregator -> provider
+    this.app.route('/zswapstatus').post(controller.zswapStatus);
+    // provider -> aggregator
+    this.app.route('/updateswapstatus').post(controller.updateSwapStatus);
+    // frontend -> aggregator -> provider
+    this.app.route('/zbroadcastsponsoredtx').post(controller.zbroadcastSponsoredTx);
 
     // admin dashboard
     this.app.route('/api/admin/swaps').get(controller.getAdminSwaps);

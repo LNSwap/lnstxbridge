@@ -3,6 +3,7 @@ module.exports = {
     'node': true
   },
   rules: {
+    '@typescript-eslint/ban-ts-comment': 'off',
     'jest/expect-expect': 'off',
     'node/no-missing-import': 'off',
     'node/no-extraneous-import': 'off',

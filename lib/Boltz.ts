@@ -47,7 +47,7 @@ class Boltz {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.loglevel, this.config.logpath);
 
-    this.logger.error(`boltz constructor`);
+    this.logger.error('boltz constructor');
 
     process.on('unhandledRejection', ((reason) => {
       this.logger.error(`Unhandled rejection: ${formatError(reason)}`);
@@ -87,7 +87,7 @@ class Boltz {
     const walletCurrencies = Array.from(this.currencies.values());
 
     if (fs.existsSync(this.config.mnemonicpath)) {
-      this.logger.error("boltz.ts 90, service init with currencies "+ JSON.stringify(walletCurrencies));
+      this.logger.error('boltz.ts 90, service init with currencies '+ JSON.stringify(walletCurrencies));
       this.walletManager = new WalletManager(this.logger, this.config.mnemonicpath, walletCurrencies, this.ethereumManager, this.rskManager, this.stacksManager);
     } else {
       const mnemonic = generateMnemonic();
@@ -156,9 +156,9 @@ class Boltz {
       // Query the chain tips now to avoid them being updated after the chain clients are initialized
       const chainTips = await chainTipRepository.getChainTips();
 
-      this.logger.verbose(`boltz.159 loop currencies\n`);
+      this.logger.verbose('boltz.159 loop currencies\n');
       for (const [, currency] of this.currencies) {
-        
+
         // console.log("currency: ", currency);
         if (currency.chainClient) {
           // this.logger.verbose(`boltz start loop currency connectChainClient: ${currency}` + JSON.stringify(currency) + '\n');
@@ -195,7 +195,7 @@ class Boltz {
       const rescanPromises: Promise<void>[] = [];
 
       for (const chainTip of chainTips) {
-        this.logger.verbose("rescanpromise chaintip: " + chainTip.symbol);
+        this.logger.verbose('rescanpromise chaintip: ' + chainTip.symbol);
         if (chainTip.symbol === 'ETH') {
           if (this.walletManager.ethereumManager) {
             logRescan(chainTip);
@@ -241,7 +241,7 @@ class Boltz {
 
     try {
       await client.connect(chainTipRepository);
-      
+
       const blockchainInfo = await client.getBlockchainInfo();
       const networkInfo = await client.getNetworkInfo();
 

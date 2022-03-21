@@ -9,6 +9,11 @@ import packageJson from '../package.json';
 import { OrderSide } from './consts/Enums';
 import ChainClient from './chain/ChainClient';
 import { etherDecimals } from './consts/Consts';
+import fs from 'fs';
+import toml from '@iarna/toml';
+import Errors from './consts/Errors';
+import { ConfigType } from './Config';
+
 // import { getInfo } from './wallet/stacks/StacksUtils';
 // import mempoolJS from "@mempool/mempool.js";
 // const { bitcoin: { transactions } } = mempoolJS({
@@ -495,7 +500,7 @@ export const parseTomlConfig = (filename: string): any => {
       throw Errors.COULD_NOT_PARSE_CONFIG(filename, JSON.stringify(error));
     }
   }
-}
+};
 
 export const saveTomlConfig = (config: any): any => {
   try {

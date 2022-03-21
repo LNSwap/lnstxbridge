@@ -332,7 +332,7 @@ class SwapManager {
       let asRedeemScript = '';
       if (args.baseAmount && args.onchainTimeoutBlockDelta) {
 
-        // 
+        //
         const { keys, index } = sendingCurrency.wallet.getNewKeys();
         // const { blocks } = await sendingCurrency.chainClient!.getBlockchainInfo();
         // timeoutBlockHeight = blocks + args.onchainTimeoutBlockDelta;

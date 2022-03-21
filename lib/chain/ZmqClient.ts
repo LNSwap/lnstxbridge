@@ -200,7 +200,7 @@ class ZmqClient extends EventEmitter {
       }
 
       if (this.isRelevantTransaction(transaction)) {
-        console.log('zmq.185 isRelevantTransaction', transaction);
+        // console.log('zmq.185 isRelevantTransaction', transaction);
         const transactionData = await this.getRawTransactionVerbose(id) as RawTransaction;
 
         try {
@@ -215,7 +215,7 @@ class ZmqClient extends EventEmitter {
           //   console.log('zmq.212 regtest ');
           //   transactionData = await this.getRawTransactionVerbose(id);
           // }
-  
+
           // Check whether the transaction got confirmed or added to the mempool
           if (transactionData.confirmations) {
             // when astransaction mempool -> conf
@@ -365,7 +365,7 @@ class ZmqClient extends EventEmitter {
       // console.log('zmqclient checking output ', output );
       // console.log('zmqclient relevantOutputs ', this.relevantOutputs);
       if (this.relevantOutputs.has(getHexString(output.script))) {
-        console.log('zmqclient found it!!! ', getHexString(output.script));
+        // console.log('zmqclient found it!!! ', getHexString(output.script));
         return true;
       }
     }

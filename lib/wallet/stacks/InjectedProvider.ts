@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish, providers, utils } from 'ethers';
 import { BlockWithTransactions } from '@ethersproject/abstract-provider';
-// connectWebSocketClient, 
+// connectWebSocketClient,
 import { StacksApiWebSocketClient } from '@stacks/blockchain-api-client';
 import Errors from './Errors';
 import Logger from '../../Logger';
@@ -51,7 +51,7 @@ class InjectedProvider implements providers.Provider {
   constructor(private logger: Logger, config: StacksConfig) {
     // this.logger.error(`Stacks injectedprovider constructor: ` + JSON.stringify(config));
     // if (config.providerEndpoint) {
-      
+
     //   // stacks will have blockchain-api-client
     //   this.providers.set(EthProviderService.Websocket, new providers.WebSocketProvider(config.providerEndpoint));
     //   // this is processed
@@ -114,15 +114,15 @@ class InjectedProvider implements providers.Provider {
 
     for (const [providerName, provider] of this.providers) {
       try {
-        this.logger.error(`****************stacks injectedprovider getNetwork: ` + providerName + " " + JSON.stringify(provider));
-        
+        this.logger.error('****************stacks injectedprovider getNetwork: ' + providerName + ' ' + JSON.stringify(provider));
+
         // ws://stacks-node-api.testnet.stacks.co/
         // this.client = await connectWebSocketClient('wss://stacks-node-api.testnet.stacks.co/');
         // this.client.subscribeAddressTransactions("ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ", function (transactionInfo) {
         //   console.log("ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ tx: ", transactionInfo);
         // });
 
-        
+
 
         const network = await provider.getNetwork();
         this.logConnectedProvider(providerName, network);
@@ -211,7 +211,7 @@ class InjectedProvider implements providers.Provider {
   }
 
   public getLogs = (filter: providers.Filter): Promise<Array<providers.Log>> => {
-    this.logger.error("rsk injectedprovider getLogs " + JSON.stringify(filter));
+    this.logger.error('rsk injectedprovider getLogs ' + JSON.stringify(filter));
     return this.forwardMethod('getLogs', filter);
   }
 
@@ -396,7 +396,7 @@ class InjectedProvider implements providers.Provider {
       } catch (error) {
         const formattedError = formatError(error);
 
-        this.logger.error("inside forwardMethod");
+        this.logger.error('inside forwardMethod');
         this.logger.warn(`Request to ${providerName} Web3 provider failed: ${method}: ${formattedError}`);
         errors.push(formattedError);
       }
@@ -448,8 +448,8 @@ class InjectedProvider implements providers.Provider {
   private logDisabledProvider = (name: string, reason: string) => {
     this.logger.warn(`Disabled ${name} Web3 provider: ${reason}`);
   }
-  
-  public getClient = () => {
+
+  public getClient = ():StacksApiWebSocketClient => {
     return this.client;
   }
 

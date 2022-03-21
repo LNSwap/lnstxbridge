@@ -189,7 +189,7 @@ class RateProvider {
         //     "baseAsset": 10000000,
         //     "quoteAsset": 0
         //   }
-        
+
 
         this.pairs.set(pairId, {
           rate,
@@ -232,8 +232,8 @@ class RateProvider {
     this.logger.silly('Updated rates');
   }
 
-  // The quotation EUR/USD = 1.2500 means that one euro is exchanged for 1.2500 U.S. dollars. 
-  // In this case, EUR is the base currency and USD is the quote currency (counter currency). 
+  // The quotation EUR/USD = 1.2500 means that one euro is exchanged for 1.2500 U.S. dollars.
+  // In this case, EUR is the base currency and USD is the quote currency (counter currency).
   // This means that 1 euro can be exchanged for 1.25 U.S. dollars. Another way of looking at this is that it will cost you $125 to buy 100 euros.
 
   private getLimits = async (pair: string, base: string, quote: string, rate: number) => {
@@ -251,7 +251,7 @@ class RateProvider {
       // Make sure the minimal limit is at least 4 times the fee needed to claim
       const minimalLimitQuoteTransactionFee = this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim) * 4;
       const minimalLimitBaseTransactionFee = this.feeProvider.getBaseFee(base, BaseFeeType.NormalClaim) * rate * 4;
-      // rateprovider.235 basefee, quote, base, rate:                      1,   
+      // rateprovider.235 basefee, quote, base, rate:                      1,
       // this.logger.error("rateprovider.235 basefee, quote, base, rate: "+ this.feeProvider.getBaseFee(quote, BaseFeeType.NormalClaim));
       //                  340,                                            rate: 33222.591362126244
         // + "," + this.feeProvider.getBaseFee(base, BaseFeeType.NormalClaim) + ", rate: " +rate);

@@ -1,27 +1,27 @@
 import { Arguments } from 'yargs';
 import { BigNumber } from 'ethers';
-import { getHexBuffer } from '../../../Utils';
+import { getHexBuffer , getHexString } from '../../../Utils';
 import { etherDecimals } from '../../../consts/Consts';
 import BuilderComponents from '../../BuilderComponents';
 // import { getBoltzAddress } from '../StacksUtils';
 
 import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, makeContractCall, broadcastTransaction, TxBroadcastResult, makeContractSTXPostCondition } from '@stacks/transactions';
-import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
-import { getHexString } from '../../../Utils';
+// StacksTestnet
+import { StacksMocknet, StacksMainnet } from '@stacks/network';
 import { Constants } from '../StacksUtils';
 
-const BigNum = require('bn.js');
+import BigNum from 'bn.js';
 
-let networkconf:string = "mocknet";
-let network = new StacksTestnet();
-if(networkconf=="mainnet"){
-  network = new StacksMainnet();
-} else if(networkconf=="mocknet") {
-  network = new StacksMocknet()
-}
+// const networkconf = 'mocknet';
+// let network = new StacksTestnet();
+// if(networkconf=='mainnet'){
+//   network = new StacksMainnet();
+// } else if(networkconf=='mocknet') {
+let network = new StacksMocknet();
+// }
 
-let contractAddress = Constants.stxSwapAddress.split(".")[0]
-let contractName = Constants.stxSwapAddress.split(".")[1]
+let contractAddress = Constants.stxSwapAddress.split('.')[0];
+let contractName = Constants.stxSwapAddress.split('.')[1];
 
 let privkey:string;
 
@@ -50,18 +50,18 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // const signer = connectEthereum(argv.provider, argv.signer);
   // const { etherSwap } = getContracts(signer);
 
-  let allargs = process.argv.slice(2);
+  const allargs = process.argv.slice(2);
   // [ 'lock', 'asd', 'qwe', 'zxc' ]
-  console.log("stx lock: ", allargs);
+  console.log('stx lock: ', allargs);
 
   // USAGE
   // ./bin/boltz-stacks lock preimagehash amount refundAddress claimAddress timelock mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 privkey
-  
-  const selectednetwork = allargs[6]
-  if(selectednetwork=="mainnet"){
+
+  const selectednetwork = allargs[6];
+  if(selectednetwork=='mainnet'){
     network = new StacksMainnet();
-  } else if(selectednetwork=="mocknet") {
-    network = new StacksMocknet()
+  } else if(selectednetwork=='mocknet') {
+    network = new StacksMocknet();
   }
 
   contractAddress = allargs[7].split('.')[0];
@@ -77,7 +77,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   const refundAddress = allargs[3];
   const claimAddress = allargs[4];
   const timelock = parseInt(allargs[5]);
-  console.log("stacks cli preimageHash,amount,refundAddress,timelock: ", preimageHash,amount,refundAddress,claimAddress,timelock);
+  console.log('stacks cli preimageHash,amount,refundAddress,timelock: ', preimageHash,amount,refundAddress,claimAddress,timelock);
 
 
   // const preimageHash = getHexBuffer(argv.preimageHash);
@@ -91,7 +91,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   //   return;
   // }
 
-  let transaction: TxBroadcastResult;
+  // let transaction: TxBroadcastResult;
 
   // if (argv.token) {
   //   console.log("rsk erc20Swap.lock to erc20SwapAddress: ", Constants.erc20SwapAddress);
@@ -107,7 +107,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // } else {
     // console.log("rsk etherSwap.lock to claimAddress: ", boltzAddress);
 
-    transaction = await lockupStx(preimageHash, amount, refundAddress, timelock);
+    const transaction = await lockupStx(preimageHash, amount, refundAddress, timelock);
 
   //   transaction = await etherSwap.lock(
   //     preimageHash,
@@ -133,11 +133,11 @@ const lockupStx = async (
   console.log(`Locking ${amount} Stx with preimage hash: ${getHexString(preimageHash)} with claimaddress ${claimAddress}`);
   // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
-  amount = amount.div(etherDecimals)
-  let decimalamount = parseInt(amount.toString(),10) + 1
-  console.log("lockup.121 smaller amount: "+ amount + ", "+ decimalamount)
+  amount = amount.div(etherDecimals);
+  const decimalamount = parseInt(amount.toString(),10) + 1;
+  console.log('lockup.121 smaller amount: '+ amount + ', '+ decimalamount);
 
-  
+
 
   // Add an optional post condition
   // See below for details on constructing post conditions
@@ -159,17 +159,17 @@ const lockupStx = async (
     )
   ];
 
-  console.log("contracthandler.85: ",contractAddress, contractName, postConditionCode, postConditionAmount)
-  
-  let swapamount = decimalamount.toString(16).split(".")[0] + "";
-  let paddedamount = swapamount.padStart(32, "0");
-  let tl1 = timeLock.toString(16);
-  let tl2 = tl1.padStart(32, "0");
-  let tl3 = tl2 // dont slice so it matches
+  console.log('contracthandler.85: ',contractAddress, contractName, postConditionCode, postConditionAmount);
+
+  const swapamount = decimalamount.toString(16).split('.')[0] + '';
+  const paddedamount = swapamount.padStart(32, '0');
+  const tl1 = timeLock.toString(16);
+  const tl2 = tl1.padStart(32, '0');
+  const tl3 = tl2; // dont slice so it matches
   // .slice(2);
 
-  console.log("contracthandler.94: amounts",decimalamount,swapamount,paddedamount)
-  console.log("contracthandler.95: timelocks ",timeLock,tl1, tl2, tl3)
+  console.log('contracthandler.94: amounts',decimalamount,swapamount,paddedamount);
+  console.log('contracthandler.95: timelocks ',timeLock,tl1, tl2, tl3);
 
   // (lockStx (preimageHash (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16))
   const functionArgs = [
@@ -214,4 +214,4 @@ const lockupStx = async (
   //   value: amount,
   //   gasPrice: await getGasPrice(this.etherSwap.provider),
   // });
-}
+};

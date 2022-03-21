@@ -116,12 +116,12 @@ class InjectedProvider implements providers.Provider {
     transaction: utils.Deferrable<providers.TransactionRequest>,
     blockTag?: providers.BlockTag,
   ): Promise<string> => {
-    this.logger.error("eth call tx: " + JSON.stringify(transaction));
+    this.logger.error('eth call tx: ' + JSON.stringify(transaction));
     return this.forwardMethod('call', transaction, blockTag);
   }
 
   public estimateGas = (transaction: providers.TransactionRequest): Promise<BigNumber> => {
-    this.logger.error("eth estimategas tx: " + JSON.stringify(transaction));
+    this.logger.error('eth estimategas tx: ' + JSON.stringify(transaction));
     return this.forwardMethod('estimateGas', transaction);
   }
 
@@ -151,7 +151,7 @@ class InjectedProvider implements providers.Provider {
   }
 
   public getLogs = (filter: providers.Filter): Promise<Array<providers.Log>> => {
-    this.logger.error("eth getLogs " + JSON.stringify(filter));
+    this.logger.error('eth getLogs ' + JSON.stringify(filter));
     return this.forwardMethod('getLogs', filter);
   }
 
@@ -175,7 +175,7 @@ class InjectedProvider implements providers.Provider {
     addressOrName: string,
     blockTag?: providers.BlockTag,
   ): Promise<number> => {
-    this.logger.error("eth getTransactionCount tx: " + JSON.stringify(addressOrName));
+    this.logger.error('eth getTransactionCount tx: ' + JSON.stringify(addressOrName));
     return this.forwardMethod('getTransactionCount', addressOrName, blockTag);
   }
 
@@ -188,7 +188,7 @@ class InjectedProvider implements providers.Provider {
   }
 
   public resolveName = (name: string): Promise<string> => {
-    this.logger.error("eth resolveName tx: " + name);
+    this.logger.error('eth resolveName tx: ' + name);
     return this.forwardMethod('resolveName', name);
   }
 
@@ -338,7 +338,7 @@ class InjectedProvider implements providers.Provider {
           resultIsNull = true;
         }
       } catch (error) {
-        this.logger.error("eth injectedprovider caught: " + JSON.stringify(error));
+        this.logger.error('eth injectedprovider caught: ' + JSON.stringify(error));
         // let dummyresult = {"jsonrpc":"2.0","id":1,"result":"0xb5aa"};
         // // dummyresult = "0x0";
         // // return dummyresult;

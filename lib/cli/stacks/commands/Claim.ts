@@ -1,7 +1,7 @@
 import { Arguments } from 'yargs';
 // import { crypto } from 'bitcoinjs-lib';
 // import { ContractTransaction } from 'ethers';
-import { getHexBuffer } from '../../../Utils';
+import { getHexBuffer, getHexString } from '../../../Utils';
 import BuilderComponents from '../../BuilderComponents';
 // import { Constants } from '../StacksUtils';
 // import { queryEtherSwapValues } from '../../../wallet/rsk/ContractUtils';
@@ -19,12 +19,12 @@ import { BigNumber } from 'ethers';
 
 // makeContractCall, , broadcastTransaction, estimateContractFunctionCall
 import { bufferCV, AnchorMode, FungibleConditionCode, PostConditionMode, makeContractCall, broadcastTransaction, makeContractSTXPostCondition } from '@stacks/transactions';
-import { StacksMocknet, StacksTestnet, StacksMainnet } from '@stacks/network';
-import { getHexString } from '../../../Utils';
+// StacksTestnet
+import { StacksMocknet, StacksMainnet } from '@stacks/network';
 import { getAccountNonce } from '../../../wallet/stacks/StacksUtils';
 // import StacksManager from '../../../wallet/stacks/StacksManager';
 
-const BigNum = require('bn.js');
+import BigNum from 'bn.js';
 
 // let networkconf:string = "mocknet";
 // let network = new StacksTestnet();
@@ -50,13 +50,14 @@ export const builder = {
   token: BuilderComponents.token,
 };
 
-let networkconf:string = "mocknet";
-let network = new StacksTestnet();
-if(networkconf=="mainnet"){
-  network = new StacksMainnet();
-} else if(networkconf=="mocknet") {
-  network = new StacksMocknet()
-}
+// const networkconf = 'mocknet';
+let network = new StacksMocknet();
+// let network = new StacksTestnet();
+// if(networkconf=='mainnet'){
+//   network = new StacksMainnet();
+// } else if(networkconf=='mocknet') {
+//   network = new StacksMocknet();
+// }
 
 let contractAddress:string;
 let contractName:string;
@@ -70,15 +71,15 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // ./bin/boltz-stacks claim preimage amount refundAddress claimAddress timelock mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 privkey <customfee in microstx> <customnonce>
   // ./bin/boltz-stacks claim 0xc6213f3f2635186d9fa4fd00173eac5f2d71aacabf07f0a178de9961d4020331 0x00000000000000000000000003937005 0x01 0x01 0x00000000000000000000000000009485 mainnet SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.stxswap_v8 "xxx" 500000 55
 
-  let allargs = process.argv.slice(2);
+  const allargs = process.argv.slice(2);
   // [ 'lock', 'asd', 'qwe', 'zxc' ]
-  console.log("stx refund: ", allargs, argv);
+  console.log('stx refund: ', allargs, argv);
 
-  const selectednetwork = allargs[6]
-  if(selectednetwork=="mainnet"){
+  const selectednetwork = allargs[6];
+  if(selectednetwork=='mainnet'){
     network = new StacksMainnet();
-  } else if(selectednetwork=="mocknet") {
-    network = new StacksMocknet()
+  } else if(selectednetwork=='mocknet') {
+    network = new StacksMocknet();
   }
 
   contractAddress = allargs[7].split('.')[0];
@@ -98,13 +99,13 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   const origpreimage = allargs[1].split('x')[1];
   const preimageHash = getHexBuffer(allargs[1]);
   // const amount = new BigNumber(allargs[2]);
-  let origamount = allargs[2].split('x')[1];
+  const origamount = allargs[2].split('x')[1];
   let amount = BigNumber.from(allargs[2]).mul(etherDecimals);
   const refundAddress = allargs[3];
   const claimAddress = allargs[4];
   const timelock = parseInt(allargs[5]);
   const origtimelock = allargs[5].split('x')[1];
-  console.log("stacks cli preimageHash,amount,refundAddress,timelock: ", preimageHash,amount,refundAddress,claimAddress,timelock);
+  console.log('stacks cli preimageHash,amount,refundAddress,timelock: ', preimageHash,amount,refundAddress,claimAddress,timelock);
 
   // return;
 
@@ -114,11 +115,11 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   console.log(`claiming ${amount} Stx with preimage hash: ${getHexString(preimageHash)} with claimaddress ${claimAddress}`);
   // Locking 1613451070000000000 Stx with preimage hash: 3149e7d4d658ee7e513c63af7d7d395963141252cb43505e1e4a146fbcbe39e1
 
-  amount = amount.div(etherDecimals).div(100)
+  amount = amount.div(etherDecimals).div(100);
   // this +1 causes issues when 49 -> 50
   // removed  + 1
-  let decimalamount = parseInt(amount.toString(),10)
-  console.log("contracthandler.263 smaller amount: "+ amount + ", "+ decimalamount)
+  const decimalamount = parseInt(amount.toString(),10);
+  console.log('contracthandler.263 smaller amount: '+ amount + ', '+ decimalamount);
 
   // Add an optional post condition
   // See below for details on constructing post conditions
@@ -140,17 +141,17 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     )
   ];
 
-  console.log("contracthandler.285: ",contractAddress, contractName, postConditionCode, postConditionAmount)
+  console.log('contracthandler.285: ',contractAddress, contractName, postConditionCode, postConditionAmount);
 
-  let swapamount = decimalamount.toString(16).split(".")[0] + "";
-  let paddedamount = swapamount.padStart(32, "0");
-  let tl1 = timelock.toString(16);
-  let tl2 = tl1.padStart(32, "0");
-  let tl3 = tl2 // dont slice it?!
+  const swapamount = decimalamount.toString(16).split('.')[0] + '';
+  const paddedamount = swapamount.padStart(32, '0');
+  const tl1 = timelock.toString(16);
+  const tl2 = tl1.padStart(32, '0');
+  const tl3 = tl2; // dont slice it?!
   // .slice(2);
 
-  console.log("contracthandler.294: amounts",decimalamount,swapamount,paddedamount)
-  console.log("contracthandler.295: timelocks ",timelock,tl1, tl2, tl3)
+  console.log('contracthandler.294: amounts',decimalamount,swapamount,paddedamount);
+  console.log('contracthandler.295: timelocks ',timelock,tl1, tl2, tl3);
 
   // (claimStx (preimage (buff 32)) (amount (buff 16)) (claimAddress (buff 42)) (refundAddress (buff 42)) (timelock (buff 16)))
   const functionArgs = [
@@ -160,7 +161,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     bufferCV(Buffer.from('01','hex')),
     bufferCV(Buffer.from(origtimelock,'hex')),
   ];
-  console.log("stacks contracthandler.306 functionargs: " + JSON.stringify(functionArgs));
+  console.log('stacks contracthandler.306 functionargs: ' + JSON.stringify(functionArgs));
 
   // const functionArgs = [
   //   bufferCV(preimageHash),
@@ -171,7 +172,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   // ];
 
   // const stacksNetworkData = getStacksNetwork();
-  
+
   // console.log('got accountNonce ', accountNonce);
   const txOptions = {
     contractAddress: contractAddress,
@@ -370,7 +371,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 
 //   const transaction = await makeContractCall(txOptions);
 //   return broadcastTransaction(transaction, network);
- 
+
 
 //   // this is from connect
 //   // return await openContractCall(txOptions);
@@ -387,7 +388,7 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
 //       if (typeof value === 'undefined') {
 //         console.log("key, value: ", key, value)
 //       }
-      
+
 //       typeof value === 'bigint'
 //           ? value.toString()
 //           : value // return everything else unchanged

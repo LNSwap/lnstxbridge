@@ -13,7 +13,7 @@ depends_on = []
 
 [contracts.nft]
 path = "contracts/nft.clar"
-depends_on = ["nft-trait"]
+depends_on = ["nft-trait", "usda-token"]
 
 [contracts.nft-trait]
 path = "contracts/nft-trait.clar"
@@ -24,16 +24,16 @@ path = "contracts/sip-010-trait.clar"
 depends_on = []
 
 [contracts.sip10swap]
-path = "contracts/sip10swap_v1.clar"
-depends_on = []
+path = "contracts/sip10swap_v3.clar"
+depends_on = ["usda-token"]
 
 [contracts.stxswap]
-path = "contracts/stxswap_v9.clar"
+path = "contracts/stxswap_v10.clar"
 depends_on = []
 
 [contracts.triggerswap]
-path = "contracts/triggerswap_v4.clar"
-depends_on = ["sip-010-trait"]
+path = "contracts/triggerswap_v5.clar"
+depends_on = ["sip-010-trait", "usda-token", "nft"]
 
 [contracts.usda-token]
 path = "contracts/usda-token.clar"

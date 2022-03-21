@@ -1,6 +1,6 @@
 import { Arguments } from 'yargs';
 import { address, ECPair, Transaction, networks } from 'bitcoinjs-lib';
-// Networks, 
+// Networks,
 import { constructRefundTransaction, detectSwap } from 'boltz-core';
 import BuilderComponents from '../BuilderComponents';
 import { getHexBuffer, stringify } from '../../Utils';
@@ -26,9 +26,9 @@ export const handler = (argv: Arguments<any>): void => {
   const transaction = Transaction.fromHex(argv.rawTransaction);
   const swapOutput = detectSwap(redeemScript, transaction)!;
 
-  console.log('refund constructRefundTransaction ', 
-    swapOutput, transaction.getHash(), 
-    address.toOutputScript(argv.destinationAddress, 
+  console.log('refund constructRefundTransaction ',
+    swapOutput, transaction.getHash(),
+    address.toOutputScript(argv.destinationAddress,
     network));
 
   const refundTransaction = constructRefundTransaction(

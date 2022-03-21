@@ -226,6 +226,24 @@ class Controller {
     }
   }
 
+  public zswapStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = this.validateRequest(req.body, [
+        { name: 'id', type: 'string' },
+      ]);
+
+      const response = this.service.getPendingSwapInfos(id);
+
+      if (response) {
+        this.successResponse(res, response);
+      } else {
+        this.errorResponse(req, res, `could not find swap with id: ${id}`, 404);
+      }
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   public swapRates = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = this.validateRequest(req.body, [
@@ -294,6 +312,21 @@ class Controller {
     }
   }
 
+  public zbroadcastSponsoredTx = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id, tx } = this.validateRequest(req.body, [
+        { name: 'id', type: 'string' },
+        { name: 'tx', type: 'string' },
+      ]);
+
+      // const response = await this.service.broadcastSponsoredTx(id, tx);
+      const response = await this.service.forwardSponsoredTx(id, tx);
+      this.successResponse(res, { transactionId: response });
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   public createSwap = async (req: Request, res: Response): Promise<void> => {
     try {
       const { type } = this.validateRequest(req.body, [
@@ -312,6 +345,23 @@ class Controller {
           break;
       }
 
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
+  public zcreateSwap = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { type } = this.validateRequest(req.body, [
+        { name: 'type', type: 'string' },
+      ]);
+
+      const swapType = this.parseSwapType(type);
+
+      // forward it to potential swap providers
+      const response = await this.service.forwardSwap(req.body, swapType);
+      // console.log('got response from client ', response.response);
+      this.successResponse(res, response.response);
     } catch (error) {
       this.errorResponse(req, res, error);
     }
@@ -471,6 +521,72 @@ class Controller {
     }
   }
 
+  // new endpoint to registerClients that want to join swap provider network
+  public registerClient = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { stacksAddress, nodeId, url, pairs } = this.validateRequest(req.body, [
+        { name: 'stacksAddress', type: 'string' },
+        { name: 'nodeId', type: 'string' },
+        { name: 'url', type: 'string' },
+        { name: 'pairs', type: 'object',  },
+        // { name: 'stxAmount', type: 'number', optional: true },
+      ]);
+
+      const response = await this.service.registerClient(stacksAddress, nodeId, url, pairs);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
+  // new endpoint to registerClients that want to join swap provider network
+  public getLocked = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { preimageHash, swapContractAddress } = this.validateRequest(req.body, [
+        { name: 'preimageHash', type: 'string' },
+        // { name: 'amount', type: 'string' },
+        // { name: 'claimPrincipal', type: 'string' },
+        { name: 'swapContractAddress', type: 'string', },
+        // { name: 'stxAmount', type: 'number', optional: true },
+      ]);
+
+      const response = await this.service.getLocked(preimageHash, swapContractAddress);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
+  // new endpoint for providers to update providerSwap status
+  public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // console.log('controller.532 updateSwapStatus req.body ', req.body);
+      // eslint-disable-next-line prefer-const
+      let { id, status, txId, failureReason, transaction, txHex } = this.validateRequest(req.body, [
+        { name: 'id', type: 'string' },
+        { name: 'status', type: 'string' },
+        { name: 'txId', type: 'string', optional: true },
+        { name: 'failureReason', type: 'string', optional: true },
+        { name: 'transaction', type: 'object', optional: true },
+        { name: 'txHex', type: 'string', optional: true },
+        // { name: 'swapContractAddress', type: 'string', },
+        // { name: 'stxAmount', type: 'number', optional: true },
+      ]);
+
+      const response = await this.service.updateSwapStatus(id, status, txId, failureReason);
+
+      // console.log('controller.545 updateSwapStatus req.body ', id, status, txId, failureReason, transaction);
+
+      // trigger swap.update so the pendingswapstreams get updated
+      if(!transaction) transaction = {id: txId, hex: txHex}; // to keep frontend compatibility
+      const message = {status, txId, failureReason, transaction};
+      this.service.eventHandler.emit('swap.update', id, message);
+
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
   // EventSource streams
   public streamSwapStatus = (req: Request, res: Response): void => {
     try {
@@ -647,6 +763,16 @@ class Controller {
       { name: 'buyAmount', type: 'number' },
     ]);
     const data = await this.service.getAdminBalancer(pairId, buyAmount);
+    this.successResponse(res, data);
+  }
+
+  public getAdminBalancerBalances = async (req: Request, res: Response): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    if(!authHeader || authHeader !== this.service.getAdminDashboardAuth()) {
+      this.errorResponse(req, res, 'unauthorized');
+      return;
+    }
+    const data = await this.service.getAdminBalancerBalances();
     this.successResponse(res, data);
   }
 

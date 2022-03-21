@@ -538,7 +538,7 @@ class SwapNursery extends EventEmitter {
       case CurrencyType.BitcoinLike: {
         this.logger.info('swapnursery.538 attemptSettleSwap getRawTransaction');
         const lockupTransactionHex = await currency.chainClient!.getRawTransaction(swap.lockupTransactionId!);
-        
+
         // let lockupTransactionHex;
         // // need blockhash because we're running a pruned node with no -txindex
         // if((await getInfo()).network_id === 1) {
@@ -940,7 +940,7 @@ class SwapNursery extends EventEmitter {
             //   // regtest
             //   rawTx = await chainClient.getRawTransactionVerbose(transactionHash);
             // }
-               
+
             const tx = Transaction.fromHex(rawTx.hex);
             console.log('as.claimed tx: ', tx, ' triggering asClaimUtxo');
             await this.asClaimUtxo(chainClient!, wallet, swap, tx, preimage);
@@ -1189,7 +1189,7 @@ class SwapNursery extends EventEmitter {
   ) => {
     try {
       // let oldcontractTransaction: ContractTransaction;
-      let contractTransaction: TxBroadcastResult;
+      // let contractTransaction: TxBroadcastResult;
 
       // if (reverseSwap.minerFeeOnchainAmount) {
       //   oldcontractTransaction = await this.walletManager.ethereumManager!.contractHandler.lockupEtherPrepayMinerfee(
@@ -1200,7 +1200,7 @@ class SwapNursery extends EventEmitter {
       //     reverseSwap.timeoutBlockHeight,
       //   );
       // } else {
-        contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
+        const contractTransaction = await this.walletManager.stacksManager!.contractHandler.lockupStx(
           getHexBuffer(reverseSwap.preimageHash),
           BigNumber.from(reverseSwap.onchainAmount).mul(etherDecimals),
           reverseSwap.claimAddress!,
@@ -2051,7 +2051,7 @@ class SwapNursery extends EventEmitter {
     const lockupOutput = lockupTransaction.outs[reverseSwap.lockupTransactionVout!];
 
     const destinationAddress = await wallet.getAddress();
-    console.log('swapn.1983 refundUtxoAS ', reverseSwap.asLockupTransactionId!, lockupOutput, reverseSwap.keyIndex!, )
+    console.log('swapn.1983 refundUtxoAS ', reverseSwap.asLockupTransactionId!, lockupOutput, reverseSwap.keyIndex!, );
     const refundTransaction = constructRefundTransaction(
       [{
         ...lockupOutput,

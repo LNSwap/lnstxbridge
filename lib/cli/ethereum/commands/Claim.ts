@@ -27,10 +27,10 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
   let transaction: ContractTransaction;
 
   if (argv.token) {
-    console.log("eth claim: ", preimage, "\n", getHexString(preimage), "\n", crypto.sha256(preimage), "\nercswap::" ,JSON.stringify(erc20Swap));
+    console.log('eth claim: ', preimage, '\n', getHexString(preimage), '\n', crypto.sha256(preimage), '\nercswap::' ,JSON.stringify(erc20Swap));
     // const erc20SwapValues = await queryERC20SwapValues(erc20Swap, crypto.sha256(preimage)); -> original code, didnt work!!!
     const erc20SwapValues = await queryERC20SwapValues(erc20Swap, preimage); // worked!!!
-    // eth erc20SwapValues:  
+    // eth erc20SwapValues:
     // {"amount":{"type":"BigNumber","hex":"0x01acb4add64eef8000"},
     // "claimAddress":"0x455fCf9Af2938F8f1603182bFBC867af1731d450",
     // "tokenAddress":"0x23d5395De7862A174b0cCbf9f7A350b4b8afC720",
@@ -38,12 +38,12 @@ export const handler = async (argv: Arguments<any>): Promise<void> => {
     // "timelock":758,
     // "preimageHash":{"type":"Buffer","data":[53,194,108,143,113,144,237,158,142,56,132,54,148,251,222,228,39,228,191,200,101,145,86,156,225,134,15,202,167,77,179,131]}}
 
-    // 35c26c8f7190ed9e8e38843694fbdee427e4bfc86591569ce1860fcaa74db383, 
-    // 30891506880000000000, 
-    // 0x455fCf9Af2938F8f1603182bFBC867af1731d450, 
+    // 35c26c8f7190ed9e8e38843694fbdee427e4bfc86591569ce1860fcaa74db383,
+    // 30891506880000000000,
+    // 0x455fCf9Af2938F8f1603182bFBC867af1731d450,
     // 758
 
-    console.log("eth erc20SwapValues: ", JSON.stringify(erc20SwapValues));
+    console.log('eth erc20SwapValues: ', JSON.stringify(erc20SwapValues));
     // return;
     transaction = await erc20Swap.claim(
       preimage,

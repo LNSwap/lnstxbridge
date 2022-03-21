@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import { EtherSwap } from 'boltz-core/typechain/EtherSwap';
 import { ERC20Swap } from 'boltz-core/typechain/ERC20Swap';
 import Errors from './Errors';
@@ -52,7 +53,7 @@ export const queryEtherSwapValues = async (etherSwap: EtherSwap, preimageHash: B
 };
 
 export const queryERC20SwapValues = async (erc20Swap: ERC20Swap, preimageHash: Buffer): Promise<ERC20SwapValues> => {
-  console.log("eth queryERC20SwapValues for any lockups " + JSON.stringify(erc20Swap) + ", for " + preimageHash.toString('hex'));
+  console.log('eth queryERC20SwapValues for any lockups ' + JSON.stringify(erc20Swap) + ', for ' + preimageHash.toString('hex'));
   const events = await erc20Swap.queryFilter(
     erc20Swap.filters.Lockup(preimageHash, null, null, null, null, null),
   );
