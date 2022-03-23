@@ -1691,6 +1691,27 @@ class Service {
     let provider;
     let providerPairs;
     let reachable = false;
+
+    let satoshisRequested = 0;
+    if(req['invoice']) {
+      satoshisRequested = (await decodeInvoice(req['invoice'])).satoshis;
+      console.log('satoshisRequested ', satoshisRequested);
+    }
+
+    let stxRequested = 0;
+    if(req['invoiceAmount']) {
+      const rate = getRate(
+        this.rateProvider.pairs.get(req['pairId'])!.rate,
+        req['orderSide'],
+        true
+      );
+      stxRequested = (req['invoiceAmount'] / 100) * rate; //mstx 10^-6 -> sats 10^8
+      console.log('rate ', req['pairId'], req['orderSide'], false, rate, req['invoiceAmount'], stxRequested);
+    }
+
+    // let onchainRequested = 0;
+    // if(req['onchainAmount']) onchainRequested = req['onchainAmount'];
+
     do {
       if(count > allClients.length) {
         throw new Error('No providers found');
@@ -1709,14 +1730,27 @@ class Service {
         }
         reachable = res.data.includes(req['pairId']);
       } catch (error) {
-        console.log('provider unreachable: ', provider[0].url);
+        console.log('provider unreachable, count: ', provider[0].url, count);
       }
 
+      // console.log('selecting client: ', req, req['pairId'], provider[0]);
+
+      console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
+      console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
+      console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
       count++;
-    } while (provider[0].pairs.includes(req['pairId']) &&
-      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] &&
-      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] &&
-      reachable);
+    } while (
+      // this should resolve to false in order for the selection to be completed!
+      // reselect client if any of these conditions are true
+      !provider[0].pairs.includes(req['pairId']) ||
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] ||
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'] ||
+      // if stx -> ln - decode invoice amount and check if client can pay it
+      satoshisRequested > provider[0].localBalance ||
+      // if ln -> stx - client should have inbound + stx funds
+      req['invoiceAmount'] > provider[0].remoteBalance ||
+      stxRequested > provider[0].StxBalance ||
+      !reachable);
 
     // const allProviders = await this.clientRepository.getAll();
     // console.log('service.1582 allProviders ', allProviders);
