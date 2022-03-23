@@ -1756,7 +1756,7 @@ class Service {
   };
 
   // eslint-disable-next-line @typescript-eslint/ban-types
-  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object,): Promise<{
+  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number): Promise<{
     // id: string,
     // invoice: string,
     result: boolean,
@@ -1788,7 +1788,7 @@ class Service {
     const strPairs = JSON.stringify(pairs);
     // dont reject re-registration just update?
     if(client.length > 0) {
-      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs);
+      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs,localLNBalance, remoteLNBalance, onchainBalance, StxBalance,);
       // throw new Error('Client url exists already');
     } else {
       const id = generateId();
@@ -1801,6 +1801,10 @@ class Service {
         pairs: strPairs,
         success: 0,
         fail: 0,
+        localLNBalance,
+        remoteLNBalance,
+        onchainBalance,
+        StxBalance,
       });
     }
 

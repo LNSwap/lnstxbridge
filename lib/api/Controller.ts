@@ -524,15 +524,19 @@ class Controller {
   // new endpoint to registerClients that want to join swap provider network
   public registerClient = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { stacksAddress, nodeId, url, pairs } = this.validateRequest(req.body, [
+      const { stacksAddress, nodeId, url, pairs, localLNBalance, remoteLNBalance, onchainBalance, StxBalance } = this.validateRequest(req.body, [
         { name: 'stacksAddress', type: 'string' },
         { name: 'nodeId', type: 'string' },
         { name: 'url', type: 'string' },
         { name: 'pairs', type: 'object',  },
+        { name: 'localLNBalance', type: 'number', optional: true },
+        { name: 'remoteLNBalance', type: 'number', optional: true},
+        { name: 'onchainBalance', type: 'number', optional: true},
+        { name: 'StxBalance', type: 'number', optional: true},
         // { name: 'stxAmount', type: 'number', optional: true },
       ]);
 
-      const response = await this.service.registerClient(stacksAddress, nodeId, url, pairs);
+      const response = await this.service.registerClient(stacksAddress, nodeId, url, pairs, localLNBalance, remoteLNBalance, onchainBalance, StxBalance);
       this.successResponse(res, response);
     } catch (error) {
       this.errorResponse(req, res, error);

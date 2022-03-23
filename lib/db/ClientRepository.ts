@@ -62,12 +62,17 @@ class ClientRepository {
     });
   }
 
-  public updateClient = (client: Client, stacksAddress: string, nodeId: string, url: string, pairs: string, ): Promise<Client> => {
+  public updateClient = (client: Client, stacksAddress: string, nodeId: string, url: string, pairs: string, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number ): Promise<Client> => {
     return client.update({
       stacksAddress,
       nodeId,
       url,
       pairs,
+      localLNBalance,
+      remoteLNBalance,
+      onchainBalance,
+      StxBalance,
+      // updatedAt: new Date(),
     });
   }
 
