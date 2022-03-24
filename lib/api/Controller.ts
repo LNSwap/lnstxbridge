@@ -232,10 +232,10 @@ class Controller {
         { name: 'id', type: 'string' },
       ]);
 
-      const response = this.service.getPendingSwapInfos(id);
+      const response = await this.service.getPendingSwapInfos(id);
 
-      if (response) {
-        this.successResponse(res, response);
+      if (response.swapStatus) {
+        this.successResponse(res, response.swapStatus);
       } else {
         this.errorResponse(req, res, `could not find swap with id: ${id}`, 404);
       }
