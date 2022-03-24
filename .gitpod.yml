@@ -106,7 +106,7 @@ tasks:
         git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
         cd /workspace/lnstxbridge-dashboard
         npm i
-      # export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
+        export NEXT_PUBLIC_BACKEND_URL="http://localhost:9008"
     command: |
         npm run dev
   - init: |
