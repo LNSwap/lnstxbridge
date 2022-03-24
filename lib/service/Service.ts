@@ -1879,6 +1879,9 @@ class Service {
       });
     }
 
+    // update min-max fee spread on pairs
+    // this.rateProvider.updateMinMaxFees();
+
     return {
       result: true,
     };
