@@ -110,6 +110,11 @@ tasks:
     command: |
         npm run dev
   - init: |
+        git clone https://github.com/pseudozach/umbrel /workspace/umbrel
+        cd /workspace/umbrel
+    command: |
+        echo "umbrel fork is cloned"
+  - init: |
         git clone https://github.com/pseudozach/lnstxbridge-client /workspace/lnstxbridge-client
         cd /workspace/lnstxbridge-client
         sleep 150
