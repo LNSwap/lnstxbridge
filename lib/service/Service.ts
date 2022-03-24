@@ -1821,16 +1821,16 @@ class Service {
   };
 
   // eslint-disable-next-line @typescript-eslint/ban-types
-  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number): Promise<{
+  public registerClient = async (apiVersion: string, stacksAddress: string, nodeId: string, url: string, pairs: object, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number): Promise<{
     // id: string,
     // invoice: string,
     result: boolean,
   }> => {
-    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)} ${localLNBalance}, ${remoteLNBalance}, ${onchainBalance}, ${StxBalance}`);
+    this.logger.verbose(`s.1564 registerClient with ${apiVersion} ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)} ${localLNBalance}, ${remoteLNBalance}, ${onchainBalance}, ${StxBalance}`);
 
-    // if(stxAmount < 0) {
-    //   throw Errors.MINT_COST_MISMATCH();
-    // }
+    if(apiVersion !== (process.env.apiVersion || '1.1.1')) {
+      throw new Error('apiVersion mismatch, update your client');
+    }
 
     // check if url is in access list - limit providers that can join the network
     const ACLfile = path.join(getServiceDataDir('lnstx-aggregator'), 'accesslist.txt');
@@ -1872,57 +1872,6 @@ class Service {
         StxBalance,
       });
     }
-
-    // // check contract signature to see how much it would cost to mint
-    // // find a previous call of the same function and add up stx transfers of that call
-    // const mintCostStx = stxAmount * 10**6; // 10000000;
-    // const calcMintCostStx = await calculateStxOutTx(nftAddress, contractSignature!);
-    // if(calcMintCostStx && calcMintCostStx > mintCostStx) {
-    //   this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);
-    //   throw Errors.MINT_COST_MISMATCH();
-    // }
-    // // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
-
-    // // TODO: maybe add whitelisted NFT contracts to avoid issues?
-
-    // // add a check to make sure lnswap signer has enough funds before creating swap
-    // const signerBalances = await getAddressAllBalances();
-    // console.log('s.1504 signerBalances ', signerBalances);
-    // if (mintCostStx > signerBalances['STX']) {
-    //   throw Errors.EXCEEDS_SWAP_LIMIT();
-    // }
-
-    // // convert to BTC + fees + generate LN invoice
-    // const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');
-    // this.logger.verbose(`s.1488 sendingAmountRate ${sendingAmountRate}`); //18878.610534264677
-
-    // const percentageFee = this.rateProvider.feeProvider.getPercentageFee('BTC/STX');
-    // const baseFee = this.rateProvider.feeProvider.getBaseFee('STX', BaseFeeType.NormalClaim);
-    // this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
-
-    // // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
-    // const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
-    // // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
-    // this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
-
-    // const currency = this.getCurrency('BTC');
-    // const invoice = await currency.lndClient?.addInvoice(invoiceAmount, undefined, `Mint NFT for ${nftAddress}`);
-    // this.logger.verbose(`s.1499 mintNFT invoice ${invoice?.paymentRequest}`);
-
-    // // create swap + enter info in db in a new table
-    // const id = generateId();
-    // this.directSwapRepository.addDirectSwap({
-    //   id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
-    // })
-    // this.eventHandler.emitSwapCreation(id);
-
-    // // listen to invoice payment
-    // this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
-    // // dont subscribe to each invoice separately - subscribing to all in lndclient
-    // // currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
-
-    // // call contract so user gets NFT upon LN payment
-    // // listener is started at the beginning which will handle this.
 
     return {
       result: true,
