@@ -57,7 +57,7 @@ tasks:
       SIGNER=ST3RXC1Q8MXYKPWRNQ6ZFAWSRY8PKRK8H4BW2F8F NONCE=3 npm run stacks:fund:signer
       sleep 1
       SIGNER=STJ4J7FPHJRJ4Y91650TG58K136JH64VFK6V6DD3 NONCE=4 npm run stacks:fund:signer
-      sleep 120
+      sleep 15
       sed -i 's/.stxswap/.stxswap_v10/g' contracts/triggerswap_v*.clar
       sed -i 's/.sip10swap/.sip10swap_v3/g' contracts/triggerswap_v*.clar
       npm run stacks:deploy
