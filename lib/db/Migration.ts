@@ -163,13 +163,13 @@ class Migration {
         break;
 
       // Database schema version 4 adds support for client balances
-      case 4:
+      case 3:
         this.logUpdatingTable('clients');
 
-        await this.sequelize.query('ALTER TABLE clients ADD localLNBalance INTEGER NULL)');
-        await this.sequelize.query('ALTER TABLE clients ADD remoteLNBalance INTEGER NULL)');
-        await this.sequelize.query('ALTER TABLE clients ADD onchainBalance INTEGER NULL)');
-        await this.sequelize.query('ALTER TABLE clients ADD StxBalance INTEGER NULL)');
+        await this.sequelize.query('ALTER TABLE clients ADD localLNBalance INTEGER NULL');
+        await this.sequelize.query('ALTER TABLE clients ADD remoteLNBalance INTEGER NULL');
+        await this.sequelize.query('ALTER TABLE clients ADD onchainBalance INTEGER NULL');
+        await this.sequelize.query('ALTER TABLE clients ADD StxBalance INTEGER NULL');
 
         await this.finishMigration(versionRow.version, currencies);
         break;

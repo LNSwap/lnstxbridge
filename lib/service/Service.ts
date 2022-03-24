@@ -60,6 +60,7 @@ import {
   reverseBuffer,
   splitPairId,
   getServiceDataDir,
+  stringify,
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
 import Balancer from './Balancer';
@@ -1730,7 +1731,7 @@ class Service {
 
       // check if provider was active recently
       // console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
-      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 60000) {
+      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 70000) {
         active = true;
       }
 
@@ -1754,7 +1755,7 @@ class Service {
       // console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
       // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
       // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
-      console.log('checks: ',
+      console.log('s.1758 provider checks: ',
       !provider[0].pairs.includes(req['pairId']),
       req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'],
       req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'],
@@ -1923,6 +1924,7 @@ class Service {
     const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
       id,
     });
+    this.logger.verbose(`c.1926 providerSwap ${providerUrl}, ${stringify(swapStatus.data)}`);
     return {swapStatus: swapStatus.data};
   }
 
