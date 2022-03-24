@@ -1715,6 +1715,10 @@ class Service {
       onchainRequested = parseFloat(req['quoteAmount']) * 10**8;
     }
 
+    // optional max fee accepted by the user
+    let maxFeePercent = 10;
+    if(req['maxFeePercent']) maxFeePercent = parseInt(req['maxFeePercent']);
+
     // let onchainRequested = 0;
     // if(req['onchainAmount']) onchainRequested = req['onchainAmount'];
 
@@ -1760,6 +1764,7 @@ class Service {
       req['invoiceAmount'] > provider[0].remoteLNBalance,
       stxRequested > provider[0].StxBalance,
       onchainRequested > provider[0].onchainBalance,
+      maxFeePercent < providerPairs[req['pairId']]['fees']['percentage'],
       !reachable,
       !active
       );
@@ -1776,6 +1781,7 @@ class Service {
       req['invoiceAmount'] > provider[0].remoteLNBalance ||
       stxRequested > provider[0].StxBalance ||
       onchainRequested > provider[0].onchainBalance ||
+      maxFeePercent < providerPairs[req['pairId']]['fees']['percentage'] ||
       !reachable ||
       !active);
 
