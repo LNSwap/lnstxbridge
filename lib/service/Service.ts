@@ -1691,6 +1691,7 @@ class Service {
     let provider;
     let providerPairs;
     let reachable = false;
+    let active = false;
 
     let satoshisRequested = 0;
     if(req['invoice']) {
@@ -1717,10 +1718,16 @@ class Service {
         throw new Error('No providers found');
       }
       provider = await this.clientRepository.findRandom();
+
+      // check if provider was active recently
+      console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
+      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 60000) {
+        active = true;
+      }
+
       providerPairs = JSON.parse(provider[0].pairs);
       // console.log('provider pair data: ', providerPairs, req,)
       // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
-
       try {
         let res;
         if(provider[0].url.includes('.onion')) {
@@ -1728,16 +1735,28 @@ class Service {
         } else {
           res = await axios.get(`${provider[0].url}/getpairs`);
         }
-        reachable = res.data.includes(req['pairId']);
+        reachable = res.data.pairs[req['pairId']].limits.maximal;
       } catch (error) {
-        console.log('provider unreachable, count: ', provider[0].url, count);
+        console.log('provider unreachable, count: ', provider[0].url, count, error.message);
       }
 
       // console.log('selecting client: ', req, req['pairId'], provider[0]);
 
-      console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
-      console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
-      console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
+      // console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
+      // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
+      // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
+      console.log('checks: ',
+      !provider[0].pairs.includes(req['pairId']),
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'],
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'],
+      // if stx -> ln - decode invoice amount and check if client can pay it
+      satoshisRequested > provider[0].localBalance,
+      // if ln -> stx - client should have inbound + stx funds
+      req['invoiceAmount'] > provider[0].remoteBalance,
+      stxRequested > provider[0].StxBalance,
+      !reachable,
+      !active
+      );
       count++;
     } while (
       // this should resolve to false in order for the selection to be completed!
@@ -1750,7 +1769,8 @@ class Service {
       // if ln -> stx - client should have inbound + stx funds
       req['invoiceAmount'] > provider[0].remoteBalance ||
       stxRequested > provider[0].StxBalance ||
-      !reachable);
+      !reachable ||
+      !active);
 
     // const allProviders = await this.clientRepository.getAll();
     // console.log('service.1582 allProviders ', allProviders);
@@ -1763,7 +1783,8 @@ class Service {
 
     let data;
     try {
-      console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req);
+      // , `${provider[0].url}/createswap`, req
+      console.log('service.1590 post ',swapType);
       let response;
       if(provider[0].url.includes('.onion')) {
         response = await tor.post(`${provider[0].url}/createswap`, req);
@@ -1772,7 +1793,7 @@ class Service {
       }
       data = response.data;
 
-      console.log('service.1602 response.data ', response.data);
+      // console.log('service.1602 response.data ', response.data);
 
       // once created save info to aggregator db
       this.providerSwapRepository.addProviderSwap({
@@ -1782,8 +1803,11 @@ class Service {
       });
 
     } catch (error) {
-      console.log('service.1593 error ', error.message);
+      console.log('service.1593 error ', error.message, error.response.data);
+      data = error.response.data;
       this.clientRepository.incrementFailure(provider[0], 1);
+      // Swap create failed
+      throw new Error(`${error.response.data.error}`);
     }
 
     return {response: data};
@@ -1795,7 +1819,7 @@ class Service {
     // invoice: string,
     result: boolean,
   }> => {
-    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)}`);
+    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)} ${localLNBalance}, ${remoteLNBalance}, ${onchainBalance}, ${StxBalance}`);
 
     // if(stxAmount < 0) {
     //   throw Errors.MINT_COST_MISMATCH();
