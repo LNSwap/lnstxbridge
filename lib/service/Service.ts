@@ -1729,7 +1729,7 @@ class Service {
       provider = await this.clientRepository.findRandom();
 
       // check if provider was active recently
-      console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
+      // console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
       if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 60000) {
         active = true;
       }
@@ -1750,7 +1750,7 @@ class Service {
       }
 
       // console.log('selecting client: ', req, req['pairId'], provider[0]);
-      // console.log('satoshisrequested vs provider[0].localLNBalance, ', satoshisRequested, provider[0].localLNBalance,);
+      // console.log('maxFeePercent vs provider fee, ', maxFeePercent, providerPairs[req['pairId']]['fees']['percentage'],);
       // console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
       // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
       // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
