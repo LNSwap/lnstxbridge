@@ -1710,6 +1710,11 @@ class Service {
       console.log('rate ', req['pairId'], req['orderSide'], false, rate, req['invoiceAmount'], stxRequested);
     }
 
+    let onchainRequested = 0;
+    if(req['pairId'] === 'BTC/STX' && req['quoteAmount'] && req['orderSide'] ==='buy') {
+      onchainRequested = parseFloat(req['quoteAmount']) * 10**8;
+    }
+
     // let onchainRequested = 0;
     // if(req['onchainAmount']) onchainRequested = req['onchainAmount'];
 
@@ -1741,7 +1746,7 @@ class Service {
       }
 
       // console.log('selecting client: ', req, req['pairId'], provider[0]);
-
+      // console.log('satoshisrequested vs provider[0].localLNBalance, ', satoshisRequested, provider[0].localLNBalance,);
       // console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
       // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
       // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
@@ -1750,10 +1755,11 @@ class Service {
       req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'],
       req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'],
       // if stx -> ln - decode invoice amount and check if client can pay it
-      satoshisRequested > provider[0].localBalance,
+      satoshisRequested > provider[0].localLNBalance,
       // if ln -> stx - client should have inbound + stx funds
-      req['invoiceAmount'] > provider[0].remoteBalance,
+      req['invoiceAmount'] > provider[0].remoteLNBalance,
       stxRequested > provider[0].StxBalance,
+      onchainRequested > provider[0].onchainBalance,
       !reachable,
       !active
       );
@@ -1765,10 +1771,11 @@ class Service {
       req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] ||
       req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'] ||
       // if stx -> ln - decode invoice amount and check if client can pay it
-      satoshisRequested > provider[0].localBalance ||
+      satoshisRequested > provider[0].localLNBalance ||
       // if ln -> stx - client should have inbound + stx funds
-      req['invoiceAmount'] > provider[0].remoteBalance ||
+      req['invoiceAmount'] > provider[0].remoteLNBalance ||
       stxRequested > provider[0].StxBalance ||
+      onchainRequested > provider[0].onchainBalance ||
       !reachable ||
       !active);
 
