@@ -99,15 +99,15 @@ class ContractEventHandler extends EventEmitter {
     const stacksInfo = await getInfo();
     const currentTip = stacksInfo.stacks_tip_height;
 
-    for (let index = startHeight; index < currentTip; index++) {
-      // this.logger.error(`ceh.79 rescan loop ${index}`);
+    for (let index = startHeight; index <= currentTip; index++) {
+      this.logger.error(`ceh.79 rescan loop start at ${index} until ${currentTip}`);
       const stacksBlockResults = await getStacksContractTransactions(contract,1,undefined,index);
       // this.logger.error(`ceh.82 stacksBlockResults ` + JSON.stringify(stacksBlockResults));
 
       for (let k = 0; k < stacksBlockResults.length; k++) {
         const tx = stacksBlockResults[k];
         if(tx.tx_status && tx.tx_status === 'success' && tx.tx_type === 'contract_call'){
-          this.logger.verbose(`ceh.86 contractcall during rescan ${index} ` + JSON.stringify(stacksBlockResults));
+          this.logger.verbose(`ceh.86 contractcall during rescan ${index} ` + JSON.stringify(tx));
           // go get the event? - no need checkTx already emits required events!
           this.checkTx(tx.tx_id);
 
