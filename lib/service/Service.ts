@@ -60,6 +60,7 @@ import {
   reverseBuffer,
   splitPairId,
   getServiceDataDir,
+  stringify,
 } from '../Utils';
 import ReverseSwap from '../../lib/db/models/ReverseSwap';
 import Balancer from './Balancer';
@@ -1691,15 +1692,52 @@ class Service {
     let provider;
     let providerPairs;
     let reachable = false;
+    let active = false;
+
+    let satoshisRequested = 0;
+    if(req['invoice']) {
+      satoshisRequested = (await decodeInvoice(req['invoice'])).satoshis;
+      console.log('satoshisRequested ', satoshisRequested);
+    }
+
+    let stxRequested = 0;
+    if(req['invoiceAmount']) {
+      const rate = getRate(
+        this.rateProvider.pairs.get(req['pairId'])!.rate,
+        req['orderSide'],
+        true
+      );
+      stxRequested = (req['invoiceAmount'] / 100) * rate; //mstx 10^-6 -> sats 10^8
+      console.log('rate ', req['pairId'], req['orderSide'], false, rate, req['invoiceAmount'], stxRequested);
+    }
+
+    let onchainRequested = 0;
+    if(req['pairId'] === 'BTC/STX' && req['quoteAmount'] && req['orderSide'] ==='buy') {
+      onchainRequested = parseFloat(req['quoteAmount']) * 10**8;
+    }
+
+    // optional max fee accepted by the user
+    let maxFeePercent = 10;
+    if(req['maxFeePercent']) maxFeePercent = parseInt(req['maxFeePercent']);
+
+    // let onchainRequested = 0;
+    // if(req['onchainAmount']) onchainRequested = req['onchainAmount'];
+
     do {
       if(count > allClients.length) {
         throw new Error('No providers found');
       }
       provider = await this.clientRepository.findRandom();
+
+      // check if provider was active recently
+      // console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
+      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 70000) {
+        active = true;
+      }
+
       providerPairs = JSON.parse(provider[0].pairs);
       // console.log('provider pair data: ', providerPairs, req,)
       // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
-
       try {
         let res;
         if(provider[0].url.includes('.onion')) {
@@ -1707,16 +1745,46 @@ class Service {
         } else {
           res = await axios.get(`${provider[0].url}/getpairs`);
         }
-        reachable = res.data.includes(req['pairId']);
+        reachable = res.data.pairs[req['pairId']].limits.maximal;
       } catch (error) {
-        console.log('provider unreachable: ', provider[0].url);
+        console.log('provider unreachable, count: ', provider[0].url, count, error.message);
       }
 
+      // console.log('selecting client: ', req, req['pairId'], provider[0]);
+      // console.log('maxFeePercent vs provider fee, ', maxFeePercent, providerPairs[req['pairId']]['fees']['percentage'],);
+      // console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
+      // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
+      // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
+      console.log('s.1758 provider checks: ',
+      !provider[0].pairs.includes(req['pairId']),
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'],
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'],
+      // if stx -> ln - decode invoice amount and check if client can pay it
+      satoshisRequested > provider[0].localLNBalance,
+      // if ln -> stx - client should have inbound + stx funds
+      req['invoiceAmount'] > provider[0].remoteLNBalance,
+      stxRequested > provider[0].StxBalance,
+      onchainRequested > provider[0].onchainBalance,
+      maxFeePercent < providerPairs[req['pairId']]['fees']['percentage'],
+      !reachable,
+      !active
+      );
       count++;
-    } while (provider[0].pairs.includes(req['pairId']) &&
-      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal'] &&
-      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] &&
-      reachable);
+    } while (
+      // this should resolve to false in order for the selection to be completed!
+      // reselect client if any of these conditions are true
+      !provider[0].pairs.includes(req['pairId']) ||
+      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] ||
+      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'] ||
+      // if stx -> ln - decode invoice amount and check if client can pay it
+      satoshisRequested > provider[0].localLNBalance ||
+      // if ln -> stx - client should have inbound + stx funds
+      req['invoiceAmount'] > provider[0].remoteLNBalance ||
+      stxRequested > provider[0].StxBalance ||
+      onchainRequested > provider[0].onchainBalance ||
+      maxFeePercent < providerPairs[req['pairId']]['fees']['percentage'] ||
+      !reachable ||
+      !active);
 
     // const allProviders = await this.clientRepository.getAll();
     // console.log('service.1582 allProviders ', allProviders);
@@ -1729,7 +1797,8 @@ class Service {
 
     let data;
     try {
-      console.log('service.1590 post ',swapType, `${provider[0].url}/createswap`, req);
+      // , `${provider[0].url}/createswap`, req
+      console.log('service.1590 post ',swapType);
       let response;
       if(provider[0].url.includes('.onion')) {
         response = await tor.post(`${provider[0].url}/createswap`, req);
@@ -1738,7 +1807,7 @@ class Service {
       }
       data = response.data;
 
-      console.log('service.1602 response.data ', response.data);
+      // console.log('service.1602 response.data ', response.data);
 
       // once created save info to aggregator db
       this.providerSwapRepository.addProviderSwap({
@@ -1748,24 +1817,27 @@ class Service {
       });
 
     } catch (error) {
-      console.log('service.1593 error ', error.message);
+      console.log('service.1593 error ', error.message, error.response.data);
+      data = error.response.data;
       this.clientRepository.incrementFailure(provider[0], 1);
+      // Swap create failed
+      throw new Error(`${error.response.data.error}`);
     }
 
     return {response: data};
   };
 
   // eslint-disable-next-line @typescript-eslint/ban-types
-  public registerClient = async (stacksAddress: string, nodeId: string, url: string, pairs: object,): Promise<{
+  public registerClient = async (apiVersion: string, stacksAddress: string, nodeId: string, url: string, pairs: object, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number): Promise<{
     // id: string,
     // invoice: string,
     result: boolean,
   }> => {
-    this.logger.verbose(`s.1564 registerClient with ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)}`);
+    this.logger.verbose(`s.1564 registerClient with ${apiVersion} ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)} ${localLNBalance}, ${remoteLNBalance}, ${onchainBalance}, ${StxBalance}`);
 
-    // if(stxAmount < 0) {
-    //   throw Errors.MINT_COST_MISMATCH();
-    // }
+    if(apiVersion !== (process.env.apiVersion || '1.1.1')) {
+      throw new Error('apiVersion mismatch, update your client');
+    }
 
     // check if url is in access list - limit providers that can join the network
     const ACLfile = path.join(getServiceDataDir('lnstx-aggregator'), 'accesslist.txt');
@@ -1788,7 +1860,7 @@ class Service {
     const strPairs = JSON.stringify(pairs);
     // dont reject re-registration just update?
     if(client.length > 0) {
-      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs);
+      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs,localLNBalance, remoteLNBalance, onchainBalance, StxBalance,);
       // throw new Error('Client url exists already');
     } else {
       const id = generateId();
@@ -1801,59 +1873,15 @@ class Service {
         pairs: strPairs,
         success: 0,
         fail: 0,
+        localLNBalance,
+        remoteLNBalance,
+        onchainBalance,
+        StxBalance,
       });
     }
 
-    // // check contract signature to see how much it would cost to mint
-    // // find a previous call of the same function and add up stx transfers of that call
-    // const mintCostStx = stxAmount * 10**6; // 10000000;
-    // const calcMintCostStx = await calculateStxOutTx(nftAddress, contractSignature!);
-    // if(calcMintCostStx && calcMintCostStx > mintCostStx) {
-    //   this.logger.error(`s.1492 calcMintCostStx issue ${calcMintCostStx} > ${mintCostStx}`);
-    //   throw Errors.MINT_COST_MISMATCH();
-    // }
-    // // this.logger.verbose(`s.1484 mintCostStx ${mintCostStx}`);
-
-    // // TODO: maybe add whitelisted NFT contracts to avoid issues?
-
-    // // add a check to make sure lnswap signer has enough funds before creating swap
-    // const signerBalances = await getAddressAllBalances();
-    // console.log('s.1504 signerBalances ', signerBalances);
-    // if (mintCostStx > signerBalances['STX']) {
-    //   throw Errors.EXCEEDS_SWAP_LIMIT();
-    // }
-
-    // // convert to BTC + fees + generate LN invoice
-    // const sendingAmountRate = this.rateProvider.rateCalculator.calculateRate('BTC', 'STX');
-    // this.logger.verbose(`s.1488 sendingAmountRate ${sendingAmountRate}`); //18878.610534264677
-
-    // const percentageFee = this.rateProvider.feeProvider.getPercentageFee('BTC/STX');
-    // const baseFee = this.rateProvider.feeProvider.getBaseFee('STX', BaseFeeType.NormalClaim);
-    // this.logger.verbose(`s.1492 percentageFee ${percentageFee} baseFee ${baseFee}`); // 0.05 baseFee 87025
-
-    // // add cost + fee, multiply by 100 (mstx -> satoshi), add percentage fee and convert to bitcoin
-    // const invoiceAmount = Math.ceil((mintCostStx + baseFee) * 100 * (1+percentageFee) / sendingAmountRate)
-    // // const invoiceAmount = this.calculateInvoiceAmount(0, sendingAmountRate, mintCostStx, baseFee, percentageFee);
-    // this.logger.verbose(`s.1495 invoiceAmount ${invoiceAmount}`);
-
-    // const currency = this.getCurrency('BTC');
-    // const invoice = await currency.lndClient?.addInvoice(invoiceAmount, undefined, `Mint NFT for ${nftAddress}`);
-    // this.logger.verbose(`s.1499 mintNFT invoice ${invoice?.paymentRequest}`);
-
-    // // create swap + enter info in db in a new table
-    // const id = generateId();
-    // this.directSwapRepository.addDirectSwap({
-    //   id, nftAddress, userAddress, contractSignature, invoice: invoice!.paymentRequest, mintCostStx, status: 'swap.created'
-    // })
-    // this.eventHandler.emitSwapCreation(id);
-
-    // // listen to invoice payment
-    // this.logger.verbose(`s.1517 paymentHash ${decodeInvoice(invoice!.paymentRequest).paymentHash!}`);
-    // // dont subscribe to each invoice separately - subscribing to all in lndclient
-    // // currency.lndClient!.subscribeSingleInvoice(getHexBuffer(decodeInvoice(invoice!.paymentRequest).paymentHash!));
-
-    // // call contract so user gets NFT upon LN payment
-    // // listener is started at the beginning which will handle this.
+    // update min-max fee spread on pairs
+    // this.rateProvider.updateMinMaxFees();
 
     return {
       result: true,
@@ -1896,6 +1924,7 @@ class Service {
     const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
       id,
     });
+    this.logger.verbose(`c.1926 providerSwap ${providerUrl}, ${stringify(swapStatus.data)}`);
     return {swapStatus: swapStatus.data};
   }
 

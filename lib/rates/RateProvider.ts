@@ -43,6 +43,8 @@ type PairType = {
       quoteAsset: MinerFees,
     };
   };
+  minFee?: number;
+  maxFee?: number;
 };
 
 class RateProvider {
@@ -327,6 +329,17 @@ class RateProvider {
     }
 
     await Promise.all(promises);
+  }
+
+  public updateMinMaxFees = (pairId: string, minFee?: number, maxFee?: number):boolean => {
+    console.log('rp.335 pairId: string, minFee?: number, maxFee?: number ', pairId, minFee, maxFee);
+    console.log('rp.336 this.pairs ', this.pairs, );
+
+    this.pairs.forEach(async (pair) => {
+      console.log('foreach pair: ', pair);
+      // const id = getPairId(pair);
+    });
+    return true;
   }
 }
 

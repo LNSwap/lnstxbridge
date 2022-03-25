@@ -12,6 +12,7 @@ tasks:
       echo "http://localhost:9008" > /home/gitpod/.lnstx-aggregator/accesslist.txt
       npm i
       npm run docker:regtest
+      sleep 30
     # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
     # modify regtest container? to have prune=5000 and use mempool api
@@ -56,14 +57,14 @@ tasks:
       SIGNER=ST3RXC1Q8MXYKPWRNQ6ZFAWSRY8PKRK8H4BW2F8F NONCE=3 npm run stacks:fund:signer
       sleep 1
       SIGNER=STJ4J7FPHJRJ4Y91650TG58K136JH64VFK6V6DD3 NONCE=4 npm run stacks:fund:signer
-      sleep 120
+      sleep 15
       sed -i 's/.stxswap/.stxswap_v10/g' contracts/triggerswap_v*.clar
       sed -i 's/.sip10swap/.sip10swap_v3/g' contracts/triggerswap_v*.clar
       npm run stacks:deploy
       git stash
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
   - init: |
-        git clone -b aggregator https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
+        git clone https://github.com/pseudozach/lnstxbridge-frontend.git /workspace/lnstxbridge-frontend
         export REACT_APP_BOLTZ_API=https://9007-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_API=https://3999-${GITPOD_WORKSPACE_URL:8}
         export REACT_APP_STACKS_NETWORK_TYPE=mocknet
@@ -102,6 +103,18 @@ tasks:
         sed -i 's#/createswap#/zcreateswap#g' /workspace/lnswap-widget/src/components/Widget/Widget.js
     command: npm run start
   - init: |
+        git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
+        cd /workspace/lnstxbridge-dashboard
+        npm i
+        export NEXT_PUBLIC_BACKEND_URL="http://localhost:9008"
+    command: |
+        npm run dev
+  - init: |
+        git clone https://github.com/pseudozach/umbrel /workspace/umbrel
+        cd /workspace/umbrel
+    command: |
+        echo "umbrel fork is cloned"
+  - init: |
         git clone https://github.com/pseudozach/lnstxbridge-client /workspace/lnstxbridge-client
         cd /workspace/lnstxbridge-client
         sleep 150
@@ -121,13 +134,6 @@ tasks:
       # sed -i 's#gitpodapiurl#https://3999-'"$GITPOD_CORE_URL"'#g' /workspace/lnswap-widget/src/config.js
     command: |
       npm run dev
-  - init: |
-        git clone https://github.com/pseudozach/lnstxbridge-dashboard /workspace/lnstxbridge-dashboard
-        cd /workspace/lnstxbridge-dashboard
-        npm i
-      # export NEXT_PUBLIC_BACKEND_URL="http://localhost:9002"
-    command: |
-        npm run dev
 # List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
 ports:
   - port: 3000

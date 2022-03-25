@@ -23,6 +23,5 @@
 * clone [lnstxbridge-client](https://github.com/pseudozach/lnstxbridge-client.git) repo and start it with `aggregatorUrl` parameter set to this bridge IP:port.
 
 ## use 
-* API is available at http://localhost:9002, e.g. curl http://localhost:9002/getpairs  
+* API is available at http://localhost:9007, e.g. `curl http://localhost:9007/getpairs`  
 refer to [API docs](https://docs.boltz.exchange/en/latest/api/)
-* Deploy frontend (available at https://github.com/pseudozach/lnstxbridge-frontend)
