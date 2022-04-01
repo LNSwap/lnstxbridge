@@ -44,6 +44,34 @@ class ClientRepository {
     });
   }
 
+  public findMax = (symbol: string): Promise<Client[]> => {
+    switch (symbol) {
+      case 'STX':
+        return Client.max('StxBalance');
+
+      case 'BTC':
+        return Client.max('onchainBalance');
+
+      case 'LNIN':
+        return Client.max('remoteLNBalance');
+
+      case 'LNOUT':
+        return Client.max('localLNBalance');
+
+      default:
+        return Client.max('StxBalance');
+    }
+  }
+
+  public getAllMax = async (): Promise<{stxmax: number | undefined, btcmax: number | undefined, lninmax: number | undefined, lnoutmax: number | undefined}> => {
+    return {
+      stxmax: await Client.max('StxBalance'),
+      btcmax: await Client.max('onchainBalance'),
+      lninmax: await Client.max('remoteLNBalance'),
+      lnoutmax: await Client.max('localLNBalance')
+    };
+  }
+
   public getAll = (): Promise<Client[]> => {
     return Client.findAll();
   }
