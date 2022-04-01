@@ -145,13 +145,20 @@ class Controller {
     });
   }
 
-  public getPairs = (_: Request, res: Response): void => {
-    const data = this.service.getPairs();
+  public getPairs = async (_: Request, res: Response): Promise<void> => {
+    const data = await this.service.getPairs();
 
+    // eslint-disable-next-line prefer-const
+    let pairsObject = mapToObject(data.pairs);
+    // console.log('controller.151 data ', pairsObject, data.clients);
+    pairsObject['BTC/STX'].limits.maximal = data.clients.stxmax; // convert from clients mstx balance to boltz 10**8
+
+    // console.log('aggregator controller returning::: ', pairsObject);
     this.successResponse(res, {
       info: data.info,
       warnings: data.warnings,
-      pairs: mapToObject(data.pairs),
+      // pairs: mapToObject(data.pairs),
+      pairs: pairsObject,
     });
   }
 
