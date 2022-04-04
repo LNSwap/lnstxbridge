@@ -1941,9 +1941,25 @@ class Service {
     });
 
     const providerUrl = providerSwap?.providerUrl;
-    const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
-      id,
-    });
+
+    let swapStatus;
+    try {
+      if(providerUrl!.includes('.onion')) {
+        swapStatus = await tor.post(`${providerUrl}/swapstatus`, {
+          id,
+        });
+      } else {
+        swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+          id,
+        });
+      }
+    } catch (error) {
+      console.log('service.2001 unreachable, error: ', providerUrl, error.message);
+    }
+
+    // const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+    //   id,
+    // });
     this.logger.verbose(`c.1926 providerSwap ${providerUrl}, ${stringify(swapStatus.data)}`);
     return {swapStatus: swapStatus.data};
   }
@@ -1983,10 +1999,28 @@ class Service {
     });
 
     const providerUrl = providerSwap?.providerUrl;
-    const broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
-      id,
-      tx,
-    });
+
+    let broadcastResponse;
+    try {
+      if(providerUrl!.includes('.onion')) {
+        broadcastResponse = await tor.post(`${providerUrl}/broadcastsponsoredtx`, {
+          id,
+          tx,
+        });
+      } else {
+        broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
+          id,
+          tx,
+        });
+      }
+    } catch (error) {
+      console.log('service.2001 unreachable, error: ', providerUrl, error.message);
+    }
+
+    // const broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
+    //   id,
+    //   tx,
+    // });
     return broadcastResponse.data;
   }
 
