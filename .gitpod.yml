@@ -12,7 +12,7 @@ tasks:
       echo "http://localhost:9008" > /home/gitpod/.lnstx-aggregator/accesslist.txt
       npm i
       npm run docker:regtest
-      sleep 30
+      sleep 60
     # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
     # modify regtest container? to have prune=5000 and use mempool api
