@@ -4,9 +4,6 @@ authors = []
 description = ""
 telemetry = false
 requirements = []
-analysis = ["check_checker"]
-costs_version = 2
-
 [contracts.claim-for-trait]
 path = "contracts/claim-for-trait.clar"
 depends_on = []
@@ -32,9 +29,26 @@ path = "contracts/stxswap_v10.clar"
 depends_on = []
 
 [contracts.triggerswap]
-path = "contracts/triggerswap_v5.clar"
+path = "contracts/triggerswap_v6.clar"
 depends_on = ["sip-010-trait", "usda-token", "nft"]
+
+[contracts.trustless-rewards]
+path = "contracts/trustless-rewards.clar"
+depends_on = []
 
 [contracts.usda-token]
 path = "contracts/usda-token.clar"
 depends_on = ["sip-010-trait"]
+
+[repl]
+costs_version = 2
+parser_version = 2
+
+[repl.analysis]
+passes = ["check_checker"]
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
