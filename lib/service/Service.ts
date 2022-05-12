@@ -1779,6 +1779,7 @@ class Service {
       !provider[0].pairs.includes(req['pairId']),
       req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'],
       req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'],
+      // TODO: Need more checks when a provider has funds but has higher configured minimum so rejects a swap!
       // if stx -> ln - decode invoice amount and check if client can pay it
       satoshisRequested > provider[0].localLNBalance,
       // if ln -> stx - client should have inbound + stx funds
@@ -1812,13 +1813,14 @@ class Service {
     // console.log('service.1582 randomProvider ', randomProvider);
 
     if(provider.length == 0) {
+      console.log('No providers found');
       throw new Error('No providers found');
     }
 
     let data;
     try {
       // , `${provider[0].url}/createswap`, req
-      console.log('service.1590 post ',swapType);
+      console.log('service.1590 post ',swapType, provider[0].url);
       let response;
       if(provider[0].url.includes('.onion')) {
         response = await tor.post(`${provider[0].url}/createswap`, req);
