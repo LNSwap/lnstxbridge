@@ -127,7 +127,7 @@ class FeeProvider {
   }
 
   public updateMinerFees = async (chainCurrency: string): Promise<void> => {
-    // this.logger.error("feeprovider.125 chainCurrency "+ chainCurrency);
+    this.logger.error('feeprovider.125 chainCurrency '+ chainCurrency);
 
     const feeMap = await this.getFeeEstimation(chainCurrency);
 
@@ -178,6 +178,7 @@ class FeeProvider {
         break;
       }
 
+      default:
       case 'USDA':
       case 'STX': {
         // const relativeFee = feeMap.get(chainCurrency)!;
@@ -215,30 +216,30 @@ class FeeProvider {
         break;
       }
 
-      // If it is not BTC, LTC or ETH, it is an ERC20 token
-      default: {
-        const relativeFee = feeMap.get('ETH')!;
-        const rate = this.dataAggregator.latestRates.get(getPairId({ base: 'ETH', quote: chainCurrency }))!;
+      // // If it is not BTC, LTC or ETH, it is an ERC20 token
+      // default: {
+      //   const relativeFee = feeMap.get('ETH')!;
+      //   const rate = this.dataAggregator.latestRates.get(getPairId({ base: 'ETH', quote: chainCurrency }))!;
 
-        const claimCost = this.calculateTokenGasCosts(
-          rate,
-          relativeFee,
-          FeeProvider.gasUsage.ERC20Swap.claim,
-        );
+      //   const claimCost = this.calculateTokenGasCosts(
+      //     rate,
+      //     relativeFee,
+      //     FeeProvider.gasUsage.ERC20Swap.claim,
+      //   );
 
-        this.minerFees.set(chainCurrency, {
-          normal: claimCost,
-          reverse: {
-            claim: claimCost,
-            lockup: this.calculateTokenGasCosts(
-              rate,
-              relativeFee,
-              FeeProvider.gasUsage.ERC20Swap.lockup,
-            )
-          }
-        });
-        break;
-      }
+      //   this.minerFees.set(chainCurrency, {
+      //     normal: claimCost,
+      //     reverse: {
+      //       claim: claimCost,
+      //       lockup: this.calculateTokenGasCosts(
+      //         rate,
+      //         relativeFee,
+      //         FeeProvider.gasUsage.ERC20Swap.lockup,
+      //       )
+      //     }
+      //   });
+      //   break;
+      // }
     }
   }
 
