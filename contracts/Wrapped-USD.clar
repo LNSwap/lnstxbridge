@@ -9,9 +9,9 @@
 (define-constant PERMISSION_DENIED_ERROR u403)
 
 ;; Data variables specific to the deployed token contract
-(define-data-var token-name (string-ascii 32) "")
-(define-data-var token-symbol (string-ascii 32) "")
-(define-data-var token-decimals uint u0)
+(define-data-var token-name (string-ascii 32) "Wrapped USD")
+(define-data-var token-symbol (string-ascii 32) "xUSD")
+(define-data-var token-decimals uint u8)
 
 ;; Track who deployed the token and whether it has been initialized
 (define-data-var deployer-principal principal tx-sender)
