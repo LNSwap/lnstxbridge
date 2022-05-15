@@ -151,3 +151,6 @@ ports:
   - port: 8080
     onOpen: ignore
     visibility: public
+  - port: 8000
+    onOpen: ignore
+    visibility: public
