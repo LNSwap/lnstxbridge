@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import Logger from '../Logger';
 import { PairConfig } from '../consts/Types';
-import DataAggregator from './data/DataAggregator';
+// import DataAggregator from './data/DataAggregator';
 import { BaseFeeType, OrderSide } from '../consts/Enums';
 import { etherDecimals, gweiDecimals } from '../consts/Consts';
 import { getChainCurrency, getPairId, mapToObject, splitPairId, stringify } from '../Utils';
@@ -54,7 +54,7 @@ class FeeProvider {
 
   constructor(
     private logger: Logger,
-    private dataAggregator: DataAggregator,
+    // private dataAggregator: DataAggregator,
     private getFeeEstimation: (symbol: string) => Promise<Map<string, number>>,
   ) {}
 
@@ -243,9 +243,9 @@ class FeeProvider {
     }
   }
 
-  private calculateTokenGasCosts = (rate: number, gasPrice: number, gasUsage: number) => {
-    return Math.ceil(rate * this.calculateEtherGasCost(gasPrice, gasUsage));
-  }
+  // private calculateTokenGasCosts = (rate: number, gasPrice: number, gasUsage: number) => {
+  //   return Math.ceil(rate * this.calculateEtherGasCost(gasPrice, gasUsage));
+  // }
 
   private calculateEtherGasCost = (gasPrice: number, gasUsage: number) => {
     return BigNumber.from(gasPrice).mul(gweiDecimals).mul(gasUsage).div(etherDecimals).toNumber();

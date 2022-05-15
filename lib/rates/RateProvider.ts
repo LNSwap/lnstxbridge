@@ -76,7 +76,8 @@ class RateProvider {
     private currencies: Map<string, Currency>,
     private getFeeEstimation: (symbol: string) => Promise<Map<string, number>>,
   ) {
-    this.feeProvider = new FeeProvider(this.logger, this.dataAggregator, this.getFeeEstimation);
+    // , this.dataAggregator
+    this.feeProvider = new FeeProvider(this.logger, this.getFeeEstimation);
     this.parseCurrencies(Array.from(currencies.values()));
   }
 
