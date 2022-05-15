@@ -339,7 +339,7 @@ class Service {
    * Gets all supported pairs and their conversion rates
    */
   //  clients: {stxmax: number | undefined, btcmax: number | undefined, lninmax: number | undefined, lnoutmax: number | undefined}
-  public getPairs = async (): Promise<{ info: ServiceInfo[]; warnings: ServiceWarning[]; pairs: Map<string, PairType>; clients: {stxmax: number | undefined}}> => {
+  public getPairs = async (): Promise<{ info: ServiceInfo[]; warnings: ServiceWarning[]; pairs: Map<string, PairType>; clients: {stxmax: number | undefined, xusdmax: number | undefined}}> => {
     const info: ServiceInfo[] = [];
     const warnings: ServiceWarning[] = [];
 
@@ -363,19 +363,21 @@ class Service {
 
     // get pairs from all clients - find the max amounts
     let stxmax = 0;
+    let xusdmax = 0;
     const allclients = await this.clientRepository.getAll();
     for (let index = 0; index < allclients.length; index++) {
       const client = allclients[index];
       const clientpair = JSON.parse(client.pairs);
-      // console.log('service.367 clientpair ', clientpair);
+      console.log('service.367 clientpair ', clientpair);
       stxmax = Math.max(stxmax, clientpair['BTC/STX'].limits.maximal);
+      xusdmax = Math.max(xusdmax, clientpair['BTC/XUSD'].limits.maximal);
     }
 
     return {
       info,
       warnings,
       pairs: this.rateProvider.pairs,
-      clients: {stxmax}
+      clients: {stxmax, xusdmax}
     };
   }
 
