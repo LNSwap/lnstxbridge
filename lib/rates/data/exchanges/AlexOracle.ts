@@ -42,7 +42,7 @@ class AlexOracle implements Exchange {
     // console.log('AlexOracle.58 options: ', options, options.functionArgs);
     try {
       const result:any = await callReadOnlyFunction(options);
-      console.log('AlexOracle.62 returning ', baseAsset, quoteAsset, cvToJSON(result).value.value);
+      // console.log('AlexOracle.62 returning ', baseAsset, quoteAsset, cvToJSON(result).value.value);
       return parseInt(cvToJSON(result).value.value)/10**8;
     } catch(error) {
       throw 'Alex Oracle failure';
