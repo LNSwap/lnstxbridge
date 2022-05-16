@@ -4,6 +4,11 @@ authors = []
 description = ""
 telemetry = false
 requirements = []
+
+[contracts.Wrapped-USD]
+path = "contracts/Wrapped-USD.clar"
+depends_on = ["restricted-token-trait", "sip-010-trait"]
+
 [contracts.claim-for-trait]
 path = "contracts/claim-for-trait.clar"
 depends_on = []
@@ -14,6 +19,10 @@ depends_on = ["nft-trait", "usda-token"]
 
 [contracts.nft-trait]
 path = "contracts/nft-trait.clar"
+depends_on = []
+
+[contracts.restricted-token-trait]
+path = "contracts/restricted-token-trait.clar"
 depends_on = []
 
 [contracts.sip-010-trait]

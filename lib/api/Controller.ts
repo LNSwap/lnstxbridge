@@ -152,6 +152,7 @@ class Controller {
     let pairsObject = mapToObject(data.pairs);
     // console.log('controller.151 data ', pairsObject, data.clients);
     pairsObject['BTC/STX'].limits.maximal = data.clients.stxmax; // convert from clients mstx balance to boltz 10**8
+    pairsObject['BTC/XUSD'].limits.maximal = data.clients.xusdmax; // convert from clients mstx balance to boltz 10**8
 
     // console.log('aggregator controller returning::: ', pairsObject);
     this.successResponse(res, {

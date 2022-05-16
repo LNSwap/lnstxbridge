@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import Logger from '../Logger';
 import { PairConfig } from '../consts/Types';
-import DataAggregator from './data/DataAggregator';
+// import DataAggregator from './data/DataAggregator';
 import { BaseFeeType, OrderSide } from '../consts/Enums';
 import { etherDecimals, gweiDecimals } from '../consts/Consts';
 import { getChainCurrency, getPairId, mapToObject, splitPairId, stringify } from '../Utils';
@@ -54,7 +54,7 @@ class FeeProvider {
 
   constructor(
     private logger: Logger,
-    private dataAggregator: DataAggregator,
+    // private dataAggregator: DataAggregator,
     private getFeeEstimation: (symbol: string) => Promise<Map<string, number>>,
   ) {}
 
@@ -127,7 +127,7 @@ class FeeProvider {
   }
 
   public updateMinerFees = async (chainCurrency: string): Promise<void> => {
-    // this.logger.error("feeprovider.125 chainCurrency "+ chainCurrency);
+    this.logger.error('feeprovider.125 chainCurrency '+ chainCurrency);
 
     const feeMap = await this.getFeeEstimation(chainCurrency);
 
@@ -178,6 +178,7 @@ class FeeProvider {
         break;
       }
 
+      default:
       case 'USDA':
       case 'STX': {
         // const relativeFee = feeMap.get(chainCurrency)!;
@@ -215,36 +216,36 @@ class FeeProvider {
         break;
       }
 
-      // If it is not BTC, LTC or ETH, it is an ERC20 token
-      default: {
-        const relativeFee = feeMap.get('ETH')!;
-        const rate = this.dataAggregator.latestRates.get(getPairId({ base: 'ETH', quote: chainCurrency }))!;
+      // // If it is not BTC, LTC or ETH, it is an ERC20 token
+      // default: {
+      //   const relativeFee = feeMap.get('ETH')!;
+      //   const rate = this.dataAggregator.latestRates.get(getPairId({ base: 'ETH', quote: chainCurrency }))!;
 
-        const claimCost = this.calculateTokenGasCosts(
-          rate,
-          relativeFee,
-          FeeProvider.gasUsage.ERC20Swap.claim,
-        );
+      //   const claimCost = this.calculateTokenGasCosts(
+      //     rate,
+      //     relativeFee,
+      //     FeeProvider.gasUsage.ERC20Swap.claim,
+      //   );
 
-        this.minerFees.set(chainCurrency, {
-          normal: claimCost,
-          reverse: {
-            claim: claimCost,
-            lockup: this.calculateTokenGasCosts(
-              rate,
-              relativeFee,
-              FeeProvider.gasUsage.ERC20Swap.lockup,
-            )
-          }
-        });
-        break;
-      }
+      //   this.minerFees.set(chainCurrency, {
+      //     normal: claimCost,
+      //     reverse: {
+      //       claim: claimCost,
+      //       lockup: this.calculateTokenGasCosts(
+      //         rate,
+      //         relativeFee,
+      //         FeeProvider.gasUsage.ERC20Swap.lockup,
+      //       )
+      //     }
+      //   });
+      //   break;
+      // }
     }
   }
 
-  private calculateTokenGasCosts = (rate: number, gasPrice: number, gasUsage: number) => {
-    return Math.ceil(rate * this.calculateEtherGasCost(gasPrice, gasUsage));
-  }
+  // private calculateTokenGasCosts = (rate: number, gasPrice: number, gasUsage: number) => {
+  //   return Math.ceil(rate * this.calculateEtherGasCost(gasPrice, gasUsage));
+  // }
 
   private calculateEtherGasCost = (gasPrice: number, gasUsage: number) => {
     return BigNumber.from(gasPrice).mul(gweiDecimals).mul(gasUsage).div(etherDecimals).toNumber();
