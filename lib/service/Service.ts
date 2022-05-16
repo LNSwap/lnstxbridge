@@ -368,7 +368,7 @@ class Service {
     for (let index = 0; index < allclients.length; index++) {
       const client = allclients[index];
       const clientpair = JSON.parse(client.pairs);
-      console.log('service.367 clientpair ', clientpair);
+      // console.log('service.367 clientpair ', clientpair);
       stxmax = Math.max(stxmax, clientpair['BTC/STX'].limits.maximal);
       xusdmax = Math.max(xusdmax, clientpair['BTC/XUSD'].limits.maximal);
     }
@@ -1062,9 +1062,12 @@ class Service {
     console.log('s.781 onchainCurrency, percentageFee, baseFee', onchainCurrency, percentageFee, baseFee);
 
     let onchainAmount, invoiceAmount, invoiceAmountAS;
-    if ((swap.pair === 'BTC/STX' || swap.pair === 'BTC/USDA') && swap.orderSide === 1) {
+    if ((swap.pair === 'BTC/STX' || swap.pair === 'BTC/USDA' || swap.pair === 'BTC/XUSD') && swap.orderSide === 1) {
       // requested amount is already in mstx
-      onchainAmount = requestedAmount*100; //go from mstx -> boltz (10^8)
+
+      if(swap.pair !== 'BTC/XUSD') // xusd is already 8 decimals
+        onchainAmount = requestedAmount*100; //go from mstx -> boltz (10^8)
+
       invoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       console.log('s.872 onchainAmount=requestedAmount ', requestedAmount);
