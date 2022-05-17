@@ -127,7 +127,7 @@ class FeeProvider {
   }
 
   public updateMinerFees = async (chainCurrency: string): Promise<void> => {
-    this.logger.error('feeprovider.125 chainCurrency '+ chainCurrency);
+    this.logger.verbose('feeprovider.125 chainCurrency '+ chainCurrency);
 
     const feeMap = await this.getFeeEstimation(chainCurrency);
 
