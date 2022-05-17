@@ -151,8 +151,12 @@ class Controller {
     // eslint-disable-next-line prefer-const
     let pairsObject = mapToObject(data.pairs);
     // console.log('controller.151 data ', pairsObject, data.clients);
-    if(pairsObject['BTC/STX']) pairsObject['BTC/STX'].limits.maximal = data.clients.stxmax; // convert from clients mstx balance to boltz 10**8
-    if(pairsObject['BTC/XUSD']) pairsObject['BTC/XUSD'].limits.maximal = data.clients.xusdmax; // convert from clients mstx balance to boltz 10**8
+    try {
+      if(pairsObject['BTC/STX']) pairsObject['BTC/STX'].limits.maximal = data.clients.stxmax; // convert from clients mstx balance to boltz 10**8
+      if(pairsObject['BTC/XUSD']) pairsObject['BTC/XUSD'].limits.maximal = data.clients.xusdmax; // convert from clients mstx balance to boltz 10**8  
+    } catch (error) {
+      console.log('controller.158 getPairs ', error.message);
+    }
 
     // console.log('aggregator controller returning::: ', pairsObject);
     this.successResponse(res, {

@@ -369,8 +369,8 @@ class Service {
       const client = allclients[index];
       const clientpair = JSON.parse(client.pairs);
       // console.log('service.367 clientpair ', clientpair);
-      stxmax = Math.max(stxmax, clientpair['BTC/STX'].limits.maximal);
-      xusdmax = Math.max(xusdmax, clientpair['BTC/XUSD'].limits.maximal);
+      if(clientpair['BTC/STX']) stxmax = Math.max(stxmax, clientpair['BTC/STX'].limits.maximal);
+      if(clientpair['BTC/XUSD']) xusdmax = Math.max(xusdmax, clientpair['BTC/XUSD'].limits.maximal);
     }
 
     return {
