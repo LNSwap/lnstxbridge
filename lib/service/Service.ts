@@ -1768,7 +1768,7 @@ class Service {
 
       // check if provider was active recently
       // console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
-      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 130000) {
+      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 200000) {
         active = true;
       } else {
         console.log('inactive provider: ', new Date().getTime(), provider[0].updatedAt, Math.abs(new Date().getTime() - provider[0].updatedAt));
