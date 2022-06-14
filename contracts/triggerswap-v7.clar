@@ -70,7 +70,9 @@
 (define-public (triggerStacking (preimage (buff 32)) (amount uint) (delegatePrincipal principal) (until-burn-ht (optional uint)))
     (begin 
         (try! (contract-call? .stxswap claimStx preimage amount))
-        (try! (contract-call? 'SP000000000000000000002Q6VF78.pox delegate-stx amount delegatePrincipal until-burn-ht none))
+        ;; testnet 'ST000000000000000000002AMW42H.pox
+        ;; mainnet/clarinet 'SP000000000000000000002Q6VF78.pox
+        (unwrap-panic (contract-call? 'SP000000000000000000002Q6VF78.pox delegate-stx amount delegatePrincipal none none))
         (ok true)
     )
 )
