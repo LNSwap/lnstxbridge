@@ -4,6 +4,7 @@ authors = []
 description = ""
 telemetry = false
 requirements = []
+boot_contracts = ["pox", "costs-v2"]
 
 [contracts.Wrapped-USD]
 path = "contracts/Wrapped-USD.clar"
@@ -38,7 +39,7 @@ path = "contracts/stxswap_v10.clar"
 depends_on = []
 
 [contracts.triggerswap]
-path = "contracts/triggerswap_v6.clar"
+path = "contracts/triggerswap-v7.clar"
 depends_on = ["sip-010-trait", "usda-token", "nft"]
 
 [contracts.trustless-rewards]
