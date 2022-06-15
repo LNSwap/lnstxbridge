@@ -143,6 +143,7 @@ Clarinet.test({
   Clarinet.test({
     name: 'Ensure that user can lock and trigger stx stacking',
     async fn(chain: Chain, accounts: Map<string, Account>) {
+      const deployer = accounts.get('deployer')!;
       const wallet_1 = accounts.get('wallet_1')!;
       const wallet_2 = accounts.get('wallet_2')!;
       const wallet_3 = accounts.get('wallet_3')!;
@@ -159,9 +160,19 @@ Clarinet.test({
           ],
           wallet_1.address
         ),
+        Tx.contractCall(
+          'SP000000000000000000002Q6VF78.pox',
+          'allow-contract-caller',
+          [
+            types.principal(deployer.address + '.triggerswap'),
+            types.none(),
+          ],
+          wallet_2.address
+        ),
       ]);
       block.receipts[0].result.expectOk().expectUint(1008);
-      // console.log(`lock.30 `, block, block.receipts[0].events);
+      block.receipts[1].result.expectOk().expectBool(true);
+      // console.log('lock.174 ', block, block.receipts[0].events);
 
       block = chain.mineBlock([
         Tx.contractCall(
@@ -176,7 +187,8 @@ Clarinet.test({
           wallet_2.address
         ),
       ]);
-      // console.log(`triggerTransferStx.49 `, block, block.receipts[0].events);
+      // block.receipts[0].events
+      // console.log(`triggerStacking.179 `, block, );
       block.receipts[0].result.expectOk().expectBool(true);
     },
   });
