@@ -72,7 +72,7 @@
         (try! (contract-call? .stxswap claimStx preimage amount))
         ;; testnet 'ST000000000000000000002AMW42H.pox
         ;; mainnet/clarinet 'SP000000000000000000002Q6VF78.pox
-        (unwrap-panic (contract-call? 'SP000000000000000000002Q6VF78.pox delegate-stx amount delegatePrincipal none none))
+        (unwrap-panic (contract-call? 'SP000000000000000000002Q6VF78.pox delegate-stx amount delegatePrincipal until-burn-ht none))
         (ok true)
     )
 )
