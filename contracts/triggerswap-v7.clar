@@ -22,7 +22,6 @@
 )
 
 ;; TODO: update .stxswap -> .stxswap_v10/sip10swap_v3
-;; mainnet 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait
 (use-trait ft-trait .sip-010-trait.sip-010-trait)
 
 (define-public (triggerStx (preimage (buff 32)) (amount uint) (nftPrincipal <claim-trait>))
