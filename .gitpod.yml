@@ -41,7 +41,7 @@ tasks:
   - init: |
       npm i -g shx rimraf postgresql-client @stacks/cli
       sleep 60
-      npm run stacks:mocknet:microblock
+      npm run stacks:mocknet:old
       sleep 60
     # npm run stacks:mocknet
     command: |
