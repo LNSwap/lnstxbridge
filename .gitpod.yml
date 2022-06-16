@@ -61,9 +61,9 @@ tasks:
       sleep 1
       SIGNER=STN1P6FRK2E2DJPDZN90AVWCSW7MHZWG3V5HS0XC NONCE=5 npm run stacks:fund:signer
       sleep 15
-      sed -i 's/.stxswap/.stxswap_v10/g' contracts/triggerswap_v*.clar
-      sed -i 's/.sip10swap/.sip10swap_v3/g' contracts/triggerswap_v*.clar
-      sed -i 's/SP000000000000000000002Q6VF78/ST000000000000000000002AMW42H/g' contracts/triggerswap_v*.clar
+      sed -i 's/.stxswap/.stxswap_v10/g' contracts/triggerswap*.clar
+      sed -i 's/.sip10swap/.sip10swap_v3/g' contracts/triggerswap*.clar
+      sed -i 's/SP000000000000000000002Q6VF78/ST000000000000000000002AMW42H/g' contracts/triggerswap*.clar
       npm run stacks:deploy
       git stash
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
