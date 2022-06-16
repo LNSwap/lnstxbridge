@@ -82,7 +82,13 @@ tasks:
       # git stash
       # git update-index --assume-unchanged .env
     command: npm run start
-  - init: brew install clarinet
+  - init: |
+        brew install clarinet
+# clarinet build from source instructions
+#        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#        git clone https://github.com/hirosystems/clarinet.git --recursive /workspace/clarinet
+#        cd /workspace/clarinet
+#        cargo install --path . --locked
     command: |
         sed -i 's/.stxswap_v10/.stxswap/g' contracts/triggerswap_v*.clar
         clarinet test
