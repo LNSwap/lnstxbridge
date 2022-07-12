@@ -339,7 +339,7 @@ class Service {
    * Gets all supported pairs and their conversion rates
    */
   //  clients: {stxmax: number | undefined, btcmax: number | undefined, lninmax: number | undefined, lnoutmax: number | undefined}
-  public getPairs = async (): Promise<{ info: ServiceInfo[]; warnings: ServiceWarning[]; pairs: Map<string, PairType>; clients: {stxmax: number | undefined}}> => {
+  public getPairs = async (): Promise<{ info: ServiceInfo[]; warnings: ServiceWarning[]; pairs: Map<string, PairType>; clients: {stxmax: number | undefined, xusdmax: number | undefined}}> => {
     const info: ServiceInfo[] = [];
     const warnings: ServiceWarning[] = [];
 
@@ -363,19 +363,21 @@ class Service {
 
     // get pairs from all clients - find the max amounts
     let stxmax = 0;
+    let xusdmax = 0;
     const allclients = await this.clientRepository.getAll();
     for (let index = 0; index < allclients.length; index++) {
       const client = allclients[index];
       const clientpair = JSON.parse(client.pairs);
       // console.log('service.367 clientpair ', clientpair);
-      stxmax = Math.max(stxmax, clientpair['BTC/STX'].limits.maximal);
+      if(clientpair['BTC/STX']) stxmax = Math.max(stxmax, clientpair['BTC/STX'].limits.maximal);
+      if(clientpair['BTC/XUSD']) xusdmax = Math.max(xusdmax, clientpair['BTC/XUSD'].limits.maximal);
     }
 
     return {
       info,
       warnings,
       pairs: this.rateProvider.pairs,
-      clients: {stxmax}
+      clients: {stxmax, xusdmax}
     };
   }
 
@@ -1060,9 +1062,12 @@ class Service {
     console.log('s.781 onchainCurrency, percentageFee, baseFee', onchainCurrency, percentageFee, baseFee);
 
     let onchainAmount, invoiceAmount, invoiceAmountAS;
-    if ((swap.pair === 'BTC/STX' || swap.pair === 'BTC/USDA') && swap.orderSide === 1) {
+    if ((swap.pair === 'BTC/STX' || swap.pair === 'BTC/USDA' || swap.pair === 'BTC/XUSD') && swap.orderSide === 1) {
       // requested amount is already in mstx
-      onchainAmount = requestedAmount*100; //go from mstx -> boltz (10^8)
+
+      if(swap.pair !== 'BTC/XUSD') // xusd is already 8 decimals
+        onchainAmount = requestedAmount*100; //go from mstx -> boltz (10^8)
+
       invoiceAmount = this.calculateInvoiceAmount(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       invoiceAmountAS = this.calculateInvoiceAmountAS(swap.orderSide, rate, onchainAmount, baseFee, percentageFee);
       console.log('s.872 onchainAmount=requestedAmount ', requestedAmount);
@@ -1711,6 +1716,7 @@ class Service {
     let providerPairs;
     let reachable = false;
     let active = false;
+    let tokenExists = false;
 
     let satoshisRequested = 0;
     if(req['invoice']) {
@@ -1719,18 +1725,30 @@ class Service {
     }
 
     let stxRequested = 0;
-    if(req['invoiceAmount']) {
+    if(req['invoiceAmount'] && req['pairId'] === 'BTC/STX') {
       const rate = getRate(
         this.rateProvider.pairs.get(req['pairId'])!.rate,
         req['orderSide'],
         true
       );
       stxRequested = (req['invoiceAmount'] / 100) * rate; //mstx 10^-6 -> sats 10^8
-      console.log('rate ', req['pairId'], req['orderSide'], false, rate, req['invoiceAmount'], stxRequested);
+      console.log('service.1734 rate, stxRequested', req['pairId'], req['orderSide'], false, rate, req['invoiceAmount'], stxRequested);
+    }
+
+    let tokenRequested = 0;
+    if(req['invoiceAmount'] && req['pairId'] === 'BTC/XUSD') {
+      const rate = getRate(
+        this.rateProvider.pairs.get(req['pairId'])!.rate,
+        req['orderSide'],
+        true
+      );
+      // / 100
+      tokenRequested = req['invoiceAmount'] * rate; //mstx 10^-6 -> sats 10^8
+      console.log('service.1746 rate, tokenRequested', req['pairId'], req['orderSide'], false, rate, req['invoiceAmount'], tokenRequested);
     }
 
     let onchainRequested = 0;
-    if(req['pairId'] === 'BTC/STX' && req['quoteAmount'] && req['orderSide'] ==='buy') {
+    if((req['pairId'] === 'BTC/STX' || req['pairId'] === 'BTC/XUSD') && req['quoteAmount'] && req['orderSide'] ==='buy') {
       onchainRequested = parseFloat(req['quoteAmount']) * 10**8;
     }
 
@@ -1746,10 +1764,11 @@ class Service {
         throw new Error('No providers found');
       }
       provider = await this.clientRepository.findRandom();
+      console.log('service.1766 provider ', provider[0].url, );
 
       // check if provider was active recently
       // console.log('provider active check: ', provider[0].updatedAt, new Date().getTime(), Math.abs(new Date().getTime() - provider[0].updatedAt));
-      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 130000) {
+      if(Math.abs(new Date().getTime() - provider[0].updatedAt) < 200000) {
         active = true;
       } else {
         console.log('inactive provider: ', new Date().getTime(), provider[0].updatedAt, Math.abs(new Date().getTime() - provider[0].updatedAt));
@@ -1757,7 +1776,7 @@ class Service {
 
       providerPairs = JSON.parse(provider[0].pairs);
       // console.log('provider pair data: ', providerPairs, req,)
-      // console.log('service.1579 provider ', providerPairs[req['pairId']]['limits']['maximal']);
+      
       try {
         let res;
         if(provider[0].url.includes('.onion')) {
@@ -1765,7 +1784,7 @@ class Service {
         } else {
           res = await axios.get(`${provider[0].url}/getpairs`);
         }
-        reachable = res.data.pairs[req['pairId']].limits.maximal;
+        reachable = res.data.pairs[req['pairId']]?.limits?.maximal;
       } catch (error) {
         console.log('provider unreachable, count: ', provider[0].url, count, error.message);
       }
@@ -1775,36 +1794,44 @@ class Service {
       // console.log('1onchain check? ', req['onchainAmount'] < providerPairs[req['pairId']]['limits']['maximal']);
       // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
       // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
+      console.log('service.1795 provider[0].tokenBalances ', req['pairId'], provider[0].tokenBalances);
+      console.log('service.1798 tokenRequested check: ', tokenRequested, req['pairId'].split('/')[1], provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]],)
       console.log('s.1758 provider checks: ',
-      !provider[0].pairs.includes(req['pairId']),
-      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'],
-      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'],
-      // if stx -> ln - decode invoice amount and check if client can pay it
-      satoshisRequested > provider[0].localLNBalance,
-      // if ln -> stx - client should have inbound + stx funds
-      req['invoiceAmount'] > provider[0].remoteLNBalance,
-      stxRequested > provider[0].StxBalance,
-      onchainRequested > provider[0].onchainBalance,
-      maxFeePercent < providerPairs[req['pairId']]['fees']['percentage'],
-      !reachable,
-      !active
+        !provider[0].pairs.includes(req['pairId']),
+        req['onchainAmount'] > (providerPairs[req['pairId']] && providerPairs[req['pairId']]['limits']['maximal']),
+        req['onchainAmount'] < (providerPairs[req['pairId']] && providerPairs[req['pairId']]['limits']['minimal']),
+        // TODO: Need more checks when a provider has funds but has higher configured minimum so rejects a swap!
+        // if stx -> ln - decode invoice amount and check if client can pay it
+        satoshisRequested > provider[0].localLNBalance,
+        // if ln -> stx - client should have inbound + stx funds
+        req['invoiceAmount'] > provider[0].remoteLNBalance,
+        stxRequested > provider[0].StxBalance,
+        tokenExists,
+        tokenRequested > (provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]]),
+        onchainRequested > provider[0].onchainBalance,
+        maxFeePercent < (providerPairs[req['pairId']] && providerPairs[req['pairId']]['fees']['percentage']),
+        !reachable,
+        !active
       );
       count++;
     } while (
       // this should resolve to false in order for the selection to be completed!
       // reselect client if any of these conditions are true
       !provider[0].pairs.includes(req['pairId']) ||
-      req['onchainAmount'] > providerPairs[req['pairId']]['limits']['maximal'] ||
-      req['onchainAmount'] < providerPairs[req['pairId']]['limits']['minimal'] ||
+      req['onchainAmount'] > (providerPairs[req['pairId']] && providerPairs[req['pairId']]['limits']['maximal']) ||
+      req['onchainAmount'] < (providerPairs[req['pairId']] && providerPairs[req['pairId']]['limits']['minimal']) ||
       // if stx -> ln - decode invoice amount and check if client can pay it
       satoshisRequested > provider[0].localLNBalance ||
       // if ln -> stx - client should have inbound + stx funds
       req['invoiceAmount'] > provider[0].remoteLNBalance ||
       stxRequested > provider[0].StxBalance ||
+      // !tokenExists ||
+      tokenRequested > (provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]]) ||
       onchainRequested > provider[0].onchainBalance ||
-      maxFeePercent < providerPairs[req['pairId']]['fees']['percentage'] ||
+      maxFeePercent < (providerPairs[req['pairId']] && providerPairs[req['pairId']]['fees']['percentage']) ||
       !reachable ||
-      !active);
+      !active
+    );
 
     // const allProviders = await this.clientRepository.getAll();
     // console.log('service.1582 allProviders ', allProviders);
@@ -1812,13 +1839,14 @@ class Service {
     // console.log('service.1582 randomProvider ', randomProvider);
 
     if(provider.length == 0) {
+      console.log('No providers found');
       throw new Error('No providers found');
     }
 
     let data;
     try {
       // , `${provider[0].url}/createswap`, req
-      console.log('service.1590 post ',swapType);
+      console.log('service.1590 post ',swapType, provider[0].url);
       let response;
       if(provider[0].url.includes('.onion')) {
         response = await tor.post(`${provider[0].url}/createswap`, req);
@@ -1848,12 +1876,12 @@ class Service {
   };
 
   // eslint-disable-next-line @typescript-eslint/ban-types
-  public registerClient = async (apiVersion: string, stacksAddress: string, nodeId: string, url: string, pairs: object, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number): Promise<{
+  public registerClient = async (apiVersion: string, stacksAddress: string, nodeId: string, url: string, pairs: object, localLNBalance?: number, remoteLNBalance?: number, onchainBalance?: number, StxBalance?: number, tokenBalances?: object): Promise<{
     // id: string,
     // invoice: string,
     result: boolean,
   }> => {
-    this.logger.verbose(`s.1564 registerClient with ${apiVersion} ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)} ${localLNBalance}, ${remoteLNBalance}, ${onchainBalance}, ${StxBalance}`);
+    this.logger.verbose(`s.1564 registerClient with ${apiVersion} ${stacksAddress}, ${nodeId}, ${url}, ${JSON.stringify(pairs)} ${localLNBalance}, ${remoteLNBalance}, ${onchainBalance}, ${StxBalance}, ${JSON.stringify(tokenBalances)}`);
 
     if(apiVersion !== (process.env.apiVersion || '1.1.1')) {
       throw new Error('apiVersion mismatch, update your client');
@@ -1878,9 +1906,10 @@ class Service {
     const client = await this.clientRepository.findByUrl(url);
     // console.log('service.1614 checking if url exist in clientdb already ', client);
     const strPairs = JSON.stringify(pairs);
+    const strTokenBalances = JSON.stringify(tokenBalances);
     // dont reject re-registration just update?
     if(client.length > 0) {
-      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs,localLNBalance, remoteLNBalance, onchainBalance, StxBalance,);
+      await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs,localLNBalance, remoteLNBalance, onchainBalance, StxBalance, strTokenBalances);
       // throw new Error('Client url exists already');
     } else {
       const id = generateId();
@@ -1897,6 +1926,7 @@ class Service {
         remoteLNBalance,
         onchainBalance,
         StxBalance,
+        tokenBalances: strTokenBalances,
       });
     }
 
@@ -1941,9 +1971,25 @@ class Service {
     });
 
     const providerUrl = providerSwap?.providerUrl;
-    const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
-      id,
-    });
+
+    let swapStatus;
+    try {
+      if(providerUrl!.includes('.onion')) {
+        swapStatus = await tor.post(`${providerUrl}/swapstatus`, {
+          id,
+        });
+      } else {
+        swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+          id,
+        });
+      }
+    } catch (error) {
+      console.log('service.2001 unreachable, error: ', providerUrl, error.message);
+    }
+
+    // const swapStatus = await axios.post(`${providerUrl}/swapstatus`, {
+    //   id,
+    // });
     this.logger.verbose(`c.1926 providerSwap ${providerUrl}, ${stringify(swapStatus.data)}`);
     return {swapStatus: swapStatus.data};
   }
@@ -1983,10 +2029,28 @@ class Service {
     });
 
     const providerUrl = providerSwap?.providerUrl;
-    const broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
-      id,
-      tx,
-    });
+
+    let broadcastResponse;
+    try {
+      if(providerUrl!.includes('.onion')) {
+        broadcastResponse = await tor.post(`${providerUrl}/broadcastsponsoredtx`, {
+          id,
+          tx,
+        });
+      } else {
+        broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
+          id,
+          tx,
+        });
+      }
+    } catch (error) {
+      console.log('service.2001 unreachable, error: ', providerUrl, error.message);
+    }
+
+    // const broadcastResponse = await axios.post(`${providerUrl}/broadcastsponsoredtx`, {
+    //   id,
+    //   tx,
+    // });
     return broadcastResponse.data;
   }
 

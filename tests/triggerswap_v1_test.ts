@@ -1,5 +1,5 @@
 /* eslint-disable import/no-unresolved */
-import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.14.0/index.ts';
+import { Clarinet, Tx, Chain, Account, types } from 'https://deno.land/x/clarinet@v0.31.1/index.ts';
 // import { assertEquals } from 'https://deno.land/std@0.90.0/testing/asserts.ts';
 
 const contractName = 'stxswap';
@@ -137,5 +137,58 @@ Clarinet.test({
       // console.log(`triggerSip10.200 `, block,);
       block.receipts[0].result.expectOk().expectBool(true);
 
+    },
+  });
+
+  Clarinet.test({
+    name: 'Ensure that user can lock and trigger stx stacking',
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+      const deployer = accounts.get('deployer')!;
+      const wallet_1 = accounts.get('wallet_1')!;
+      const wallet_2 = accounts.get('wallet_2')!;
+      const wallet_3 = accounts.get('wallet_3')!;
+      const amount = 1_000;
+      let block = chain.mineBlock([
+        Tx.contractCall(
+          contractName,
+          'lockStx',
+          [
+            '0x4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a', // preimagehash
+            types.uint(amount),
+            types.uint(5),
+            types.principal(wallet_2.address),
+          ],
+          wallet_1.address
+        ),
+        Tx.contractCall(
+          'SP000000000000000000002Q6VF78.pox',
+          'allow-contract-caller',
+          [
+            types.principal(deployer.address + '.triggerswap'),
+            types.none(),
+          ],
+          wallet_2.address
+        ),
+      ]);
+      block.receipts[0].result.expectOk().expectUint(1008);
+      block.receipts[1].result.expectOk().expectBool(true);
+      // console.log('lock.174 ', block, block.receipts[0].events);
+
+      block = chain.mineBlock([
+        Tx.contractCall(
+          'triggerswap',
+          'triggerStacking',
+          [
+            '0x01', //preimage
+            types.uint(amount),
+            types.principal(wallet_1.address), // delegate-to
+            types.none()
+          ],
+          wallet_2.address
+        ),
+      ]);
+      // block.receipts[0].events
+      // console.log(`triggerStacking.179 `, block, );
+      block.receipts[0].result.expectOk().expectBool(true);
     },
   });

@@ -16,6 +16,7 @@ type ClientType = {
   remoteLNBalance?: number;
   onchainBalance?: number;
   StxBalance?: number;
+  tokenBalances?: string;
 };
 
 class Client extends Model implements ClientType {
@@ -32,6 +33,7 @@ class Client extends Model implements ClientType {
   public remoteLNBalance?: number;
   public onchainBalance?: number;
   public StxBalance?: number;
+  public tokenBalances?: string;
 
   // public createdAt!: Date;
   // public updatedAt!: Date;
@@ -49,6 +51,7 @@ class Client extends Model implements ClientType {
       remoteLNBalance: { type: new DataTypes.INTEGER(), allowNull: true },
       onchainBalance: { type: new DataTypes.INTEGER(), allowNull: true },
       StxBalance: { type: new DataTypes.INTEGER(), allowNull: true },
+      tokenBalances: { type: new DataTypes.STRING(1255), allowNull: true },
     }, {
       sequelize,
       tableName: 'clients',

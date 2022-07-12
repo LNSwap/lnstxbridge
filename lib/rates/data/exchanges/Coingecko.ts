@@ -30,6 +30,7 @@ class Coingecko implements Exchange {
       case 'BTC': return 'bitcoin';
       case 'RBTC': return 'rootstock';
       case 'STX': return 'blockstack';
+      case 'XUSD': return 'usd-coin';
 
       default: return asset;
     }

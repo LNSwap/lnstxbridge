@@ -151,7 +151,12 @@ class Controller {
     // eslint-disable-next-line prefer-const
     let pairsObject = mapToObject(data.pairs);
     // console.log('controller.151 data ', pairsObject, data.clients);
-    pairsObject['BTC/STX'].limits.maximal = data.clients.stxmax; // convert from clients mstx balance to boltz 10**8
+    try {
+      if(pairsObject['BTC/STX']) pairsObject['BTC/STX'].limits.maximal = data.clients.stxmax; // convert from clients mstx balance to boltz 10**8
+      if(pairsObject['BTC/XUSD']) pairsObject['BTC/XUSD'].limits.maximal = data.clients.xusdmax; // convert from clients mstx balance to boltz 10**8  
+    } catch (error) {
+      console.log('controller.158 getPairs ', error.message);
+    }
 
     // console.log('aggregator controller returning::: ', pairsObject);
     this.successResponse(res, {
@@ -531,7 +536,7 @@ class Controller {
   // new endpoint to registerClients that want to join swap provider network
   public registerClient = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { apiVersion, stacksAddress, nodeId, url, pairs, localLNBalance, remoteLNBalance, onchainBalance, StxBalance } = this.validateRequest(req.body, [
+      const { apiVersion, stacksAddress, nodeId, url, pairs, localLNBalance, remoteLNBalance, onchainBalance, StxBalance, tokenBalances } = this.validateRequest(req.body, [
         { name: 'apiVersion', type: 'string' },
         { name: 'stacksAddress', type: 'string' },
         { name: 'nodeId', type: 'string' },
@@ -541,10 +546,10 @@ class Controller {
         { name: 'remoteLNBalance', type: 'number', optional: true},
         { name: 'onchainBalance', type: 'number', optional: true},
         { name: 'StxBalance', type: 'number', optional: true},
-        // { name: 'stxAmount', type: 'number', optional: true },
+        { name: 'tokenBalances', type: 'object', optional: true },
       ]);
 
-      const response = await this.service.registerClient(apiVersion, stacksAddress, nodeId, url, pairs, localLNBalance, remoteLNBalance, onchainBalance, StxBalance);
+      const response = await this.service.registerClient(apiVersion, stacksAddress, nodeId, url, pairs, localLNBalance, remoteLNBalance, onchainBalance, StxBalance, tokenBalances);
       this.successResponse(res, response);
     } catch (error) {
       this.errorResponse(req, res, error);

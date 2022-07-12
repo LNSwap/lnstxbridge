@@ -12,7 +12,8 @@ tasks:
       echo "http://localhost:9008" > /home/gitpod/.lnstx-aggregator/accesslist.txt
       npm i
       npm run docker:regtest
-      sleep 30
+      sleep 150
+    # wait until contracts are deployed
     # sed -i 's/sslEnabled: true/sslEnabled: false/g' lib/Config.ts
     # git stash
     # modify regtest container? to have prune=5000 and use mempool api
@@ -40,7 +41,7 @@ tasks:
   - init: |
       npm i -g shx rimraf postgresql-client @stacks/cli
       sleep 60
-      npm run stacks:mocknet:microblock
+      npm run stacks:mocknet:old
       sleep 60
     # npm run stacks:mocknet
     command: |
@@ -57,9 +58,12 @@ tasks:
       SIGNER=ST3RXC1Q8MXYKPWRNQ6ZFAWSRY8PKRK8H4BW2F8F NONCE=3 npm run stacks:fund:signer
       sleep 1
       SIGNER=STJ4J7FPHJRJ4Y91650TG58K136JH64VFK6V6DD3 NONCE=4 npm run stacks:fund:signer
+      sleep 1
+      SIGNER=STN1P6FRK2E2DJPDZN90AVWCSW7MHZWG3V5HS0XC NONCE=5 npm run stacks:fund:signer
       sleep 15
-      sed -i 's/.stxswap/.stxswap_v10/g' contracts/triggerswap_v*.clar
-      sed -i 's/.sip10swap/.sip10swap_v3/g' contracts/triggerswap_v*.clar
+      sed -i 's/.stxswap/.stxswap_v10/g' contracts/triggerswap*.clar
+      sed -i 's/.sip10swap/.sip10swap_v3/g' contracts/triggerswap*.clar
+      sed -i 's/SP000000000000000000002Q6VF78/ST000000000000000000002AMW42H/g' contracts/triggerswap*.clar
       npm run stacks:deploy
       git stash
     # seed set manually and funded ST1N28QCRR03EW37S470PND4SPECCXQ22ZZHF97GP as the operator account
@@ -81,7 +85,13 @@ tasks:
       # git stash
       # git update-index --assume-unchanged .env
     command: npm run start
-  - init: brew install clarinet
+  - init: |
+        brew install clarinet
+# clarinet build from source instructions
+#        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#        git clone https://github.com/hirosystems/clarinet.git --recursive /workspace/clarinet
+#        cd /workspace/clarinet
+#        cargo install --path . --locked
     command: |
         sed -i 's/.stxswap_v10/.stxswap/g' contracts/triggerswap_v*.clar
         clarinet test
@@ -94,7 +104,7 @@ tasks:
   # echo 'deb http://mirror.arizona.edu/ubuntu/ focal main' | sudo tee -a /etc/apt/sources.list
   # sudo apt update && sudo apt install rsync --assume-yes && npm i
   - init: |
-        git clone -b aggregator https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
+        git clone https://github.com/pseudozach/lnswap-widget /workspace/lnswap-widget
         cd /workspace/lnswap-widget
         npm i
         export GITPOD_CORE_URL=${GITPOD_WORKSPACE_URL:8}
@@ -148,5 +158,8 @@ ports:
     onOpen: open-browser
     visibility: public
   - port: 8080
+    onOpen: ignore
+    visibility: public
+  - port: 8000
     onOpen: ignore
     visibility: public

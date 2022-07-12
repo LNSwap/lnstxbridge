@@ -14,7 +14,8 @@ import { decodeInvoice, formatError, getChainCurrency, getHexBuffer, splitPairId
 class Migration {
   private versionRepository: DatabaseVersionRepository;
 
-  private static latestSchemaVersion = 4;
+  // updated with each new version
+  private static latestSchemaVersion = 5;
 
   constructor(private logger: Logger, private sequelize: Sequelize) {
     this.versionRepository = new DatabaseVersionRepository();
@@ -170,6 +171,14 @@ class Migration {
         await this.sequelize.query('ALTER TABLE clients ADD remoteLNBalance INTEGER NULL');
         await this.sequelize.query('ALTER TABLE clients ADD onchainBalance INTEGER NULL');
         await this.sequelize.query('ALTER TABLE clients ADD StxBalance INTEGER NULL');
+
+        await this.finishMigration(versionRow.version, currencies);
+        break;
+
+      // Database schema version 5 adds support for tokenBalances
+      case 4:
+        this.logUpdatingTable('clients');
+        await this.sequelize.query('ALTER TABLE clients ADD tokenBalances VARCHAR(1255) NULL');
 
         await this.finishMigration(versionRow.version, currencies);
         break;
