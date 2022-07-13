@@ -81,7 +81,7 @@ class LndClient extends BaseClient implements LndClient {
   private peerEventSubscription?: ClientReadableStream<lndrpc.PeerEvent>;
   private channelEventSubscription?: ClientReadableStream<lndrpc.ChannelEventUpdate>;
   private channelBackupSubscription?: ClientReadableStream<lndrpc.ChanBackupSnapshot>;
-  private allInvoicesSubscription?: ClientReadableStream<lndrpc.Invoice>;
+  // private allInvoicesSubscription?: ClientReadableStream<lndrpc.Invoice>;
 
   /**
    * Create an LND client
@@ -136,7 +136,7 @@ class LndClient extends BaseClient implements LndClient {
           this.subscribePeerEvents();
           this.subscribeChannelEvents();
           this.subscribeChannelBackups();
-          this.subscribeAllInvoices();
+          // this.subscribeAllInvoices();
         }
 
         this.clearReconnectTimer();
@@ -635,35 +635,35 @@ class LndClient extends BaseClient implements LndClient {
       });
   }
 
-  /**
-   * Subscribe to events for a single invoice
-   */
-   private subscribeAllInvoices = () => {
-    if (this.allInvoicesSubscription) {
-      this.allInvoicesSubscription.cancel();
-    }
-    this.logger.verbose('lndclient.646 subscribeAllInvoices started');
-    this.allInvoicesSubscription = this.lightning!.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
-      .on('data', (event: lndrpc.Invoice) => {
-        // console.log('lndclient.646 subscribeAllInvoices got invoice ', event)
-        console.log('lndclient.649 subscribeAllInvoices got getPaymentRequest ', event.getPaymentRequest(), event.getSettled(), event.getState() === lndrpc.Invoice.InvoiceState.SETTLED);
+  // /**
+  //  * Subscribe to events for all invoices - used for nftmint
+  //  */
+  //  private subscribeAllInvoices = () => {
+  //   if (this.allInvoicesSubscription) {
+  //     this.allInvoicesSubscription.cancel();
+  //   }
+  //   this.logger.verbose('lndclient.646 subscribeAllInvoices started');
+  //   this.allInvoicesSubscription = this.lightning!.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
+  //     .on('data', (event: lndrpc.Invoice) => {
+  //       // console.log('lndclient.646 subscribeAllInvoices got invoice ', event)
+  //       console.log('lndclient.649 subscribeAllInvoices got getPaymentRequest ', event.getPaymentRequest(), event.getSettled(), event.getState() === lndrpc.Invoice.InvoiceState.SETTLED);
 
-        // check if it's settled & directswap - trigger the mintnft
-        if(event.getState() === lndrpc.Invoice.InvoiceState.SETTLED) {
-          console.log('lndclient.653 emitting invoice.settled for ', event.getPaymentRequest());
-          this.emit('invoice.settled', event.getPaymentRequest());
-        }
+  //       // check if it's settled & directswap - trigger the mintnft
+  //       if(event.getState() === lndrpc.Invoice.InvoiceState.SETTLED) {
+  //         console.log('lndclient.653 emitting invoice.settled for ', event.getPaymentRequest());
+  //         this.emit('invoice.settled', event.getPaymentRequest());
+  //       }
 
 
-        // if (event.getType() === lndrpc.Invoice) {
-        //   this.emit('peer.online', event.getPubKey());
-        // }
-      })
-      .on('error', async (error) => {
-        console.log('lndclient.646 subscribeAllInvoices got error ', error);
-        await this.handleSubscriptionError('allinvoices event', error);
-      });
-  }
+  //       // if (event.getType() === lndrpc.Invoice) {
+  //       //   this.emit('peer.online', event.getPubKey());
+  //       // }
+  //     })
+  //     .on('error', async (error) => {
+  //       console.log('lndclient.646 subscribeAllInvoices got error ', error);
+  //       await this.handleSubscriptionError('allinvoices event', error);
+  //     });
+  // }
 
   private handleSubscriptionError = async (subscriptionName: string, error: any) => {
     this.logger.error(`${LndClient.serviceName} ${this.symbol} ${subscriptionName} subscription errored: ${formatError(error)}`);

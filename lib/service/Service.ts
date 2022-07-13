@@ -1716,7 +1716,7 @@ class Service {
     let providerPairs;
     let reachable = false;
     let active = false;
-    let tokenExists = false;
+    const tokenExists = false;
 
     let satoshisRequested = 0;
     if(req['invoice']) {
@@ -1776,7 +1776,7 @@ class Service {
 
       providerPairs = JSON.parse(provider[0].pairs);
       // console.log('provider pair data: ', providerPairs, req,)
-      
+
       try {
         let res;
         if(provider[0].url.includes('.onion')) {
@@ -1795,7 +1795,7 @@ class Service {
       // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
       // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
       console.log('service.1795 provider[0].tokenBalances ', req['pairId'], provider[0].tokenBalances);
-      console.log('service.1798 tokenRequested check: ', tokenRequested, req['pairId'].split('/')[1], provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]],)
+      console.log('service.1798 tokenRequested check: ', tokenRequested, req['pairId'].split('/')[1], provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]],);
       console.log('s.1758 provider checks: ',
         !provider[0].pairs.includes(req['pairId']),
         req['onchainAmount'] > (providerPairs[req['pairId']] && providerPairs[req['pairId']]['limits']['maximal']),
@@ -1909,6 +1909,7 @@ class Service {
     const strTokenBalances = JSON.stringify(tokenBalances);
     // dont reject re-registration just update?
     if(client.length > 0) {
+      // this.logger.verbose(`updating client: ${stacksAddress}, ${nodeId}, ${url} at ${new Date()}`);
       await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs,localLNBalance, remoteLNBalance, onchainBalance, StxBalance, strTokenBalances);
       // throw new Error('Client url exists already');
     } else {
