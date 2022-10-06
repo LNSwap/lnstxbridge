@@ -1190,6 +1190,7 @@ class Service {
     const invoiceAmount = decodeInvoice(invoice).satoshis!;
     const rate = swap.rate || getRate(pairRate, swap.orderSide, false);
 
+    console.log('service.1193 setSwapInvoice rate', swap.rate, getRate(pairRate, swap.orderSide, false));
     this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
 
     const { baseFee, percentageFee } = this.rateProvider.feeProvider.getFees(
@@ -1481,6 +1482,7 @@ class Service {
       throw Errors.NO_AMOUNT_SPECIFIED();
     }
 
+    console.log('service.1485 setSwapInvoice rate', args.pairId, rate, holdInvoiceAmount, side);
     this.verifyAmount(args.pairId, rate, holdInvoiceAmount, side, true);
 
     let prepayMinerFeeInvoiceAmount: number | undefined = undefined;
@@ -1954,6 +1956,41 @@ class Service {
     // console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
     // returns relevant txData array - lock/claim/refund
     return {txData: txData};
+  }
+
+  public resolveLNAddress = async (lnaddress: string, amount: string, ): Promise<{
+    invoice: string,
+  }> => {
+    if (
+      // eslint-disable-next-line no-useless-escape
+      !/^[a-z0-9][a-z0-9-_\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\.[a-z0-9]{2,10}(?:\.[a-z]{2,10})?$/.test(
+        lnaddress
+      )
+    ) {
+      throw new Error('invalid ln address');
+    }
+    if(!amount || amount == '0' || amount == '' ) {
+      throw new Error('invalid amount');
+    }
+    const domain = lnaddress.split('@')[1];
+    const username = lnaddress.split('@')[0];
+    try {
+      // regular LUD06 support requires 2 calls!
+      const response1 = await axios.get(`https://${domain}/.well-known/lnurlp/${username}`);
+      const cbaddress = response1.data.callback;
+      let finalurl;
+      if(cbaddress.includes('?')) {
+        finalurl = `${cbaddress}&amount=${amount}`;
+      } else {
+        finalurl = `${cbaddress}?amount=${amount}`;
+      }
+      const response = await axios.get(finalurl);
+      // console.log('service.1980 got cb response: ', finalurl, response.data);
+      return {invoice: response.data};
+    } catch (error) {
+      console.log('service.1983 resolvelnaddress', error.message);
+      throw new Error('error fetching invoice from lnaddress');
+    }
   }
 
   // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?

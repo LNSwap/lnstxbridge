@@ -111,6 +111,9 @@ class Api {
     this.app.route('/api/admin/getconfiguration').get(controller.getAdminConfiguration);
     this.app.route('/api/admin/saveconfiguration').post(controller.saveAdminConfiguration);
     this.app.route('/api/admin/restartapp').post(controller.getAdminRestartApp);
+
+    // helpers
+    this.app.route('/resolvelnaddress').get(controller.resolveLNAddress);
   }
 }
 
