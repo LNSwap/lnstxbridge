@@ -574,6 +574,21 @@ class Controller {
     }
   }
 
+   // resolve LN Address for fetching invoice
+   public resolveLNAddress = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { lnaddress, amount } = this.validateRequest(req.query, [
+        { name: 'lnaddress', type: 'string' },
+        { name: 'amount', type: 'string', },
+      ]);
+
+      const response = await this.service.resolveLNAddress(lnaddress, amount);
+      this.successResponse(res, response);
+    } catch (error) {
+      this.errorResponse(req, res, error);
+    }
+  }
+
   // new endpoint for providers to update providerSwap status
   public updateSwapStatus = async (req: Request, res: Response): Promise<void> => {
     try {

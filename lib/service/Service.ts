@@ -1190,6 +1190,7 @@ class Service {
     const invoiceAmount = decodeInvoice(invoice).satoshis!;
     const rate = swap.rate || getRate(pairRate, swap.orderSide, false);
 
+    console.log('service.1193 setSwapInvoice rate', swap.rate, getRate(pairRate, swap.orderSide, false));
     this.verifyAmount(swap.pair, rate, invoiceAmount, swap.orderSide, false);
 
     const { baseFee, percentageFee } = this.rateProvider.feeProvider.getFees(
@@ -1481,6 +1482,7 @@ class Service {
       throw Errors.NO_AMOUNT_SPECIFIED();
     }
 
+    console.log('service.1485 setSwapInvoice rate', args.pairId, rate, holdInvoiceAmount, side);
     this.verifyAmount(args.pairId, rate, holdInvoiceAmount, side, true);
 
     let prepayMinerFeeInvoiceAmount: number | undefined = undefined;
@@ -1716,7 +1718,7 @@ class Service {
     let providerPairs;
     let reachable = false;
     let active = false;
-    let tokenExists = false;
+    const tokenExists = false;
 
     let satoshisRequested = 0;
     if(req['invoice']) {
@@ -1776,7 +1778,7 @@ class Service {
 
       providerPairs = JSON.parse(provider[0].pairs);
       // console.log('provider pair data: ', providerPairs, req,)
-      
+
       try {
         let res;
         if(provider[0].url.includes('.onion')) {
@@ -1795,7 +1797,7 @@ class Service {
       // console.log('2onchain check? ', req['onchainAmount'] > providerPairs[req['pairId']]['limits']['minimal']);
       // console.log('3onchain check? ', req['onchainAmount'], providerPairs[req['pairId']]['limits']['minimal'], providerPairs[req['pairId']]['limits']['maximal']);
       console.log('service.1795 provider[0].tokenBalances ', req['pairId'], provider[0].tokenBalances);
-      console.log('service.1798 tokenRequested check: ', tokenRequested, req['pairId'].split('/')[1], provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]],)
+      console.log('service.1798 tokenRequested check: ', tokenRequested, req['pairId'].split('/')[1], provider[0].tokenBalances && provider[0].tokenBalances[req['pairId'].split('/')[1]],);
       console.log('s.1758 provider checks: ',
         !provider[0].pairs.includes(req['pairId']),
         req['onchainAmount'] > (providerPairs[req['pairId']] && providerPairs[req['pairId']]['limits']['maximal']),
@@ -1909,6 +1911,7 @@ class Service {
     const strTokenBalances = JSON.stringify(tokenBalances);
     // dont reject re-registration just update?
     if(client.length > 0) {
+      // this.logger.verbose(`updating client: ${stacksAddress}, ${nodeId}, ${url} at ${new Date()}`);
       await this.clientRepository.updateClient(client[0], stacksAddress, nodeId, url, strPairs,localLNBalance, remoteLNBalance, onchainBalance, StxBalance, strTokenBalances);
       // throw new Error('Client url exists already');
     } else {
@@ -1953,6 +1956,41 @@ class Service {
     // console.log('service.1720 getLocked findByPreimageHash ', preimageHash, txData);
     // returns relevant txData array - lock/claim/refund
     return {txData: txData};
+  }
+
+  public resolveLNAddress = async (lnaddress: string, amount: string, ): Promise<{
+    invoice: string,
+  }> => {
+    if (
+      // eslint-disable-next-line no-useless-escape
+      !/^[a-z0-9][a-z0-9-_\.]+@([a-z]|[a-z0-9]?[a-z0-9-]+[a-z0-9])\.[a-z0-9]{2,10}(?:\.[a-z]{2,10})?$/.test(
+        lnaddress
+      )
+    ) {
+      throw new Error('invalid ln address');
+    }
+    if(!amount || amount == '0' || amount == '' ) {
+      throw new Error('invalid amount');
+    }
+    const domain = lnaddress.split('@')[1];
+    const username = lnaddress.split('@')[0];
+    try {
+      // regular LUD06 support requires 2 calls!
+      const response1 = await axios.get(`https://${domain}/.well-known/lnurlp/${username}`);
+      const cbaddress = response1.data.callback;
+      let finalurl;
+      if(cbaddress.includes('?')) {
+        finalurl = `${cbaddress}&amount=${amount}`;
+      } else {
+        finalurl = `${cbaddress}?amount=${amount}`;
+      }
+      const response = await axios.get(finalurl);
+      // console.log('service.1980 got cb response: ', finalurl, response.data);
+      return {invoice: response.data};
+    } catch (error) {
+      console.log('service.1983 resolvelnaddress', error.message);
+      throw new Error('error fetching invoice from lnaddress');
+    }
   }
 
   // register to the aggregator as a swap provider - is this needed if updateswapstatus is ok?

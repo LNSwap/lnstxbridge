@@ -687,7 +687,7 @@ class SwapManager {
       args.preimageHash,
       args.lightningTimeoutBlockDelta,
       this.invoiceExpiryHelper.getExpiry(receivingCurrency.symbol),
-      getSwapMemo(sendingCurrency.symbol, true),
+      getSwapMemo(sendingCurrency.symbol, true) + ` ID: ${id}`,
       routingHints,
     );
 
@@ -707,7 +707,7 @@ class SwapManager {
         minerFeeInvoicePreimageHash,
         undefined,
         this.invoiceExpiryHelper.getExpiry(receivingCurrency.symbol),
-        getPrepayMinerFeeInvoiceMemo(sendingCurrency.symbol),
+        getPrepayMinerFeeInvoiceMemo(sendingCurrency.symbol) + ` ID: ${id}`,
         routingHints,
       );
       minerFeeInvoice = prepayInvoice.paymentRequest;
